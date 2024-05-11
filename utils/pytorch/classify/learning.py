@@ -4,12 +4,12 @@ from math import floor
 import torch
 
 
-def train_model_in_single_epoch(model, train_loader, optimizer, criterion, device, writer=None, epoch=None):
+def train_model_in_single_epoch(model, training_loader, optimizer, criterion, device, writer=None, epoch=None):
     """
     训练模型一个 epoch.
     Args:
         model (torch.nn.Module): 用于训练的 PyTorch 模型.
-        train_loader (torch.classify_utils.data.DataLoader): 训练集的 DataLoader.
+        training_loader (torch.classify_utils.data.DataLoader): 训练集的 DataLoader.
         optimizer (torch.optim.Optimizer): 训练优化器.
         criterion (torch.nn.Module): 损失函数.
         device (str | torch.device | int): 训练设备, 比如：'cpu' 或 'cuda'.
@@ -25,7 +25,7 @@ def train_model_in_single_epoch(model, train_loader, optimizer, criterion, devic
     max_loss = float('-inf')
     total_loss = 0
     model.train()    # 设置模型为训练模式
-    for i_batch, (data, target) in enumerate(train_loader):
+    for i, (data, target) in enumerate(training_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()                   # 清空梯度
         output = model(data)                    # 前向传播，获得输出
@@ -39,11 +39,11 @@ def train_model_in_single_epoch(model, train_loader, optimizer, criterion, devic
         total_loss += loss.item()
 
         # 打印训练进度
-        i_current_batch = i_batch + 1
-        if floor(100. * i_current_batch / len(train_loader)) > floor(100. * i_batch / len(train_loader)):
+        i_current_batch = i + 1
+        if floor(100. * i_current_batch / len(training_loader)) > floor(100. * i / len(training_loader)):
             print(
-                f"[{i_current_batch * len(data)}/{len(train_loader.dataset)} "
-                f"({floor(100. * i_current_batch / len(train_loader)):.0f}%)]\tLoss: {loss.item():.6f}")
+                f"[{i_current_batch * len(data)}/{len(training_loader.dataset)} "
+                f"({floor(100. * i_current_batch / len(training_loader)):.0f}%)]\tLoss: {loss.item():.6f}")
 
         if writer is not None:
             writer.add_scalar('./logs_tensorboard/loss', loss.item(), i_current_batch)
@@ -52,7 +52,7 @@ def train_model_in_single_epoch(model, train_loader, optimizer, criterion, devic
         print(f"Epoch {epoch} training finished. "
               f"Min loss: {min_loss:.6f}, "
               f"Max loss: {max_loss:.6f}, "
-              f"Avg loss: {total_loss / len(train_loader):.6f}")
+              f"Avg loss: {total_loss / len(training_loader):.6f}")
 
     end_time = time.time()
     print(f"Epoch {epoch} training time: {end_time - start_time:.2f}s")

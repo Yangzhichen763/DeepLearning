@@ -1,6 +1,20 @@
 import torch
 import torch.nn as nn
 from torchvision import models
+from torchvision.models import (
+    ResNet18_Weights,
+    ResNet34_Weights,
+    ResNet50_Weights,
+    ResNet101_Weights,
+    ResNet152_Weights
+)
+from torchvision.models import (
+    resnet18,
+    resnet34,
+    resnet50,
+    resnet101,
+    resnet152
+)
 from utils.logger import *
 
 
@@ -106,28 +120,36 @@ class ResNet(nn.Module):
 
 def ResNet18(num_classes=10, pretrained=False):
     if pretrained:
-        return models.resnet18(pretrained=True)
+        weights = ResNet18_Weights.IMAGENET1K_V1
+        model = resnet18(weights=weights)
+        return model
     else:
         return ResNet(BasicBlock, [2, 2, 2, 2], num_classes)
 
 
 def ResNet34(num_classes=10, pretrained=False):
     if pretrained:
-        return models.resnet34(pretrained=True)
+        weights = ResNet34_Weights.IMAGENET1K_V1
+        model = resnet34(weights=weights)
+        return model
     else:
         return ResNet(BasicBlock, [3, 4, 6, 3], num_classes)
 
 
 def ResNet50(num_classes=10, pretrained=False):
     if pretrained:
-        return models.resnet50(pretrained=True)
+        weights = ResNet50_Weights.IMAGENET1K_V1
+        model = resnet50(weights=weights)
+        return model
     else:
         return ResNet(Bottleneck, [3, 4, 6, 3], num_classes)
 
 
 def ResNet101(num_classes=10, pretrained=False):
     if pretrained:
-        return models.resnet101(pretrained=True)
+        weights = ResNet101_Weights.IMAGENET1K_V1
+        model = resnet101(weights=weights)
+        return model
     else:
         return ResNet(Bottleneck, [3, 4, 23, 3], num_classes)
 
@@ -140,7 +162,9 @@ def ResNet152(num_classes=10, pretrained=False):
 
 
 if __name__ == '__main__':
-    model = ResNet34()
+    _model = ResNet34()
     x_input = torch.randn(1, 3, 32, 32)
+    y_pred = _model(x_input)
+    print(y_pred.shape)
 
-    log_sequential_model_info(model, x_input)
+    log_model_params(_model, x_input.shape)

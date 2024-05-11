@@ -1,2 +1,3 @@
-*/logs_tensorboard/
-*/datas/
+**/logs_tensorboard/
+**/datas/
+/datas/

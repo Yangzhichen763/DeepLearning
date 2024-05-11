@@ -57,6 +57,8 @@ def get_data_loader(datasets, batch_size, num_samples, shuffle=True, num_workers
     # 定义数据加载器
     training_loader = DataLoader(training_subset, batch_size, shuffle=shuffle, num_workers=num_workers)
     test_loader = DataLoader(test_subset, batch_size, shuffle=shuffle, num_workers=num_workers)
+
+    print(f"Training loader type: {type(training_loader)}")
     return training_loader, test_loader
 
 
@@ -97,7 +99,11 @@ def train_and_validate(
         batch_size,
         num_samples,
 
+        optimizer_type='SGD',
         learning_rate=0.001,
+        weight_decay=1e-4,
+        momentum=0.9,
+        criterion_type='CrossEntropyLoss',
         scheduler_step_size=2,
         scheduler_gamma=0.5,
 
@@ -114,9 +120,15 @@ def train_and_validate(
         model_creator: 模型创建器，接收 num_classes 作为参数，返回模型
         batch_size: 批大小
         num_samples: 训练集和测试集样本数量，比如 [5000, 1000]
+
+        optimizer_type: 优化器类型，支持 'SGD' 和 'Adam'
         learning_rate: 学习率
+        weight_decay: 权重衰减
+        momentum: 动量
+        criterion_type: 损失函数类型，支持 'CrossEntropyLoss'
         scheduler_step_size: 学习率更新步长
         scheduler_gamma: 学习率衰减率，每个步长衰减学习率为 gamma * 学习率
+
         device: 设备类型
         num_epochs: 训练轮数
         writer: 日志记录器
@@ -145,14 +157,32 @@ def train_and_validate(
         model = model_creator(num_classes=num_classes).to(device)
 
     # ------------------------ 训练和测试部分
-    optimizer = torch.optim.Adam(                   # 定义优化器
-        model.parameters(),
-        lr=learning_rate)
-    criterion = torch.nn.CrossEntropyLoss()         # 定义损失函数
-    scheduler = torch.optim.lr_scheduler.StepLR(    # 定义学习率调度器
+    # 定义优化器
+    if optimizer_type == 'SGD':
+        optimizer = torch.optim.SGD(
+            model.parameters(),
+            lr=learning_rate,
+            weight_decay=weight_decay,
+            momentum=momentum)
+    elif optimizer_type == 'Adam':
+        optimizer = torch.optim.Adam(
+            model.parameters(),
+            lr=learning_rate)
+    else:
+        raise ValueError(f"Unsupported optimizer type: {optimizer_type}")
+
+    # 定义损失函数
+    if criterion_type == 'CrossEntropyLoss':
+        criterion = torch.nn.CrossEntropyLoss()
+    else:
+        raise ValueError(f"Unsupported criterion type: {criterion_type}")
+
+    # 定义学习率调度器
+    scheduler = torch.optim.lr_scheduler.StepLR(
         optimizer,
         step_size=scheduler_step_size,
         gamma=scheduler_gamma)
+
     # 训练模型
     train_model(
         model=model,

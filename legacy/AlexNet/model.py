@@ -126,7 +126,9 @@ class AlexNet_CIFAR10(nn.Module):
 
 
 if __name__ == '__main__':
-    model = AlexNet_CIFAR10(40, 10)
+    _model = AlexNet_CIFAR10(40, 10)
     x_input = torch.randn(1, 3, 32, 32)
+    y_pred = _model(x_input)
+    print(y_pred.shape)
 
-    log_sequential_model_info(model, x_input)
+    log_model_params(_model, x_input.shape)

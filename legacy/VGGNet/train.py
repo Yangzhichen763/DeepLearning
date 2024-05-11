@@ -17,9 +17,10 @@ def get_transform():
     """
     transform = transforms.Compose(
         [
-         transforms.Resize((224, 224)),  # 从 (bath_size, 3, 32, 32) 缩放到 224x224
-         transforms.ToTensor(),
-         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+            transforms.Resize((224, 224)),  # 从 (bath_size, 3, 32, 32) 缩放到 224x224
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
     return transform
 
 

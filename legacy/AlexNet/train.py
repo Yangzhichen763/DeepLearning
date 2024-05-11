@@ -21,7 +21,7 @@ if __name__ == '__main__':
         get_transform(),
         model_creator=model_creator,
         batch_size=16,
-        num_samples=-1,
+        num_samples=[-1, -1],
 
         learning_rate=0.001,
         scheduler_step_size=1,
