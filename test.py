@@ -1,50 +1,50 @@
-import torch
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
-import torchvision.transforms.functional as F
+mpl.rcParams.update({'figure.dpi':150})
 
-plt.rcParams['savefig.bbox'] = 'tight'  # 保存图片时布局紧凑
+# colormaps 中可用的颜色，将颜色图分类:
+# http://matplotlib.org/examples/color/colormaps_reference.html
+cmaps = [('Perceptually Uniform Sequential', [
+            'viridis', 'plasma', 'inferno', 'magma']),
+         ('Sequential', [
+            'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',
+            'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu',
+            'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn']),
+         ('Sequential (2)', [
+            'binary', 'gist_yarg', 'gist_gray', 'gray', 'bone', 'pink',
+            'spring', 'summer', 'autumn', 'winter', 'cool', 'Wistia',
+            'hot', 'afmhot', 'gist_heat', 'copper']),
+         ('Diverging', [
+            'PiYG', 'PRGn', 'BrBG', 'PuOr', 'RdGy', 'RdBu',
+            'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic']),
+         ('Qualitative', [
+            'Pastel1', 'Pastel2', 'Paired', 'Accent',
+            'Dark2', 'Set1', 'Set2', 'Set3',
+            'tab10', 'tab20', 'tab20b', 'tab20c']),
+         ('Miscellaneous', [
+            'flag', 'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
+            'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg', 'hsv',
+            'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar'])]
 
+viridis = mpl.colormaps.get_cmap('magma')
 
-def show_image(images, title=None):
-    """
-    显示图片
-    """
-    if not isinstance(images, list):
-        images = [images]
-    # figure 表示整个图形，axes 表示包含每个子图坐标轴的数组，squeeze=False 表示始终返回一个二维数组
-    figure, axes = plt.subplots(ncols=len(images), squeeze=False)
+size = 20
+bounds = np.linspace(0, 1, size)
+colors = viridis(bounds)
 
-    # 显示图片
-    for i, _image in enumerate(images):
-        _image = _image.detach()
-        _image = F.to_pil_image(_image)
-        axes[0, i].imshow(np.asarray(_image))
-        axes[0, i].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
+fig, axes = plt.subplots(figsize=(size, 1))
+fig.subplots_adjust(bottom=0)
+cmap = mpl.colors.ListedColormap(colors)
+norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+cb1 = mpl.colorbar.ColorbarBase(axes, cmap=cmap, norm=norm, orientation='horizontal')
+cb1.set_label('Colorbar')
 
-    # 设置标题
-    if title:
-        figure.suptitle(title)
+plt.show()
 
+# 输出 viridis 的颜色码
+colors_byte = [[int(c[0] * 255), int(c[1] * 255), int(c[2] * 255)] for c in colors]
+colors_code = ['#{:02x}{:02x}{:02x}'.format(c[0], c[1], c[2]) for c in colors_byte]
+print(colors_code)
 
-# 输入
-image = torch.Tensor([[[0, 0, 128],
-                       [0, 0, 0],
-                       [0, 0, 0]],
-                      [[0, 0, 128],
-                       [0, 0, 0],
-                       [0, 0, 0]],
-                      [[0, 0, 128],
-                       [0, 0, 0],
-                       [0, 0, 0]]]
-                     )
-image.permute([1, 2, 0])  # 转换为 HWC 格式
-color = torch.Tensor([128, 128, 128])
-show_image(image, title='Input Image')
-
-# 不使用对每个元素进行比较的方法计算
-mask = np.all(image == color, axis=-1)
-
-# 输出
-print(mask)

@@ -1,13 +1,9 @@
-
-from torch.utils.tensorboard import SummaryWriter
+from utils.tensorboard import *
 import torchvision.transforms as transforms
 
 from model import (VGG11, VGG13, VGG16, VGG19)
 from legacy.classify_utils import train_and_validate
 from utils.pytorch import *
-
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 def get_transform():
@@ -31,7 +27,7 @@ if __name__ == '__main__':
     model_creator = VGG11
     # 训练和验证模型，在 Terminal 激活 tensorboard 的指令:
     # tensorboard --logdir=./modules/UNet/logs_tensorboard
-    writer = SummaryWriter(log_dir='./logs_tensorboard')
+    writer = get_writer('./')
     num_classes = train_and_validate(
         get_transform(),
         model_creator=model_creator,
@@ -46,7 +42,7 @@ if __name__ == '__main__':
         num_epochs=10,
         writer=writer,
     )
-    writer.close()
+    close_writer(writer)
 
     # 加载最佳模型
     load_model = model_creator(num_classes=num_classes).to(device)

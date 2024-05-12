@@ -1,3 +1,7 @@
 **/logs_tensorboard/
 **/datas/
 /datas/
+*.png
+*.jpg
+*.jpeg
+*.gif

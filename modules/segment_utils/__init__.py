@@ -1,12 +1,13 @@
 import torch
-from torch.utils.data import DataLoader
+import numpy as np
+from torch.utils.data import DataLoader, Sampler
 import torchvision
 import torchvision.transforms as transforms
 
 from utils.pytorch import *
 from utils.pytorch.segment import *
 
-import os
+from modules.segment_utils.datasets import VOCSegmentationDataset
 
 
 def get_transform():
@@ -19,9 +20,19 @@ def get_transform():
             transforms.Resize(256),
             transforms.CenterCrop(256),
             transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+            # transforms.ToPILImage(),
         ])
     return transform
+
+
+def custom_collate(batch):
+    images = []
+    targets = []
+    for item in batch:
+        images.append(transforms.ToTensor()(item[0]))  # 转换图像为张量
+        targets.append(torch.as_tensor(np.array(item[1])))  # 转换标签为张量
+    return images, targets
 
 
 def get_data_set(transform):
@@ -33,9 +44,9 @@ def get_data_set(transform):
     # 加载 CIFAR-10 数据集
     root = '../../datas/VOCSegmentation'
     year = '2012'
-    training_dataset = torchvision.datasets.VOCSegmentation(
+    training_dataset = VOCSegmentationDataset(
         root=root, year=year, image_set='train', download=True, transform=transform)    # 训练集
-    test_dataset = torchvision.datasets.VOCSegmentation(
+    test_dataset = VOCSegmentationDataset(
         root=root, year=year, image_set='val', download=True, transform=transform)      # 测试集
     return training_dataset, test_dataset
 
@@ -54,13 +65,21 @@ def get_data_loader(datasets, batch_size, num_samples, shuffle=True, num_workers
     training_num_samples, test_num_samples = num_samples
 
     training_subset = pick_random(training_dataset, training_num_samples, "training")
-    test_subset = pick_random(test_dataset, test_num_samples, "test")
+    test_subset = pick_random(test_dataset, test_num_samples, "validation")
 
     # 定义数据加载器
-    training_loader = DataLoader(training_subset, batch_size, shuffle=shuffle, num_workers=num_workers)
-    test_loader = DataLoader(test_subset, batch_size, shuffle=shuffle, num_workers=num_workers)
-    return training_loader, test_loader
+    training_loader = DataLoader(
+        training_subset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers)  # , collate_fn=custom_collate)
+    test_loader = DataLoader(
+        test_subset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers)
 
+    return training_loader, test_loader
 
 def train_model(model, optimizer, criterion, scheduler, loaders, device='cuda', num_epochs=10, writer=None):
     """
@@ -99,9 +118,11 @@ def train_and_validate(
         batch_size,
         num_samples,
 
+        optimizer_type='SGD',
         learning_rate=0.001,
         weight_decay=1e-4,
         momentum=0.9,
+        criterion_type='CrossEntropyLoss',
         scheduler_step_size=2,
         scheduler_gamma=0.5,
 
@@ -116,11 +137,15 @@ def train_and_validate(
         model_creator: 模型创建器，接收 num_classes 作为参数，返回模型
         batch_size: 批大小
         num_samples: 训练集和测试集样本数量，比如 [5000, 1000]
+
+        optimizer_type: 优化器类型，支持 'SGD' 和 'Adam'
         learning_rate: 学习率
         weight_decay: 权重衰减
         momentum: 动量
+        criterion_type: 损失函数类型，支持 'CrossEntropyLoss'
         scheduler_step_size: 学习率更新步长
         scheduler_gamma: 学习率衰减率，每个步长衰减学习率为 gamma * 学习率
+
         device: 设备类型
         num_epochs: 训练轮数
         writer: 日志记录器
@@ -145,16 +170,32 @@ def train_and_validate(
     model = model_creator(num_classes=num_classes).to(device)
 
     # ------------------------ 训练和测试部分
-    optimizer = torch.optim.SGD(                    # 定义优化器
-        model.parameters(),
-        lr=learning_rate,
-        weight_decay=weight_decay,
-        momentum=momentum)
-    criterion = torch.nn.CrossEntropyLoss()         # 定义损失函数
-    scheduler = torch.optim.lr_scheduler.StepLR(    # 定义学习率调度器
+    # 定义优化器
+    if optimizer_type == 'SGD':
+        optimizer = torch.optim.SGD(
+            model.parameters(),
+            lr=learning_rate,
+            weight_decay=weight_decay,
+            momentum=momentum)
+    elif optimizer_type == 'Adam':
+        optimizer = torch.optim.Adam(
+            model.parameters(),
+            lr=learning_rate)
+    else:
+        raise ValueError(f"Unsupported optimizer type: {optimizer_type}")
+
+    # 定义损失函数
+    if criterion_type == 'CrossEntropyLoss':
+        criterion = torch.nn.CrossEntropyLoss()
+    else:
+        raise ValueError(f"Unsupported criterion type: {criterion_type}")
+
+    # 定义学习率调度器
+    scheduler = torch.optim.lr_scheduler.StepLR(
         optimizer,
         step_size=scheduler_step_size,
         gamma=scheduler_gamma)
+
     # 训练模型
     train_model(
         model=model,

@@ -1,12 +1,8 @@
-
-from torch.utils.tensorboard import SummaryWriter
+from utils.tensorboard import *
 
 from model import (ResNet18, ResNet34, ResNet50, ResNet101, ResNet152)
 from legacy.classify_utils import get_transform, train_and_validate
 from utils.pytorch import *
-
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 if __name__ == '__main__':
@@ -16,7 +12,7 @@ if __name__ == '__main__':
     model_creator = ResNet18
     # 训练和验证模型，在 Terminal 激活 tensorboard 的指令:
     # tensorboard --logdir=./legacy/ResNet/logs_tensorboard
-    writer = SummaryWriter(log_dir='./logs_tensorboard')
+    writer = get_writer('./')
     num_classes = train_and_validate(
         get_transform(),
         model_creator=model_creator,
@@ -31,7 +27,7 @@ if __name__ == '__main__':
         num_epochs=1,
         writer=writer,
     )
-    writer.close()
+    close_writer(writer)
 
     # 加载最佳模型
     load_model = model_creator(num_classes=10).to(device)
