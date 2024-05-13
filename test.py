@@ -1,50 +1,21 @@
+import torch
+from torch import nn
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-mpl.rcParams.update({'figure.dpi':150})
-
-# colormaps 中可用的颜色，将颜色图分类:
-# http://matplotlib.org/examples/color/colormaps_reference.html
-cmaps = [('Perceptually Uniform Sequential', [
-            'viridis', 'plasma', 'inferno', 'magma']),
-         ('Sequential', [
-            'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',
-            'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu',
-            'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn']),
-         ('Sequential (2)', [
-            'binary', 'gist_yarg', 'gist_gray', 'gray', 'bone', 'pink',
-            'spring', 'summer', 'autumn', 'winter', 'cool', 'Wistia',
-            'hot', 'afmhot', 'gist_heat', 'copper']),
-         ('Diverging', [
-            'PiYG', 'PRGn', 'BrBG', 'PuOr', 'RdGy', 'RdBu',
-            'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic']),
-         ('Qualitative', [
-            'Pastel1', 'Pastel2', 'Paired', 'Accent',
-            'Dark2', 'Set1', 'Set2', 'Set3',
-            'tab10', 'tab20', 'tab20b', 'tab20c']),
-         ('Miscellaneous', [
-            'flag', 'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
-            'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg', 'hsv',
-            'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar'])]
-
-viridis = mpl.colormaps.get_cmap('magma')
-
-size = 20
-bounds = np.linspace(0, 1, size)
-colors = viridis(bounds)
-
-fig, axes = plt.subplots(figsize=(size, 1))
-fig.subplots_adjust(bottom=0)
-cmap = mpl.colors.ListedColormap(colors)
-norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
-cb1 = mpl.colorbar.ColorbarBase(axes, cmap=cmap, norm=norm, orientation='horizontal')
-cb1.set_label('Colorbar')
-
-plt.show()
-
-# 输出 viridis 的颜色码
-colors_byte = [[int(c[0] * 255), int(c[1] * 255), int(c[2] * 255)] for c in colors]
-colors_code = ['#{:02x}{:02x}{:02x}'.format(c[0], c[1], c[2]) for c in colors_byte]
-print(colors_code)
+out = torch.randn(1, 8, 4, 4)
+spx = torch.split(out, [2, 2, 2, 2], 1)  # 在通道维度上分割张量
+print(spx[0].shape, spx[1].shape, spx[2].shape, spx[3].shape)
+for i in range(4):  # 对于每个尺度
+    if i == 0:
+        sp = spx[i]  # 如果是第一个尺度，取出分割后的张量
+    else:
+        sp = sp + spx[i]  # 否则，累加之前的张量和当前尺度的张量
+    sp = torch.zeros(1, 2, 4, 4)
+    if i == 0:
+        out = sp  # 如果是第一个尺度，直接赋值给out
+    else:
+        out = torch.cat((out, sp), 1)  # 否则，将当前尺度的结果和之前的结果在通道维度上拼接
+out = torch.cat((out, spx[4]), 1)
 

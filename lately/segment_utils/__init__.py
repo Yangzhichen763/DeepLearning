@@ -7,22 +7,32 @@ import torchvision.transforms as transforms
 from utils.pytorch import *
 from utils.pytorch.segment import *
 
-from modules.segment_utils.datasets import VOCSegmentationDataset
+from lately.segment_utils.datasets import VOCSegmentationDataset
 
 
-def get_transform():
+def get_transform(channels=3):
     """
     获取数据预处理器
     :return:
     """
-    transform = transforms.Compose(
-        [
-            transforms.Resize(256),
-            transforms.CenterCrop(256),
-            transforms.ToTensor(),
-            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-            # transforms.ToPILImage(),
-        ])
+    if channels == 3:
+        transform = transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.CenterCrop(256),
+                transforms.ToTensor(),
+                transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+            ])
+    elif channels == 1:
+        transform = transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.CenterCrop(256),
+                transforms.ToTensor()
+            ])
+    else:
+        raise ValueError(f"Unsupported channels: {channels}")
+
     return transform
 
 
@@ -35,19 +45,23 @@ def custom_collate(batch):
     return images, targets
 
 
-def get_data_set(transform):
+def get_data_set(transform_image, transform_label):
     """
     获取数据集
-    :param transform: 数据预处理器
+    Args:
+        transform_image: 图像预处理器
+        transform_label: 标签预处理器
     :return: 训练集和测试集
     """
     # 加载 CIFAR-10 数据集
     root = '../../datas/VOCSegmentation'
     year = '2012'
     training_dataset = VOCSegmentationDataset(
-        root=root, year=year, image_set='train', download=True, transform=transform)    # 训练集
+        root=root, year=year, image_set='train', download=True,
+        transform_image=transform_image, transform_label=transform_label)    # 训练集
     test_dataset = VOCSegmentationDataset(
-        root=root, year=year, image_set='val', download=True, transform=transform)      # 测试集
+        root=root, year=year, image_set='val', download=True,
+        transform_image=transform_image, transform_label=transform_label)    # 测试集
     return training_dataset, test_dataset
 
 
@@ -112,7 +126,8 @@ def train_model(model, optimizer, criterion, scheduler, loaders, device='cuda', 
 
 
 def train_and_validate(
-        transform,
+        transform_image,
+        transform_label,
         model_creator,
 
         batch_size,
@@ -133,7 +148,8 @@ def train_and_validate(
     """
     训练并验证模型
     Args:
-        transform: 数据预处理器
+        transform_image: 图像预处理器
+        transform_label: 标签预处理器
         model_creator: 模型创建器，接收 num_classes 作为参数，返回模型
         batch_size: 批大小
         num_samples: 训练集和测试集样本数量，比如 [5000, 1000]
@@ -155,7 +171,7 @@ def train_and_validate(
     """
     # ------------------------ 数据集处理部分
     # 获取数据集
-    datasets = get_data_set(transform)
+    datasets = get_data_set(transform_image, transform_label)
     # 获取数据加载器
     loaders = get_data_loader(
         datasets=datasets,

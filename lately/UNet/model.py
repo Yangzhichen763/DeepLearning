@@ -71,9 +71,13 @@ class UNetCustom(nn.Module):
         return x
 
 
+def UNet_custom_light(num_classes=21):
+    return UNetCustom(3, num_classes, features=[4, 8, 16, 32, 64])
+
+
 if __name__ == '__main__':
-    model = UNetCustom(3, 10, features=[64, 128, 256, 512, 1024])
-    x_input = torch.randn(1, 3, 512, 512)
+    model = UNet_custom_light()
+    x_input = torch.randn(1, 3, 256, 256)
     x_output = model(x_input)
     print(x_output.shape)
 

@@ -1,7 +1,8 @@
 from utils.tensorboard import *
 
 from model import (UNet, UNetCustom)
-from modules.segment_utils import get_transform, train_and_validate
+from model import (UNet_custom_light)
+from lately.segment_utils import get_transform, train_and_validate
 from utils.pytorch import *
 
 
@@ -9,12 +10,13 @@ if __name__ == '__main__':
     # 部署 GPU 设备
     device = assert_on_cuda()
 
-    model_creator = UNet
+    model_creator = UNet_custom_light
     # 训练和验证模型，在 Terminal 激活 tensorboard 的指令:
     # tensorboard --logdir=./legacy/ResNet/logs_tensorboard
     writer = get_writer('./')
     num_classes = train_and_validate(
-        get_transform(),
+        transform_image=get_transform(3),
+        transform_label=get_transform(1),
         model_creator=model_creator,
         batch_size=8,
         num_samples=[-1, -1],

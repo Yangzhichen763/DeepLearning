@@ -1,7 +1,7 @@
 import torch
 from torch import nn
-from modules.Transformer.Embedding import TransformerEmbedding
-from modules.Transformer.Layers import EncoderLayer, DecoderLayer
+from lately.Transformer.Embedding import TransformerEmbedding
+from lately.Transformer.Layers import EncoderLayer, DecoderLayer
 
 
 class Encoder(nn.Module):

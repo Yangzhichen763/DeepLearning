@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     model_creator = VGG11
     # 训练和验证模型，在 Terminal 激活 tensorboard 的指令:
-    # tensorboard --logdir=./modules/UNet/logs_tensorboard
+    # tensorboard --logdir=./lately/UNet/logs_tensorboard
     writer = get_writer('./')
     num_classes = train_and_validate(
         get_transform(),

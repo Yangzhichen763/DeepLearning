@@ -1,7 +1,10 @@
 from torch.utils.tensorboard import SummaryWriter
 
 import os
+import warnings
+
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+warnings.filterwarnings("ignore")   # 忽略警告
 
 
 def get_writer(log_dir):
