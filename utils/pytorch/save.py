@@ -10,11 +10,13 @@ def as_pt(model, save_path):
         model (torch.nn.Module): 要保存的 PyTorch 模型.
         save_path (str): 模型保存路径，包含文件名和后缀名 .pt.
     """
+    print("Saving model to: ", save_path)
     directory = os.path.dirname(save_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
     torch.save(model.state_dict(), save_path)
+    print("Model saved.")
 
 
 def as_onnx(model, dummy_input, save_path, input_names=None, output_names=None):

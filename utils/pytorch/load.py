@@ -9,4 +9,6 @@ def from_model(model, load_path, device):
         load_path (str): 模型加载路径.
         device (str): 加载设备, 比如：'cpu' 或 'cuda'.
     """
+    print(f"Loading model from {load_path}...")
     model.load_state_dict(torch.load(load_path, map_location=device))
+    print("Model loaded.")

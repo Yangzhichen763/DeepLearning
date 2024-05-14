@@ -1,8 +1,11 @@
-import time
-from math import floor
+import math
+from PIL import Image
+import os
+import numpy as np
+from tqdm import tqdm
 
 import torch
-import numpy as np
+from torch.utils.data import DataLoader
 
 
 def train_model_in_single_epoch(model, training_loader, optimizer, criterion, device, writer=None, epoch=None):
@@ -10,55 +13,52 @@ def train_model_in_single_epoch(model, training_loader, optimizer, criterion, de
     训练模型一个 epoch.
     Args:
         model (torch.nn.Module): 用于训练的 PyTorch 模型.
-        training_loader (torch.classify_utils.data.DataLoader): 训练集的 DataLoader.
+        training_loader (DataLoader): 训练集的 DataLoader.
         optimizer (torch.optim.Optimizer): 训练优化器.
         criterion (torch.nn.Module): 损失函数.
         device (str | torch.device | int): 训练设备, 比如：'cpu' 或 'cuda'.
         writer (SummaryWriter): TensorBoard 日志记录器.
         epoch (int): 当前 epoch 数.
     """
-    print('_' * 30)
-    print(f"Epoch {epoch} training started.")
-
-    start_time = time.time()
-
     min_loss = float('inf')
     max_loss = float('-inf')
     total_loss = 0
+    dataset_size = len(training_loader.dataset)
+    dataset_batches = len(training_loader)
+    batch_size = math.ceil(dataset_size / dataset_batches)
+
     model.train()  # 设置模型为训练模式
-    for i, (image, ground_true) in enumerate(training_loader):
-        image, ground_true = image.to(device), ground_true.to(device)
-        optimizer.zero_grad()                       # 清空梯度
-        output = model(image)                       # 前向传播，获得输出
-        loss = criterion(output, ground_true)       # 计算损失
-        loss.backward()                             # 反向传播
-        optimizer.step()                            # 更新参数
+    with tqdm(
+            total=dataset_size,
+            unit='image') as pbar:
+        pbar.set_description(f"Epoch {epoch} training")
+        for i, (image, ground_true) in enumerate(training_loader):
+            image, ground_true = image.to(device), ground_true.to(device)
+            optimizer.zero_grad()                       # 清空梯度
+            output = model(image)                       # 前向传播，获得输出
+            loss = criterion(output, ground_true)       # 计算损失
+            loss.backward()                             # 反向传播
+            optimizer.step()                            # 更新参数
 
-        # 记录损失最小值和最大值以及总损失
-        min_loss = min(min_loss, loss.item())
-        max_loss = max(max_loss, loss.item())
-        total_loss += loss.item()
+            # 记录损失最小值和最大值以及总损失
+            min_loss = min(min_loss, loss.item())
+            max_loss = max(max_loss, loss.item())
+            total_loss += loss.item()
 
-        # 打印训练进度
-        i_current_batch = i + 1
-        if floor(100. * i_current_batch / len(training_loader)) > floor(100. * i / len(training_loader)):
-            print(
-                f"[{i_current_batch * len(image)}/{len(training_loader.dataset)} "
-                f"({floor(100. * i_current_batch / len(training_loader)):.0f}%)]\tLoss: {loss.item():.6f}")
-        # len(training_loader) 即训练集的总样本数 / batch_size
-        # len(training_loader.dataset) 即训练集的总样本数
+            # 打印训练进度
+            i_current_batch = i + 1
+            pbar.update(batch_size)
+            # len(training_loader) 即训练集的总样本数 / batch_size
+            # len(training_loader.dataset) 即训练集的总样本数
 
-        if writer is not None:
-            writer.add_scalar('./logs_tensorboard/loss', loss.item(), i_current_batch)
+            if writer is not None:
+                writer.add_scalar('./logs/tensorboard/loss', loss.item(), i_current_batch)
 
     if epoch is not None:
         print(f"Epoch {epoch} training finished. "
               f"Min loss: {min_loss:.6f}, "
               f"Max loss: {max_loss:.6f}, "
-              f"Avg loss: {total_loss / len(training_loader):.6f}")
-
-    end_time = time.time()
-    print(f"Epoch {epoch} training time: {end_time - start_time:.2f}s")
+              f"Avg loss: {total_loss / dataset_batches:.6f}")
     # 在训练集上，如果最大最小损失相差太大，说明学习率过大
     # 在训练集上，如果平均损失越大，说明模型欠拟合
     # 1. 扩大训练集规模
@@ -84,33 +84,60 @@ def validate_model(
     测试模型.
     Args:
         model (torch.nn.Module): 用于测试的 PyTorch 模型.
-        test_loader (torch.classify_utils.data.DataLoader): 测试集的 DataLoader.
+        test_loader (DataLoader): 测试集的 DataLoader.
         criterion (torch.nn.Module): 损失函数.
         device (str | torch.device | int): 测试设备, 比如：'cpu' 或 'cuda'.
         writer (SummaryWriter): TensorBoard 日志记录器.
         epoch (int): 当前 epoch 数.
         validation_config (str): 验证配置, 目前支持 validation_configurations 中的部分配置.
     Returns:
-        tuple: 总损失函数值和正确率.
+        tuple: 平均损失和正确率.
     """
+    if validation_config is None:
+        validation_config = 'iou_correct'
+    if validation_config not in validation_configurations:
+        raise ValueError(f"Unsupported validation config: {validation_config}. "
+                         f"Supported configs: {validation_configurations}.")
+
+    dataset_size = len(test_loader.dataset)
+    dataset_batches = len(test_loader)
+    batch_size = math.ceil(dataset_size / dataset_batches)
+
     total_loss = 0
-    correct = 0
+    correct = 0.
     model.eval()
-    with torch.no_grad():
-        for (images, true_masks) in test_loader:
+    with tqdm(
+            total=dataset_size,
+            unit='image') as pbar, torch.no_grad():
+        for i, (images, true_masks) in enumerate(test_loader):
             images, true_masks = images.to(device), true_masks.to(device)
             output = model(images)                                                  # 前向传播，获得输出
-            total_loss += criterion(output, true_masks).item()                      # 计算损失
-            if validation_config == 'iou_correct':
-                iou_list = calculate_iou(output, true_masks, num_classes=2)             # 计算 IoU
-                correct += np.mean(iou_list)                                            # 计算正确率
-            else:
-                prediction = output.argmax(dim=1, keepdim=True)                         # 预测类别
-                correct += prediction.eq(true_masks.view_as(prediction)).sum().item()   # 计算正确率
-    total_loss /= len(test_loader.dataset)
-    accuracy = 100. * correct / len(test_loader.dataset)
+            loss = criterion(output, true_masks)                                    # 计算损失
+            if validation_config == 'confusing_matrix':
+                iou_list = calculate_iou(
+                    outputs=output,
+                    labels=true_masks)
+                iou = torch.mean(iou_list)                                        # 计算正确率
+            else:                                                                 # 计算 IoU
+                iou_list = calculate_iou(
+                    outputs=output,
+                    labels=true_masks)
+                iou = torch.mean(iou_list)                                        # 计算正确率
+
+            total_loss += loss.item()
+            correct += iou.item()
+
+            # 打印测试进度
+            pbar.update(batch_size)
+
+            if i <= 10:
+                save_mask_as_image(true_masks, "mask", device)
+                save_mask_as_image(output, "output", device)
+
+    average_loss = total_loss / dataset_batches
+    accuracy = 100. * correct / dataset_batches
     print(
-        f"\nTest set: Average loss: {total_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} "
+        f"\nTest set: Average loss: {average_loss:.4f}, Accuracy: {int(correct * batch_size)}/{dataset_size} "
         f"({accuracy:.0f}%)\n")
     # 在测试集上，如果平均损失越大，说明模型过拟合
     # 1. 寻找更多数据
@@ -118,63 +145,103 @@ def validate_model(
     # 3. 寻找合适的模型结构或更小的网络模型结构
 
     if (writer is not None) & (epoch is not None):
-        writer.add_scalar('./logs_tensorboard/loss', total_loss, epoch)
-        writer.add_scalar('./logs_tensorboard/accuracy', accuracy, epoch)
+        writer.add_scalar('./logs/tensorboard/loss', average_loss, epoch)
+        writer.add_scalar('./logs/tensorboard/accuracy', accuracy, epoch)
 
-    return total_loss, accuracy
+    return average_loss, accuracy
 
 
-def calculate_iou(outputs, labels, num_classes):
-    outputs = np.argmax(outputs, axis=1)  # 将模型输出转换为预测的类别
+def calculate_iou(outputs, labels):
+    """
+    计算 IoU.
+    Args:
+        outputs (torch.Tensor): 模型输出，比如 [8, 21, 256, 256]
+        labels (torch.Tensor): 标签，比如 [8, 256, 256]
+
+    Returns:
+
+    """
+    num_classes = outputs.shape[1]
+    outputs = outputs.argmax(dim=1)     # 将模型输出转换为预测的类别
     iou_list = []
-    for cls in range(num_classes):  # 对每个类别计算IoU
-        intersection = np.logical_and(labels == cls, outputs == cls).sum()
-        union = np.logical_or(labels == cls, outputs == cls).sum()
+    for classes in range(num_classes):  # 对每个类别计算IoU
+        intersection = ((labels == classes) & (outputs == classes)).sum()
+        union = ((labels == classes) | (outputs == classes)).sum()
         if union == 0:
-            iou = 1.0  # 如果没有交集，则IoU为1
+            iou = 1.0  # 如果没有并集，则IoU为1
         else:
             iou = intersection / union
         iou_list.append(iou)
-    return iou_list
+    return torch.tensor(iou_list)
 
 
 # ----------------------------- 计算混淆矩阵 ---------------------------------
 
 # 计算混淆矩阵
-def _fast_hist(ground_true, prediction, num_classes):
-    mask = (ground_true >= 0) & (ground_true < num_classes)
-    hist = np.bincount(
-        num_classes * ground_true[mask].astype(int) +
-        prediction[mask], minlength=num_classes ** 2).reshape(num_classes, num_classes)
+def _fast_hist(prediction, ground_true, num_classes):
+    hist = torch.bincount(
+        num_classes * ground_true +
+        prediction, minlength=num_classes ** 2).reshape(num_classes, num_classes)
     return hist
 
 
 # 根据混淆矩阵计算 Accuracy, Accuracy_cls 和 Mean_IoU
-def label_accuracy_score(ground_trues, predictions, num_classes):
+def label_accuracy_score(predictions, ground_trues, num_classes):
     """Returns accuracy score evaluation result.
       - overall accuracy
       - mean accuracy
       - mean IU
     """
-    hist = np.zeros((num_classes, num_classes))
+    hist = torch.zeros((num_classes, num_classes))
 
     # 计算混淆矩阵和平均准确率
     for l_true, l_pred in zip(ground_trues, predictions):
-        hist += _fast_hist(l_true.flatten(), l_pred.flatten(), num_classes)
-    accuracy = np.diag(hist).sum() / hist.sum()
+        hist += _fast_hist(l_pred.flatten(), l_true.flatten(), num_classes)
+    accuracy = torch.diag(hist).sum() / hist.sum()
 
     # 计算类别平均准确率
-    with np.errstate(divide='ignore', invalid='ignore'):
-        accuracy_class = np.diag(hist) / hist.sum(axis=1)
-    accuracy_class = np.nanmean(accuracy_class)
+    with torch.errstate(divide='ignore', invalid='ignore'):
+        accuracy_class = torch.diag(hist) / hist.sum(dim=1)
+    accuracy_class = torch.nanmean(accuracy_class)
 
     # 计算类别平均 IoU
-    with np.errstate(divide='ignore', invalid='ignore'):
-        iou = np.diag(hist) / (
-                hist.sum(axis=1) + hist.sum(axis=0) - np.diag(hist)
+    with torch.errstate(divide='ignore', invalid='ignore'):
+        iou = torch.diag(hist) / (
+                hist.sum(dim=1) + hist.sum(dim=0) - torch.diag(hist)
         )
-    mean_iou = np.nanmean(iou)
+    mean_iou = torch.nanmean(iou)
 
     # 计算全局准确率
-    freq = hist.sum(axis=1) / hist.sum()
+    freq = hist.sum(dim=1) / hist.sum()
     return accuracy, accuracy_class, mean_iou, freq
+
+
+if __name__ == '__main__':
+    map = np.array([[1, 2, 3], [4, 5, 6]])
+    a = np.array([[1, 0, 1], [0, 1, 1], [1, 0, 0]])
+    b = map[a]
+    print(b)
+
+
+#
+def save_mask_as_image(mask, device, dir_path='./logs/mask_images/', file_name=None, colormap=None):
+    if colormap is None:
+        colormap = torch.mul(torch.tensor([
+            [0, 0, 0], [2, 0, 0], [0, 2, 0], [2, 2, 0], [0, 0, 2],
+            [2, 0, 2], [0, 2, 2], [2, 2, 2], [1, 0, 0], [3, 0, 0],
+            [1, 2, 0], [3, 2, 0], [1, 0, 2], [3, 0, 2], [1, 2, 2],
+            [3, 2, 2], [0, 1, 0], [2, 1, 0], [0, 3, 0], [2, 3, 0],
+            [0, 1, 2]]), 64).to(device)
+
+    output_label = mask.argmax(dim=1)  # [8, 21, 256, 256] -> [8, 1, 256, 256]
+    output_label = torch.squeeze(output_label)  # [8, 1, 256, 256] -> [8, 256, 256]
+    masks_rgb = colormap[output_label]  # [8, 256, 256] -> [8, 256, 256, 3]
+    masks_rgb = masks_rgb.permute(0, 3, 1, 2)  # [8, 256, 256, 3] -> [8, 3, 256, 256]
+    masks_rgb = torch.chunk(masks_rgb, masks_rgb.shape[0], dim=0)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    for j, image in enumerate(masks_rgb):
+        image = image.squeeze(dim=0)  # [1, 3, 256, 256] -> [3, 256, 256]
+        image = image.permute(1, 2, 0)  # [3, 256, 256] -> [256, 256, 3]
+        image = Image.fromarray(image.cpu().numpy(), mode='RGB')
+        image.save(os.path.join(dir_path, f"{file_name}{j}.png"))

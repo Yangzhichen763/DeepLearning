@@ -53,14 +53,13 @@ def get_data_set(transform_image, transform_label):
         transform_label: 标签预处理器
     :return: 训练集和测试集
     """
-    # 加载 CIFAR-10 数据集
-    root = '../../datas/VOCSegmentation'
+    # 加载 VOCSegmentation 数据集
     year = '2012'
     training_dataset = VOCSegmentationDataset(
-        root=root, year=year, image_set='train', download=True,
+        year=year, image_set='train', download=True,
         transform_image=transform_image, transform_label=transform_label)    # 训练集
     test_dataset = VOCSegmentationDataset(
-        root=root, year=year, image_set='val', download=True,
+        year=year, image_set='val', download=True,
         transform_image=transform_image, transform_label=transform_label)    # 测试集
     return training_dataset, test_dataset
 
@@ -95,6 +94,7 @@ def get_data_loader(datasets, batch_size, num_samples, shuffle=True, num_workers
 
     return training_loader, test_loader
 
+
 def train_model(model, optimizer, criterion, scheduler, loaders, device='cuda', num_epochs=10, writer=None):
     """
     训练模型
@@ -116,12 +116,13 @@ def train_model(model, optimizer, criterion, scheduler, loaders, device='cuda', 
     # 训练模型
     best_accuracy = 0.0
     for epoch in range(1, num_epochs + 1):
-        print('Training Epoch: %d' % epoch)
         train_model_in_single_epoch(model, training_loader, optimizer, criterion, device, writer, epoch)
         _, accuracy = validate_model(model, test_loader, criterion, device, writer, epoch)
         if accuracy > best_accuracy:
             best_accuracy = accuracy
             save.as_pt(model, "./models/best.pt")
+        else:
+            save.as_pt(model, f"./models/epoch_{epoch}.pt")
         scheduler.step()  # 更新学习率
 
 
@@ -225,7 +226,7 @@ def train_and_validate(
 
     # 保存模型
     save.as_pt(
-        model,
-        f"./models/{model_creator.__name__}.pt")
+        model=model,
+        save_path=f"./models/{model_creator.__name__}.pt")
 
     return num_classes

@@ -22,17 +22,17 @@ if __name__ == '__main__':
         num_samples=[-1, -1],
 
         learning_rate=0.001,
-        scheduler_step_size=2,
-        scheduler_gamma=0.5,
+        scheduler_step_size=3,
+        scheduler_gamma=0.75,
 
         device=device,
-        num_epochs=1,
+        num_epochs=30,
         writer=writer,
     )
     close_writer(writer)
 
     # 加载最佳模型
-    load_model = model_creator(num_classes=10).to(device)
+    load_model = model_creator(num_classes=21).to(device)
     load.from_model(load_model, f'models/{model_creator.__name__}.pt', device)
 
     # 测试模型
