@@ -87,22 +87,25 @@ def log_model_params(model, input_shape):
     输出模型参数信息
     Args:
         model: 要输出信息的模型
-        input_shape (torch.Size): 输入形状，比如 (1, 3, 224, 224)
+        input_shape (torch.Size | tuple): 输入形状，比如 (1, 3, 224, 224)
     """
     if input_shape is None:
         logger.warning("input cannot be None.")
         exit()
-    elif not isinstance(input_shape, torch.Size):
-        logger.warning("input cannot be not a tensor or a tensor shape.")
+    elif isinstance(input_shape, torch.Size):
+        input_shape = tuple(input_shape)
+    elif not isinstance(input_shape, tuple):
+        logger.warning(f"input (type: {type(input_shape)}) cannot be not a tensor or a tensor shape.")
         exit()
 
     device = assert_on_cuda()
     model = model.to(device)
     summary(model=model,
-            input_size=tuple(input_shape)[1:],  # tuple(input_shape) 是 (1, 3, 224, 224)
+            input_size=input_shape[1:],  # tuple(input_shape) 是 (1, 3, 224, 224)
             # batch_size=input_shape[0],
             device=device.__str__())
 
     x_input = torch.Tensor(*input_shape)        # *input_shape 是 1 3 224 224
     x_input = x_input.to(device)
     print("Input shape: ", x_input.shape)
+    print("Output shape: ", model(x_input).shape)

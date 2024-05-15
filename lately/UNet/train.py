@@ -1,3 +1,7 @@
+from torch import optim
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+
 from utils.tensorboard import *
 
 from model import (UNet, UNetCustom)
@@ -21,7 +25,6 @@ if __name__ == '__main__':
         batch_size=8,
         num_samples=[-1, -1],
 
-        learning_rate=0.001,
         scheduler_step_size=3,
         scheduler_gamma=0.75,
 
@@ -37,3 +40,31 @@ if __name__ == '__main__':
 
     # 测试模型
     # test_model(load_model, x_input, device)
+
+
+def carvana():
+    image_size = (256, 256)
+    train_transform = A.Compose([
+        A.Resize(*image_size),
+        A.Rotate(limit=35, p=1.0),
+        A.HorizontalFlip(p=0.5),
+        A.VerticalFlip(p=0.5),
+        A.Normalize(
+            mean=[0.0, 0.0, 0.0],
+            std=[1.0, 1.0, 1.0],
+            max_pixel_value=255.0
+        ),
+        ToTensorV2(),
+    ])
+
+    val_transform = A.Compose([
+        A.Resize(*image_size),
+        A.Normalize(
+            mean=[0.0, 0.0, 0.0],
+            std=[1.0, 1.0, 1.0],
+            max_pixel_value=255.0
+        ),
+        ToTensorV2(),
+    ])
+
+    # train_loader, val_loader = get_carvana_loaders(

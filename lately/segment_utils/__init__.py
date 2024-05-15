@@ -1,39 +1,13 @@
 import torch
 import numpy as np
-from torch.utils.data import DataLoader, Sampler
-import torchvision
+from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
 from utils.pytorch import *
 from utils.pytorch.segment import *
 
-from lately.segment_utils.datasets import VOCSegmentationDataset
-
-
-def get_transform(channels=3):
-    """
-    获取数据预处理器
-    :return:
-    """
-    if channels == 3:
-        transform = transforms.Compose(
-            [
-                transforms.Resize(256),
-                transforms.CenterCrop(256),
-                transforms.ToTensor(),
-                transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-            ])
-    elif channels == 1:
-        transform = transforms.Compose(
-            [
-                transforms.Resize(256),
-                transforms.CenterCrop(256),
-                transforms.ToTensor()
-            ])
-    else:
-        raise ValueError(f"Unsupported channels: {channels}")
-
-    return transform
+from utils.pytorch.segment.datasets import *
+from utils.pytorch.segment.learning import train_model_in_single_epoch, validate_model
 
 
 def custom_collate(batch):
@@ -136,7 +110,7 @@ def train_and_validate(
 
         optimizer_type='SGD',
         learning_rate=0.001,
-        weight_decay=1e-4,
+        weight_decay=0.0005,
         momentum=0.9,
         criterion_type='CrossEntropyLoss',
         scheduler_step_size=2,

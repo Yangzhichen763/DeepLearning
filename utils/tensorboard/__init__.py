@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore")   # 忽略警告
 
 
 def get_writer(log_dir):
-    log_dir = os.path.join(log_dir, 'logs_tensorboard')
+    log_dir = os.path.join(log_dir, 'logs/tensorboard')
     print(f"Tensorboard logs will be saved to {log_dir}")
     return SummaryWriter(log_dir=log_dir)
 

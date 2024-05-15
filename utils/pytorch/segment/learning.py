@@ -1,11 +1,11 @@
 import math
-from PIL import Image
-import os
-import numpy as np
 from tqdm import tqdm
 
 import torch
 from torch.utils.data import DataLoader
+
+from utils.pytorch.segment import save_label_as_png
+from utils.pytorch.segment.datasets import VOCSegmentationDataset
 
 
 def train_model_in_single_epoch(model, training_loader, optimizer, criterion, device, writer=None, epoch=None):
@@ -23,6 +23,7 @@ def train_model_in_single_epoch(model, training_loader, optimizer, criterion, de
     min_loss = float('inf')
     max_loss = float('-inf')
     total_loss = 0
+
     dataset_size = len(training_loader.dataset)
     dataset_batches = len(training_loader)
     batch_size = math.ceil(dataset_size / dataset_batches)
@@ -32,7 +33,7 @@ def train_model_in_single_epoch(model, training_loader, optimizer, criterion, de
             total=dataset_size,
             unit='image') as pbar:
         pbar.set_description(f"Epoch {epoch} training")
-        for i, (image, ground_true) in enumerate(training_loader):
+        for (i, (image, ground_true)) in enumerate(training_loader):
             image, ground_true = image.to(device), ground_true.to(device)
             optimizer.zero_grad()                       # 清空梯度
             output = model(image)                       # 前向传播，获得输出
@@ -53,6 +54,8 @@ def train_model_in_single_epoch(model, training_loader, optimizer, criterion, de
 
             if writer is not None:
                 writer.add_scalar('./logs/tensorboard/loss', loss.item(), i_current_batch)
+
+        pbar.close()
 
     if epoch is not None:
         print(f"Epoch {epoch} training finished. "
@@ -109,7 +112,7 @@ def validate_model(
     with tqdm(
             total=dataset_size,
             unit='image') as pbar, torch.no_grad():
-        for i, (images, true_masks) in enumerate(test_loader):
+        for (i, (images, true_masks)) in enumerate(test_loader):
             images, true_masks = images.to(device), true_masks.to(device)
             output = model(images)                                                  # 前向传播，获得输出
             loss = criterion(output, true_masks)                                    # 计算损失
@@ -131,8 +134,20 @@ def validate_model(
             pbar.update(batch_size)
 
             if i <= 10:
-                save_mask_as_image(true_masks, "mask", device)
-                save_mask_as_image(output, "output", device)
+                save_label_as_png(
+                    true_masks,
+                    device,
+                    VOCSegmentationDataset.color_map,
+                    dir_path='./logs/targets',
+                    file_name=f"target_{i}")
+                save_label_as_png(
+                    output,
+                    device,
+                    VOCSegmentationDataset.color_map,
+                    dir_path='./logs/outputs',
+                    file_name=f"output_{i}")
+
+        pbar.close()
 
     average_loss = total_loss / dataset_batches
     accuracy = 100. * correct / dataset_batches
@@ -217,31 +232,9 @@ def label_accuracy_score(predictions, ground_trues, num_classes):
 
 
 if __name__ == '__main__':
-    map = np.array([[1, 2, 3], [4, 5, 6]])
-    a = np.array([[1, 0, 1], [0, 1, 1], [1, 0, 0]])
-    b = map[a]
-    print(b)
+    # 测试 save_label_as_image 函数
+    _mask = torch.randint(0, 21, (21, 256, 256))
+    for _i in range(21):
+        _mask[_i, 100:150, 100:150] = _i
+    save_label_as_png(_mask, device='cpu', dir_path='./logs/test', file_name='test')
 
-
-#
-def save_mask_as_image(mask, device, dir_path='./logs/mask_images/', file_name=None, colormap=None):
-    if colormap is None:
-        colormap = torch.mul(torch.tensor([
-            [0, 0, 0], [2, 0, 0], [0, 2, 0], [2, 2, 0], [0, 0, 2],
-            [2, 0, 2], [0, 2, 2], [2, 2, 2], [1, 0, 0], [3, 0, 0],
-            [1, 2, 0], [3, 2, 0], [1, 0, 2], [3, 0, 2], [1, 2, 2],
-            [3, 2, 2], [0, 1, 0], [2, 1, 0], [0, 3, 0], [2, 3, 0],
-            [0, 1, 2]]), 64).to(device)
-
-    output_label = mask.argmax(dim=1)  # [8, 21, 256, 256] -> [8, 1, 256, 256]
-    output_label = torch.squeeze(output_label)  # [8, 1, 256, 256] -> [8, 256, 256]
-    masks_rgb = colormap[output_label]  # [8, 256, 256] -> [8, 256, 256, 3]
-    masks_rgb = masks_rgb.permute(0, 3, 1, 2)  # [8, 256, 256, 3] -> [8, 3, 256, 256]
-    masks_rgb = torch.chunk(masks_rgb, masks_rgb.shape[0], dim=0)
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-    for j, image in enumerate(masks_rgb):
-        image = image.squeeze(dim=0)  # [1, 3, 256, 256] -> [3, 256, 256]
-        image = image.permute(1, 2, 0)  # [3, 256, 256] -> [256, 256, 3]
-        image = Image.fromarray(image.cpu().numpy(), mode='RGB')
-        image.save(os.path.join(dir_path, f"{file_name}{j}.png"))

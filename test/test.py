@@ -7,11 +7,11 @@ from pathlib import Path
 import os
 from PIL import Image
 
-a = torch.randn(3, 256, 256).cpu().permute(1, 2, 0)
-b = a.numpy()
-print(b.shape)
-image = Image.fromarray(b, mode='RGB')
-if not os.path.exists("./output"):
-    os.makedirs("./output")
-image.save(f"./output/1.png")
-print(b.shape)
+a = torch.tensor([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 4]]).squeeze()
+b, c, d = a[[0, 1, 2, 2]], a[[0, 2, 1, 1]], a[[1, 2, 0, 1]]
+e = torch.stack([b, c, d])
+f = e[[0, 2, 1]].permute(1, 2, 0)
+print(f.shape)
+h = torch.flatten(f, start_dim=0, end_dim=1)
+h = torch.unique(h, dim=0)
+print(h)
