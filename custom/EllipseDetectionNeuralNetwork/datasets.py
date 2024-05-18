@@ -34,10 +34,10 @@ class EllipseDetectionDataset(Dataset):
         print(f"EllipseDetectionDataset loaded, {int(len(self.labels) / self.label_length)} labels found.")
 
     def __getitem__(self, index):
-        row = self.labels.values[index * self.label_length: (index + 1) * self.label_length, :]
+        row = self.labels.values[index * self.label_length: (index + 1) * self.label_length, :]  # ndarray<str> [x, 5]
         image_file_name = row[0, 0]
-        rotated_rect = row[:, 2:].astype(np.float32)
-        label = torch.tensor(rotated_rect).permute(1, 0)
+        rotated_rect = row[:, 2:].astype(np.float32)    # ndarray<float> [x, 5] 其中 x = self.label_length
+        label = torch.tensor(rotated_rect)              # tensor [x, 5]
 
         image_path = os.path.join(self.image_dir, f'{image_file_name}.jpg')
         image = Image.open(image_path).convert("L")

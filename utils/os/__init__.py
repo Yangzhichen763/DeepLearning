@@ -13,7 +13,7 @@ def get_root_path():
     return path
 
 
-def get_unique_file_name(dir, file_name, suffix):
+def get_unique_file_name(dir, file_name, suffix, unique=True):
     """
     获取一个唯一的文件名
     Args:
@@ -24,6 +24,12 @@ def get_unique_file_name(dir, file_name, suffix):
     Returns:
 
     """
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+    if not unique:
+        return os.path.join(dir, f"{file_name}.{suffix}")
+
     k = 0
     while True:
         save_file_name = f"{file_name}_{k}.{suffix}"

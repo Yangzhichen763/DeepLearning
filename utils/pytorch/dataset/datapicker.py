@@ -1,5 +1,4 @@
 import torch.utils.data
-from torch import clamp
 from torch.utils.data import Dataset, Subset, random_split
 import numpy as np
 from typing import Sequence, TypeVar
@@ -48,17 +47,22 @@ def pick_random(data, num_samples, dataset_name=None):
 
 # -------------------------- 以下为数据集划分函数 --------------------------
 
-def split_train_test(dataset, test_ratio=0.2):
+def split_train_test(dataset, lengths, random=True):
     """
     将数据集划分为训练集和测试集。
     Args:
         dataset (Dataset): 数据集
-        test_ratio (float): 测试集占比
+        lengths (Sequence[int | float]): 训练集、测试集的比例，如 [0.8, 0.2]
     """
-    # 划分训练集和测试集
-    train_size = int(len(dataset) * (1 - test_ratio))
-    test_size = len(dataset) - train_size
-    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+    # 均等划分训练集和测试集
+    if random:
+        train_dataset, test_dataset = random_split(dataset, lengths)
+    else:
+        lengths /= np.sum(lengths)
+        dataset_size = len(dataset)
+        train_size = int(dataset_size * lengths[0])
+        test_size = dataset_size - train_size
+        train_dataset, test_dataset = Subset(dataset, np.arange(train_size)), Subset(dataset, np.arange(test_size))
     return train_dataset, test_dataset
 
 

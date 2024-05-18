@@ -10,9 +10,64 @@ from custom.EllipseDetectionNeuralNetwork.datasets import EllipseDetectionDatase
 from utils.tensorboard import *
 from utils.pytorch import *
 from utils.pytorch.dataset import *
+from utils.os import *
 
 from model import EllipseDetectionNetwork
 from loss import *
+
+import cv2
+
+
+def save_image(pred, target, target_images, batches):
+    """
+    Args:
+        pred: shape 为 [batch_size, num_pred, 6]
+        target: shape 为 [batch_size, x, 5]
+        target_images: shape 为 [batch_size, 3, x, y]
+        batches:
+    Returns:
+    """
+    def _draw_ellipse(image, box, color, thickness=2):
+        box = box.detach()
+        box = torch.clamp_min(box, 1)
+        box = box.cpu().numpy()
+        box = (box[0:2], box[2:4], box[4])
+        cv2.ellipse(img=image,
+                    box=box,
+                    color=color,
+                    thickness=thickness)
+
+    if pred.dim() == 2:
+        pred = pred.unsqueeze(0)
+
+    num_target = target.shape[-2]
+    image_size = torch.tensor(target_images.shape[-2:], device=pred.device)
+
+    pred = pred.detach()
+    target = target.detach()
+    target_images = target_images.detach().permute(0, 2, 3, 1).cpu().numpy()
+
+    # 如果要绘制原图作为背景，则改为 [(image * 255).astype(np.uint8) for image in target_images]
+    images = [np.zeros_like(image) for image in target_images]
+
+    # 获取椭圆框
+    pred_rr, pred_scores = EllipseLoss.split_pred(pred)
+    pred_rr, _, target_rr = EllipseLoss.get_argmax_pred(pred_rr, pred_scores, target)
+    pred_rr = EllipseLoss.regress_pred_rr(pred_rr, image_size)
+
+    # 绘制椭圆框
+    for i, (prrs, trrs) in enumerate(zip(pred_rr, target_rr)):
+        for j, (prr, trr) in enumerate(zip(prrs, trrs)):
+            _draw_ellipse(images[i], trr, color=(64, 64, 64), thickness=10)
+            _draw_ellipse(images[i], prr, color=(int(255 * (j + 1) / num_target), 0, 255))
+
+        path = get_unique_file_name(
+            f"./logs/checkpoints",
+            f"pred_{batches * batch_size + i}",
+            "jpg",
+            unique=False)
+        cv2.imwrite(path, images[i])
+
 
 
 def train():
@@ -28,13 +83,14 @@ def train():
             unit='image') as pbar:
         for (i, (data, target)) in enumerate(train_loader):
             data, target = data.to(device), target.to(device)
-            optimizer.zero_grad()               # 清空梯度
-            output = model(data)                # 前向传播，获得输出
-            print(output.shape, target.shape)
-            loss = obbox_iou(output, target, iou_type="DIoU")      # 计算损失
-            print(loss.item())
-            loss.backward()                     # 反向传播
-            optimizer.step()                    # 更新参数
+            optimizer.zero_grad()                   # 清空梯度
+            output = model(data)                    # 前向传播，获得输出
+            loss, iou = criterion(output, target)   # 计算损失
+            loss.backward()                         # 反向传播
+            optimizer.step()                        # 更新参数
+
+            # if iou.max() > 0.5:
+            save_image(output, target, data, i)
 
             # 记录损失最小值和最大值以及总损失
             min_loss = min(min_loss, loss.item())
@@ -49,10 +105,11 @@ def train():
                 writer.add_scalar('./logs/tensorboard/loss', loss.item(), i_current_batch)
 
     if epoch is not None:
-        print(f"Epoch {epoch} training finished. "
-              f"Min loss: {min_loss:.6f}, "
-              f"Max loss: {max_loss:.6f}, "
-              f"Avg loss: {total_loss / len(train_loader):.6f}")
+        tqdm.write(
+            f"Epoch {epoch} training finished. "
+            f"Min loss: {min_loss:.6f}, "
+            f"Max loss: {max_loss:.6f}, "
+            f"Avg loss: {total_loss / len(train_loader):.6f}")
 
 
 def validate():
@@ -67,21 +124,20 @@ def validate():
             unit='image') as pbar, torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-            output = model(data)                                                # 前向传播，获得输出
-            loss = criterion(output, target)                                    # 计算损失
-            iou = obbox_iou(output, target, iou_type="GIoU").argmax(dim=1, keepdim=True)                     # 预测类别
+            output = model(data)                   # 前向传播，获得输出
+            loss, iou = criterion(output, target)  # 计算损失
 
             total_loss += loss.item()
-            correct += iou.item()   # 计算正确率
+            correct += iou.mean(dim=-1).sum().item()   # 计算正确率
 
             # 打印测试进度
             pbar.update(batch_size)
 
     average_loss = total_loss / dataset_batches
     accuracy = 100. * correct / dataset_size
-    print(
-        f"\nTest set: Average loss: {average_loss:.4f}, Accuracy: {correct}/{dataset_size} "
-        f"({accuracy:.0f}%)\n")
+    tqdm.write(
+        f"\nTest set: Average loss: {average_loss:.4f}, Accuracy: {correct:.00f}/{dataset_size} "
+        f"({accuracy:.00f}%)\n")
 
     if (writer is not None) & (epoch is not None):
         writer.add_scalar('./logs/tensorboard/loss', average_loss, epoch)
@@ -93,7 +149,7 @@ def validate():
 if __name__ == '__main__':
     # 超参数设置
     batch_size = 8
-    num_epochs = 10
+    num_epochs = 50
     learning_rate = 0.001
     weight_decay = 0.0001
     momentum = 0.9
@@ -108,12 +164,13 @@ if __name__ == '__main__':
     # 加载数据集
     dataset = EllipseDetectionDataset(data_set="1x")
     train_set, val_set = datapicker.split_train_test(dataset, [0.8, 0.2])
-    train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=False, num_workers=4)
     test_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=4)
 
     # 定义模型
+    image_shape = (1, 256, 256)
     model = EllipseDetectionNetwork(
-        input_shape=(1, 256, 256),
+        input_shape=image_shape,
         dim_features=[16, 32, 64, 128, 256],
         num_layers_in_features=[2, 2, 3, 3, 2],
         dim_classifiers=[64, 32],
@@ -122,7 +179,7 @@ if __name__ == '__main__':
     model.to(device)
 
     # 定义损失函数和优化器
-    criterion = nn.CrossEntropyLoss()
+    criterion = EllipseLoss(image_shape)
     optimizer = optim.Adam(
         model.parameters(),
         lr=learning_rate)

@@ -29,7 +29,7 @@ def train_model_in_single_epoch(model, training_loader, optimizer, criterion, de
     with tqdm(
             total=dataset_size,
             unit='image') as pbar:
-        for i, (data, target) in enumerate(training_loader):
+        for (i, (data, target)) in enumerate(training_loader):
             data, target = data.to(device), target.to(device)
             optimizer.zero_grad()                   # 清空梯度
             output = model(data)                    # 前向传播，获得输出
@@ -50,10 +50,11 @@ def train_model_in_single_epoch(model, training_loader, optimizer, criterion, de
                 writer.add_scalar('./logs/tensorboard/loss', loss.item(), i_current_batch)
 
     if epoch is not None:
-        print(f"Epoch {epoch} training finished. "
-              f"Min loss: {min_loss:.6f}, "
-              f"Max loss: {max_loss:.6f}, "
-              f"Avg loss: {total_loss / len(training_loader):.6f}")
+        tqdm.write(
+            f"Epoch {epoch} training finished. "
+            f"Min loss: {min_loss:.6f}, "
+            f"Max loss: {max_loss:.6f}, "
+            f"Avg loss: {total_loss / len(training_loader):.6f}")
     # 在训练集上，如果最大最小损失相差太大，说明学习率过大
     # 在训练集上，如果平均损失越大，说明模型欠拟合
     # 1. 扩大训练集规模
@@ -98,7 +99,7 @@ def validate_model(model, test_loader, criterion, device, writer=None, epoch=Non
 
     average_loss = total_loss / dataset_batches
     accuracy = 100. * correct / dataset_size
-    print(
+    tqdm.write(
         f"\nTest set: Average loss: {average_loss:.4f}, Accuracy: {correct}/{dataset_size} "
         f"({accuracy:.0f}%)\n")
     # 在测试集上，如果平均损失越大，说明模型过拟合

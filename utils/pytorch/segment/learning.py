@@ -58,10 +58,11 @@ def train_model_in_single_epoch(model, training_loader, optimizer, criterion, de
         pbar.close()
 
     if epoch is not None:
-        print(f"Epoch {epoch} training finished. "
-              f"Min loss: {min_loss:.6f}, "
-              f"Max loss: {max_loss:.6f}, "
-              f"Avg loss: {total_loss / dataset_batches:.6f}")
+        tqdm.write(
+            f"Epoch {epoch} training finished. "
+            f"Min loss: {min_loss:.6f}, "
+            f"Max loss: {max_loss:.6f}, "
+            f"Avg loss: {total_loss / dataset_batches:.6f}")
     # 在训练集上，如果最大最小损失相差太大，说明学习率过大
     # 在训练集上，如果平均损失越大，说明模型欠拟合
     # 1. 扩大训练集规模
@@ -151,7 +152,7 @@ def validate_model(
 
     average_loss = total_loss / dataset_batches
     accuracy = 100. * correct / dataset_batches
-    print(
+    tqdm.write(
         f"\nTest set: Average loss: {average_loss:.4f}, Accuracy: {int(correct * batch_size)}/{dataset_size} "
         f"({accuracy:.0f}%)\n")
     # 在测试集上，如果平均损失越大，说明模型过拟合

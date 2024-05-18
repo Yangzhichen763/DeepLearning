@@ -69,8 +69,8 @@ class EllipseDetectionNetwork(nn.Module):
         self.classifiers = nn.Sequential(*classifiers)
 
         self.outputs = []
-        # 如果 dim_output = 5，则输出为 x, y, w, h, angle
-        for i in range(dim_output):
+        # 如果 dim_output = 5，则输出为 x, y, w, h, angle, score
+        for i in range(dim_output + 1):
             self.outputs.append(
                 nn.Linear(
                     in_features=dim_classifiers[-1],
@@ -87,7 +87,7 @@ class EllipseDetectionNetwork(nn.Module):
         y = []
         for output in self.outputs:
             y.append(output(x))
-        x = torch.stack(y, dim=1)
+        x = torch.stack(y, dim=1).permute(0, 2, 1)
         return x
 
 

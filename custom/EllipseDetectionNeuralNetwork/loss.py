@@ -6,27 +6,341 @@ import numpy as np
 import math
 
 
-class EllipseLoss(nn.Module):
+class AABBboxLoss(nn.Module):
     def __init__(self):
-        super(EllipseLoss, self).__init__()
-        self.loss_func = nn.CrossEntropyLoss()
+        super().__init__()
 
-    def forward(self, pred, target):
-        # pred: [batch_size, 5, 64]
-        # target: [batch_size, 5, 1]
+    def forward(self, pred_bboxes, target_bboxes, target_scores, iou_type="DIoU"):
+        """
+        计算 AABB 边界框的交并比损失值
+        Args:
+            pred_bboxes: 预测的边界框。可以取 shape=[N, 4]，或者 shape=[4]
+            target_bboxes: 真实的边界框。可以取 shape=[N, 4]，或者 shape=[4]
+            target_scores: 真实的边界框的置信度。可以取 shape=[N, 1], shape=[N, x]（x可以取任意值），或者 shape=[]（标量）
+            iou_type:
+        Returns:
+            loss: 交并比损失值，为标量
+            iou: 边界框的交并比，shape=[N]
+        """
+        weight, weight_sum = self.check_target_scores(target_scores, pred_bboxes.device)
+
+        iou = aabbox_iou(pred_bboxes, target_bboxes, iou_type=iou_type)
+        loss_iou = ((1.0 - iou) * weight).sum() / weight_sum
+
+        return loss_iou, iou.T.squeeze(dim=0)
+
+    @staticmethod
+    def check_target_scores(target_scores, device):
+        weight = None
+        weight_sum = 1.0
+        if isinstance(target_scores, float) or isinstance(target_scores, int):
+            weight = torch.tensor(target_scores, device=device)
+            weight_sum = weight
+        elif isinstance(target_scores, torch.Tensor):
+            if target_scores.dim() == 0:
+                weight = target_scores
+            elif target_scores.dim() == 1:
+                weight = target_scores.unsqueeze(dim=-1)
+            elif target_scores.dim() == 2:
+                weight = target_scores.sum(dim=-1).unsqueeze(dim=-1)
+            else:
+                raise ValueError("target_scores a tensor must be with shape=[N, 1], shape=[N, x] or shape=[], "
+                                 f"instead of {target_scores.shape} with content {target_scores}")
+            weight_sum = torch.max(weight.sum(), 1)
+        if weight is None:
+            raise ValueError("target_scores must be a tensor or a float, "
+                             f"instead of {target_scores} with type {type(target_scores)}")
+
+        return weight, weight_sum
+
+
+class OBBLoss(AABBboxLoss):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, pred_bboxes, target_bboxes, target_scores, iou_type="IoU"):
+        """
+        计算 AABB 边界框的交并比损失值
+        Args:
+            pred_bboxes: 预测的边界框。可以取 shape=[N, 5]，或者 shape=[5]
+            target_bboxes: 真实的边界框。可以取 shape=[N, 5]，或者 shape=[5]
+            target_scores: 真实的边界框的置信度。可以取 shape=[N, 1], shape=[N, x]（x可以取任意值），或者 shape=[]（标量）
+            iou_type:
+        Returns:
+            loss: 交并比损失值，为标量
+            iou: 边界框的交并比，shape=[N]
+        """
+        weight, weight_sum = self.check_target_scores(target_scores, pred_bboxes.device)
+
+        iou = obbox_iou(pred_bboxes, target_bboxes, iou_type=iou_type)  # [N, 1]
+        loss_iou = ((1.0 - iou) * weight).sum() / weight_sum
+
+        return loss_iou, iou.T.squeeze(dim=0)
+
+
+class EllipseLoss(OBBLoss):
+    def __init__(self, image_size):
+        super(EllipseLoss, self).__init__()
+        self.pred_loss_func = OBBLoss()
+        self.score_loss_func = nn.CrossEntropyLoss()
+        self.image_size = image_size
+
+    def __call__(self, pred, target):
+        """
+        Args:
+            pred (torch.Tensor): 预测的边界框。可以取 shape=[batch_size, 64, 6]
+            target (torch.Tensor): 目标的边界框。可以取 shape=[batch_size, x, 5]
+        Returns:
+            loss_iou: 所有 batch 的交并比损失值的平均值，为标量
+            iou: 每个 batch 边界框的交并比，shape=[batch_size]
+        """
         # 0,1 是椭圆中心坐标
         # 2,3 是椭圆长短轴长度
         # 4   是椭圆旋转角度
+        # pred 中的 5 是预测分数
+        device = pred.device
+        batch_size = pred.shape[0]
+        pred_rr, pred_scores = self.split_pred(pred)
+        pred_rr, pred_scores, target_rr = self.get_argmax_pred(pred_rr, pred_scores, target)
+        pred_rr = self.regress_pred_rr(pred_rr, self.image_size)
 
-        iou = obbox_iou(pred, target, iou_type='GIoU').squeeze()
-        loss_box = (1.0 - iou).mean()
-        print(loss_box)
+        losses_iou, losses_score, ious = [], [], []
+        for i in range(batch_size):
+            loss_iou, iou = self.pred_loss_func(pred_rr[i], target_rr[i], 1)
+            _pred = torch.cat(
+                tensors=[
+                    iou.unsqueeze(dim=-1),
+                    self.regress_pred_scores(pred_scores[i])
+                ],
+                dim=-1)
+            _target = torch.zeros(iou.shape[0], dtype=torch.long, device=device)
+            loss_score = self.score_loss_func(_pred, _target)
 
-        # iou
-        loss = self.loss_func(iou, torch.zeros_like(iou).long())
-        return loss
+            losses_iou.append(loss_iou)
+            ious.append(iou)
+            losses_score.append(loss_score)
+
+        ious = torch.stack(ious)
+        if ious.dim() == 2:
+            ious, _ = ious.max(dim=-1)
+
+        loss = torch.stack(losses_iou) + torch.stack(losses_score)
+        loss = loss.mean()
+        return loss, ious
+
+    @staticmethod
+    def split_pred(pred):
+        """
+        将 pred 拆分为 rotated_rect 和 score
+        Args:
+            pred: 预测得到的边界框，shape=[batch_size, num_preds, 6]
+        Returns:
+            pred_rotated_rects: 预测得到的边界框，shape=[batch_size, num_preds, 5]
+            pred_scores: 预测得到的分数，shape=[batch_size, num_preds, 1]
+        """
+        pred_rotated_rects, pred_scores = pred.split(split_size=(5, 1), dim=-1)
+        return pred_rotated_rects, pred_scores
+
+    @staticmethod
+    def get_argmax_pred(pred_rr, pred_scores, target_rr):
+        """
+        [batch_size, num_preds, 6] -> [batch_size, k, 5]，其中 k 对应着 target 中边框的数量
+        Args:
+            pred_rr: 预测得到的边界框，shape=[batch_size, num_preds, 5]
+            pred_scores: 预测得到的分数，shape=[batch_size, num_preds, 1]
+            target_rr: 真实的边界框，shape=[batch_size, x, 5]
+        Returns:
+            pred_rr: 分数前 k 高的预测边界框
+            pred_scores: 分数前 k 高的预测分数
+            其中 k 对应着 target 中边框的数量
+        """
+        num_targets, num_preds = target_rr.shape[-2], pred_rr.shape[-2]
+
+        # 获取 topk 最高分的预测边界框
+        if num_targets < num_preds:
+            pred_scores, top_indices = pred_scores.topk(k=num_targets, dim=-2)
+            pred_rr = torch.stack(
+                [
+                    pred_rr[..., i, index.squeeze(dim=-1), :]
+                    for i, index in enumerate(top_indices)
+                ])
+        # print("pred:", pred.shape, "target:",  target.shape, "topk:", pred_rr.shape)
+
+        return pred_rr, pred_scores, target_rr
+
+    @staticmethod
+    def regress_pred_rr(rotated_rect, image_size):
+        if isinstance(image_size, (list, tuple)):
+            image_size = torch.tensor(image_size, device=rotated_rect.device)
+        elif isinstance(image_size, torch.Tensor):
+            image_size = image_size.detach().to(rotated_rect.device)
+        else:
+            raise ValueError("image_size must be a list, tuple or tensor")
+
+        if image_size.shape[-1] >= 2:
+            image_size = image_size[-2:]
+        if image_size.dim() > 1 or image_size.shape[-1] != 2:
+            raise ValueError(f"image_size must be a tensor with shape=[2], "
+                             f"instead of {image_size.shape} with content {image_size}")
+
+        # 回归到原图坐标系
+        center, size, angle = rotated_rect.split(split_size=(2, 2, 1), dim=-1)
+
+        center = center.sigmoid() * image_size
+        size = (size.sigmoid() ** 2 * image_size).clamp_min(1.0)
+        angle = torch.sin(angle * math.pi / 180).asin() * 180 / math.pi
+        rotated_rect = torch.cat([center, size, angle], dim=-1)
+        return rotated_rect
+
+    @staticmethod
+    def regress_pred_scores(pred_scores):
+        scores = pred_scores.sigmoid()
+        return scores
 
 
+# --------- 以下代码来自 https://github.com/ultralytics/ultralytics ----------
+def box_iou(box1, box2, eps=1e-7):
+    """
+    Calculate intersection-over-union (IoU) of boxes. Both sets of boxes are expected to be in (x1, y1, x2, y2) format.
+    Based on https://github.com/pytorch/vision/blob/master/torchvision/ops/boxes.py
+
+    Args:
+        box1 (torch.Tensor): A tensor of shape (N, 4) representing N bounding boxes.
+        box2 (torch.Tensor): A tensor of shape (M, 4) representing M bounding boxes.
+        eps (float, optional): A small value to avoid division by zero. Defaults to 1e-7.
+
+    Returns:
+        (torch.Tensor): An NxM tensor containing the pairwise IoU values for every element in box1 and box2.
+    """
+
+    # inter(N,M) = (rb(N,M,2) - lt(N,M,2)).clamp(0).prod(2)
+    (a1, a2), (b1, b2) = box1.unsqueeze(1).chunk(2, 2), box2.unsqueeze(0).chunk(2, 2)
+    inter = (torch.min(a2, b2) - torch.max(a1, b1)).clamp_(0).prod(2)
+
+    # IoU = inter / (area1 + area2 - inter)
+    return inter / ((a2 - a1).prod(2) + (b2 - b1).prod(2) - inter + eps)
+
+
+def aabbox_iou(box1, box2, xywh=True, iou_type="IoU", eps=1e-7):
+    """
+    Calculate Intersection over Union (IoU) of box1(1, 4) to box2(n, 4).
+
+    Args:
+        box1 (torch.Tensor): A tensor representing a single bounding box with shape (1, 4).
+        box2 (torch.Tensor): A tensor representing n bounding boxes with shape (n, 4).
+        xywh (bool, optional): If True, input boxes are in (x, y, w, h) format. If False, input boxes are in
+                               (x1, y1, x2, y2) format. Defaults to True.
+        GIoU (bool, optional): If True, calculate Generalized IoU. Defaults to False.
+        DIoU (bool, optional): If True, calculate Distance IoU. Defaults to False.
+        CIoU (bool, optional): If True, calculate Complete IoU. Defaults to False.
+        eps (float, optional): A small value to avoid division by zero. Defaults to 1e-7.
+
+    Returns:
+        (torch.Tensor): IoU, GIoU, DIoU, or CIoU values depending on the specified flags.
+    """
+
+    # Get the coordinates of bounding boxes
+    if xywh:  # transform from xywh to xyxy
+        (x1, y1, w1, h1), (x2, y2, w2, h2) = box1.chunk(4, -1), box2.chunk(4, -1)
+        w1_, h1_, w2_, h2_ = w1 / 2, h1 / 2, w2 / 2, h2 / 2
+        b1_x1, b1_x2, b1_y1, b1_y2 = x1 - w1_, x1 + w1_, y1 - h1_, y1 + h1_
+        b2_x1, b2_x2, b2_y1, b2_y2 = x2 - w2_, x2 + w2_, y2 - h2_, y2 + h2_
+    else:  # x1, y1, x2, y2 = box1
+        b1_x1, b1_y1, b1_x2, b1_y2 = box1.chunk(4, -1)
+        b2_x1, b2_y1, b2_x2, b2_y2 = box2.chunk(4, -1)
+        w1, h1 = b1_x2 - b1_x1, b1_y2 - b1_y1 + eps
+        w2, h2 = b2_x2 - b2_x1, b2_y2 - b2_y1 + eps
+
+    # Intersection area
+    inter = (b1_x2.minimum(b2_x2) - b1_x1.maximum(b2_x1)).clamp_(0) * (
+        b1_y2.minimum(b2_y2) - b1_y1.maximum(b2_y1)
+    ).clamp_(0)
+
+    # Union Area
+    union = w1 * h1 + w2 * h2 - inter + eps
+
+    # IoU
+    iou = inter / union
+    if iou_type in ["CIou", "DIoU", "GIoU"]:
+        cw = b1_x2.maximum(b2_x2) - b1_x1.minimum(b2_x1)  # convex (smallest enclosing box) width
+        ch = b1_y2.maximum(b2_y2) - b1_y1.minimum(b2_y1)  # convex height
+        if iou_type in ["CIou", "DIoU"]:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
+            c2 = cw.pow(2) + ch.pow(2) + eps  # convex diagonal squared
+            rho2 = (
+                (b2_x1 + b2_x2 - b1_x1 - b1_x2).pow(2) + (b2_y1 + b2_y2 - b1_y1 - b1_y2).pow(2)
+            ) / 4  # center dist**2
+            if iou_type in ["CIou"]:  # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
+                v = (4 / math.pi**2) * ((w2 / h2).atan() - (w1 / h1).atan()).pow(2)
+                with torch.no_grad():
+                    alpha = v / (v - iou + (1 + eps))
+                return iou - (rho2 / c2 + v * alpha)  # CIoU
+            return iou - rho2 / c2  # DIoU
+        c_area = cw * ch + eps  # convex area
+        return iou - (c_area - union) / c_area  # GIoU https://arxiv.org/pdf/1902.09630.pdf
+    return iou  # IoU
+
+
+def obbox_iou(obb1, obb2, iou_type="IoU", eps=1e-7):
+    """
+    Calculate the prob IoU between oriented bounding boxes, https://arxiv.org/pdf/2106.06072v1.pdf.
+
+    Args:
+        obb1 (torch.Tensor): A tensor of shape (N, 5) representing ground truth obbs, with xywhr format.
+        obb2 (torch.Tensor): A tensor of shape (N, 5) representing predicted obbs, with xywhr format.
+        eps (float, optional): A small value to avoid division by zero. Defaults to 1e-7.
+
+    Returns:
+        (torch.Tensor): A tensor of shape (N, ) representing obb similarities.
+    """
+    x1, y1 = obb1[..., :2].split(1, dim=-1)
+    x2, y2 = obb2[..., :2].split(1, dim=-1)
+    a1, b1, c1 = _get_covariance_matrix(obb1)
+    a2, b2, c2 = _get_covariance_matrix(obb2)
+
+    t1 = (
+        ((a1 + a2) * (y1 - y2).pow(2) + (b1 + b2) * (x1 - x2).pow(2)) / ((a1 + a2) * (b1 + b2) - (c1 + c2).pow(2) + eps)
+    ) * 0.25
+    t2 = (((c1 + c2) * (x2 - x1) * (y1 - y2)) / ((a1 + a2) * (b1 + b2) - (c1 + c2).pow(2) + eps)) * 0.5
+    t3 = (
+        ((a1 + a2) * (b1 + b2) - (c1 + c2).pow(2))
+        / (4 * ((a1 * b1 - c1.pow(2)).clamp_(0) * (a2 * b2 - c2.pow(2)).clamp_(0)).sqrt() + eps)
+        + eps
+    ).log() * 0.5
+    bd = (t1 + t2 + t3).clamp(eps, 100.0)
+    hd = (1.0 - (-bd).exp() + eps).sqrt()
+    iou = 1 - hd
+    if iou_type in ["CIoU"]:  # only include the wh aspect ratio part
+        w1, h1 = obb1[..., 2:4].split(1, dim=-1)
+        w2, h2 = obb2[..., 2:4].split(1, dim=-1)
+        v = (4 / math.pi**2) * ((w2 / h2).atan() - (w1 / h1).atan()).pow(2)
+        with torch.no_grad():
+            alpha = v / (v - iou + (1 + eps))
+        return iou - v * alpha  # CIoU
+    return iou
+
+
+def _get_covariance_matrix(boxes):
+    """
+    Generating covariance matrix from obbs.
+
+    Args:
+        boxes (torch.Tensor): A tensor of shape (N, 5) representing rotated bounding boxes, with xywhr format.
+
+    Returns:
+        (torch.Tensor): Covariance metrixs corresponding to original rotated bounding boxes.
+    """
+    # Gaussian bounding boxes, ignore the center points (the first two columns) because they are not needed here.
+    gbbs = torch.cat((boxes[:, 2:4].pow(2) / 12, boxes[:, 4:]), dim=-1)
+    a, b, c = gbbs.split(1, dim=-1)
+    cos = c.cos()
+    sin = c.sin()
+    cos2 = cos.pow(2)
+    sin2 = sin.pow(2)
+    return a * cos2 + b * sin2, a * sin2 + b * cos2, (a - b) * cos * sin
+# --------- 以上代码来自 https://github.com/ultralytics/ultralytics ----------
+
+
+# --------------------------- AABB ---------------------------
 
 def AABB_iou(box_1, box_2, box_minmax=False):
     boxes = torch.tensor([box_1, box_2]).permute(1, 0)
@@ -115,7 +429,7 @@ def distance_AABB_iou(bboxes1, bboxes2):
     return distance_iou
 
 
-# --------------------------- RotatedRect ---------------------------
+# --------------------------- OBB ---------------------------
 
 def _check_corners(box_1, box_2):
     """
@@ -175,9 +489,11 @@ def rotated_rect_to_corners(rotated_rect):
 
     if rotated_rect.dim() == 1:
         rotated_rect = rotated_rect.unsqueeze(0)
+    elif rotated_rect.dim() == 3 and rotated_rect.shape[-1] == 5:
+        rotated_rect = rotated_rect.flatten(start_dim=0, end_dim=-2)
 
-    if rotated_rect.dim() != 1 and rotated_rect.dim() != 2:
-        raise ValueError("rotated_rect should be a tensor with 1 or 2 dimensions, "
+    if rotated_rect.dim() not in [1, 2, 3]:
+        raise ValueError("rotated_rect should be a tensor with 1, 2 or 3 dimensions, "
                          f"instead of dims={rotated_rect.dim()}, shape={rotated_rect.shape}")
 
     num_rect = rotated_rect.shape[0]
@@ -436,7 +752,7 @@ def distance_OBB_iou_batch(rotated_rects_ref, rotated_rects_obj):
     return torch.tensor(ious).view(ref_batch_size, obj_batch_size)
 
 
-def obbox_iou(pred_boxes, target_boxes, iou_type='DIoU'):
+def _obbox_iou(pred_boxes, target_boxes, iou_type='DIoU'):
     if iou_type == 'IoU':
         return OBB_iou_batch(pred_boxes, target_boxes)
     elif iou_type == 'DIoU':
@@ -447,13 +763,41 @@ def obbox_iou(pred_boxes, target_boxes, iou_type='DIoU'):
 
 
 if __name__ == '__main__':
+    a = torch.randn(8, 64, 6)
+    b = torch.randn(8, 2, 5)
+    loss, iou = EllipseLoss((256, 256))(a, b)
+    print(loss)
+    exit()
     # 计算两个旋转矩形的IOU
+    rotated_rect_with_scores_0 = torch.tensor([5, 5, 5, 5, 0, 1.2])
+    rotated_rect_with_scores_1 = torch.tensor([5, 5, 10, 10, 0, 1.2])
+    rotated_rect_with_scores_2 = torch.tensor([0, 0, 10, 10, 60 * math.pi / 180, 1.2])
+    rotated_rect_with_scores_3 = torch.tensor([10, 10, 10, 10, 45 * math.pi / 180, 1.2])
+    rotated_rect_with_scores_4 = torch.tensor([10, 10, 10, 10, 15 * math.pi / 180, 1.2])
+    rotated_rect_with_scores_5 = torch.tensor([10, 10, 10, 10, 30 * math.pi / 180, 1.2])
+
     rotated_rect_0 = torch.tensor([5, 5, 5, 5, 0])
     rotated_rect_1 = torch.tensor([5, 5, 10, 10, 0])
     rotated_rect_2 = torch.tensor([0, 0, 10, 10, 60 * math.pi / 180])
     rotated_rect_3 = torch.tensor([10, 10, 10, 10, 45 * math.pi / 180])
     rotated_rect_4 = torch.tensor([10, 10, 10, 10, 15 * math.pi / 180])
-    # points = rotated_rect_to_corners(torch.stack([rotated_rect_1, rotated_rect_2, rotated_rect_3]))
-    print(distance_OBB_iou_batch(
-        torch.stack([rotated_rect_0, rotated_rect_1]),
-        torch.stack([rotated_rect_2, rotated_rect_3, rotated_rect_4])))
+    rotated_rect_5 = torch.tensor([10, 10, 10, 10, 30 * math.pi / 180])
+
+    rotated_rect_pred = torch.stack([
+        rotated_rect_with_scores_0,
+        rotated_rect_with_scores_1,
+        rotated_rect_with_scores_2,
+        rotated_rect_with_scores_3,
+        rotated_rect_with_scores_4,
+        rotated_rect_with_scores_5]).repeat(4, 1, 1)
+    rotated_rect_target = torch.stack([
+        rotated_rect_0,
+        rotated_rect_1,
+        rotated_rect_2,
+        rotated_rect_3,
+        rotated_rect_4,
+        rotated_rect_5]).repeat(4, 1, 1)
+    print(rotated_rect_pred.shape, rotated_rect_target.shape)
+    _loss_func = EllipseLoss()
+    _losses, _ious = _loss_func(rotated_rect_pred, rotated_rect_target)
+    print(_losses)
