@@ -11,8 +11,8 @@ import math
 
 from custom.EllipseDetectionNeuralNetwork.loss import EllipseLoss
 
-a = torch.tensor([[[1, 2, 3], [4, 5, 6], [7, 8, 9]]])
-index = torch.tensor([[[0, 1, 2], [1, 0, 1], [2, 2, 0]]])
-b = torch.zeros_like(a)
-b.scatter_(1, index, a)
-print(b)
+loss_func = nn.CrossEntropyLoss()
+pre = torch.tensor([0.8, 0.5, 0.2, 0.5], dtype=torch.float)
+tgt = torch.tensor([1, 0, 0, 0], dtype=torch.float)
+loss = loss_func(pre, tgt)
+print(loss)

@@ -98,10 +98,10 @@ def validate_model(model, test_loader, criterion, device, writer=None, epoch=Non
             pbar.update(batch_size)
 
     average_loss = total_loss / dataset_batches
-    accuracy = 100. * correct / dataset_size
+    accuracy = correct / dataset_size
     tqdm.write(
         f"\nTest set: Average loss: {average_loss:.4f}, Accuracy: {correct}/{dataset_size} "
-        f"({accuracy:.0f}%)\n")
+        f"({accuracy * 100:.0f}%)")
     # 在测试集上，如果平均损失越大，说明模型过拟合
     # 1. 寻找更多数据
     # 2. 正则化

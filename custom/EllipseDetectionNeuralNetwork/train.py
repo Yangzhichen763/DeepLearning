@@ -1,9 +1,8 @@
-import math
-
 import torch
-import torch.nn as nn
+
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from torchvision import transforms
 from tqdm import tqdm
 
 from custom.EllipseDetectionNeuralNetwork.datasets import EllipseDetectionDataset
@@ -18,13 +17,14 @@ from loss import *
 import cv2
 
 
-def save_image(pred, target, target_images, batches):
+def save_image(pred, target, target_images, batches, ioubs=None):
     """
     Args:
-        pred: shape 为 [batch_size, num_pred, 6]
-        target: shape 为 [batch_size, x, 5]
-        target_images: shape 为 [batch_size, 3, x, y]
+        pred: shape 为 [B, x, 5]
+        target: shape 为 [B, x, 5]
+        target_images: shape 为 [B, 1, H, W]
         batches:
+        ioubs: shape 为 [B, N, x]
     Returns:
     """
     def _draw_ellipse(image, box, color, thickness=2):
@@ -37,29 +37,30 @@ def save_image(pred, target, target_images, batches):
                     color=color,
                     thickness=thickness)
 
-    if pred.dim() == 2:
-        pred = pred.unsqueeze(0)
-
     num_target = target.shape[-2]
-    image_size = torch.tensor(target_images.shape[-2:], device=pred.device)
 
     pred = pred.detach()
     target = target.detach()
     target_images = target_images.detach().permute(0, 2, 3, 1).cpu().numpy()
 
+    if ioubs is None:
+        ioubs = torch.zeros((batch_size, num_target), dtype=torch.float32, device=device)
+    else:
+        ioubs, _ = ioubs.detach().max(dim=-1)
+
     # 如果要绘制原图作为背景，则改为 [(image * 255).astype(np.uint8) for image in target_images]
     images = [np.zeros_like(image) for image in target_images]
 
-    # 获取椭圆框
-    pred_rr, pred_scores = EllipseLoss.split_pred(pred)
-    pred_rr, _, target_rr = EllipseLoss.get_argmax_pred(pred_rr, pred_scores, target)
-    pred_rr = EllipseLoss.regress_pred_rr(pred_rr, image_size)
-
     # 绘制椭圆框
-    for i, (prrs, trrs) in enumerate(zip(pred_rr, target_rr)):
-        for j, (prr, trr) in enumerate(zip(prrs, trrs)):
-            _draw_ellipse(images[i], trr, color=(64, 64, 64), thickness=10)
-            _draw_ellipse(images[i], prr, color=(int(255 * (j + 1) / num_target), 0, 255))
+    for i, (prrs, trrs, ious) in enumerate(zip(pred, target, ioubs)):
+        for trr in trrs:
+            _draw_ellipse(images[i], trr,
+                          color=(64, 64, 64),
+                          thickness=12)
+        for j, (prr, iou) in enumerate(zip(prrs, ious)):
+            _draw_ellipse(images[i], prr,
+                          color=(255, 255, 255),
+                          thickness=round(iou.item() * 10))
 
         path = get_unique_file_name(
             f"./logs/checkpoints",
@@ -67,7 +68,6 @@ def save_image(pred, target, target_images, batches):
             "jpg",
             unique=False)
         cv2.imwrite(path, images[i])
-
 
 
 def train():
@@ -81,16 +81,16 @@ def train():
     with tqdm(
             total=dataset_size,
             unit='image') as pbar:
-        for (i, (data, target)) in enumerate(train_loader):
-            data, target = data.to(device), target.to(device)
-            optimizer.zero_grad()                   # 清空梯度
-            output = model(data)                    # 前向传播，获得输出
-            loss, iou = criterion(output, target)   # 计算损失
-            loss.backward()                         # 反向传播
-            optimizer.step()                        # 更新参数
+        for (i, (images, target)) in enumerate(train_loader):
+            images, target = images.to(device), target.to(device)
+            optimizer.zero_grad()                           # 清空梯度
+            output = model(images)                          # 前向传播，获得输出
+            loss, iou, pred = criterion(output, target)     # 计算损失
+            loss.backward()                                 # 反向传播
+            optimizer.step()                                # 更新参数
 
-            # if iou.max() > 0.5:
-            save_image(output, target, data, i)
+            # if epoch >= 5:
+            save_image(pred, target, images, i, iou)
 
             # 记录损失最小值和最大值以及总损失
             min_loss = min(min_loss, loss.item())
@@ -99,6 +99,7 @@ def train():
 
             # 打印训练进度
             i_current_batch = i + 1
+            pbar.set_postfix(loss=loss.item())
             pbar.update(batch_size)
 
             if writer is not None:
@@ -124,20 +125,21 @@ def validate():
             unit='image') as pbar, torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-            output = model(data)                   # 前向传播，获得输出
-            loss, iou = criterion(output, target)  # 计算损失
+            output = model(data)                            # 前向传播，获得输出
+            loss, iou, _ = criterion(output, target)        # 计算损失
 
             total_loss += loss.item()
-            correct += iou.mean(dim=-1).sum().item()   # 计算正确率
+            correct += iou.mean(dim=-1).mean(-1).sum().item()        # 计算正确率
 
             # 打印测试进度
+            pbar.set_postfix(loss=loss.item())
             pbar.update(batch_size)
 
     average_loss = total_loss / dataset_batches
     accuracy = 100. * correct / dataset_size
     tqdm.write(
         f"\nTest set: Average loss: {average_loss:.4f}, Accuracy: {correct:.00f}/{dataset_size} "
-        f"({accuracy:.00f}%)\n")
+        f"({accuracy:.00f}%)")
 
     if (writer is not None) & (epoch is not None):
         writer.add_scalar('./logs/tensorboard/loss', average_loss, epoch)
@@ -150,11 +152,18 @@ if __name__ == '__main__':
     # 超参数设置
     batch_size = 8
     num_epochs = 50
-    learning_rate = 0.001
+    learning_rate = 1e-5
     weight_decay = 0.0001
     momentum = 0.9
     scheduler_step_size = 2
     scheduler_gamma = 0.5
+
+    # _pred = torch.randn(batch_size, 64, 5) * 8
+    # _target = EllipseLoss.regress_rr(torch.randn(batch_size, 2, 5) * 8, (256, 256))
+    # _target_image = torch.zeros((batch_size, 1, 256, 256))
+    # _loss, _iou, _pred = EllipseLoss((256, 256))(_pred, _target)
+    # save_image(_pred, _target, _target_image, 0, _iou)
+    # exit()
 
     # 部署 GPU 设备
     device = assert_on_cuda()

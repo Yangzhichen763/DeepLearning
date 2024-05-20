@@ -1,10 +1,11 @@
-
+import numpy as np
 import torch
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, Dataset
 from torchvision.io import read_image
 from PIL import Image
+import albumentations as A
 
 from utils.os import *
 import os.path
@@ -104,11 +105,14 @@ class CarvanaDataset(Dataset):
             image_dir_name="images",
             mask_dir_name="masks",
             transform_image=None,
-            transform_label=None):
+            transform_label=None,
+            transform=None):
         root = os.path.join(get_root_path(), 'datas', 'Carvana', 'train')
         root = os.path.relpath(root)
         self.image_dir = os.path.join(root, image_dir_name)
         self.mask_dir = os.path.join(root, mask_dir_name)
+
+        self.images = os.listdir(self.image_dir)
 
         if transform_image is None:
             transform_image = transforms.ToTensor()
@@ -116,34 +120,36 @@ class CarvanaDataset(Dataset):
             transform_label = transforms.ToTensor()
         self.transform_image = transform_image
         self.transform_label = transform_label
-        self.images = os.listdir(self.image_dir)
+        self.transform = transform
 
     def __len__(self):
         return len(self.images)
 
     def __getitem__(self, index):
         """
-
         Args:
             index:
-
         Returns:
-
         """
         img_path = os.path.join(self.image_dir, self.images[index])
-        mask_path = os.path.join(self.mask_dir, self.images[index].replace('.jpg', '.png'))
+        mask_path = os.path.join(self.mask_dir, self.images[index].replace('.jpg', '_mask.gif'))
 
         image = Image.open(img_path).convert("RGB")
         mask = Image.open(mask_path).convert("L")
 
-        image = self.transform_image(image)
-        mask = self.transform_label(mask)
+        if self.transform is not None:
+            if isinstance(self.transform, A.Compose):
+                augmentation = self.transform(image=np.array(image), mask=np.array(mask))
+                image = augmentation['image']
+                mask = augmentation['mask']
+        elif self.transform_image is not None:
+            image = self.transform_image(image)
+            mask = self.transform_label(mask)
+            if not (mask > 1).any():
+                mask = mask / 255.0
+            mask = mask.long()
 
-        if not (mask > 1).any():
-            mask = mask / 255.0
-        label = mask.long()
-
-        return image, label
+        return image, mask
 
 
 def get_transform(channels=3):

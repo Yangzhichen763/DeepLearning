@@ -14,119 +14,191 @@ class AABBboxLoss(nn.Module):
         """
         计算 AABB 边界框的交并比损失值
         Args:
-            pred_bboxes: 预测的边界框。可以取 shape=[N, 4]，或者 shape=[4]
-            target_bboxes: 真实的边界框。可以取 shape=[N, 4]，或者 shape=[4]
-            target_scores: 真实的边界框的置信度。可以取 shape=[N, 1], shape=[N, x]（x可以取任意值），或者 shape=[]（标量）
+            pred_bboxes: 预测的边界框。可以取 shape=[B, N, 4]，或者 shape=[..., 4]
+            target_bboxes: 真实的边界框。可以取 shape=[B, x, 4]，或者 shape=[..., 4]
+            target_scores: 真实的边界框的置信度。可以取 shape=[B, N, x] | [B, N] | [B] | []（标量）
             iou_type:
         Returns:
-            loss: 交并比损失值，为标量
-            iou: 边界框的交并比，shape=[N]
+            loss: 交并比损失值，shape=[B, N]
+            iou: 边界框的交并比，shape=[B, N, x]
         """
-        weight, weight_sum = self.check_target_scores(target_scores, pred_bboxes.device)
+        weight_shape = (*pred_bboxes.shape[:-2], target_bboxes.shape[-2])   # (B, N, x)
+        weight, weight_sum = self.check_target_scores(weight_shape, target_scores, pred_bboxes.device)
 
-        iou = aabbox_iou(pred_bboxes, target_bboxes, iou_type=iou_type)
-        loss_iou = ((1.0 - iou) * weight).sum() / weight_sum
+        ious = []
+        for i in range(target_bboxes.shape[-2]):
+            iou = aabbox_iou(pred_bboxes,
+                             target_bboxes[..., i, :].unsqueeze(dim=-2),
+                             iou_type=iou_type)                              # [B, N, 1]
+            ious.append(iou)
+        ious = torch.cat(ious, dim=-1)                                      # [B, N, x]
+        loss_iou = ((1.0 - ious) * weight).sum(dim=-1) / weight_sum         # [B, N]
 
-        return loss_iou, iou.T.squeeze(dim=0)
+        return loss_iou, ious
 
     @staticmethod
-    def check_target_scores(target_scores, device):
+    def check_target_scores(weight_shape, target_scores, device):
         weight = None
         weight_sum = 1.0
-        if isinstance(target_scores, float) or isinstance(target_scores, int):
-            weight = torch.tensor(target_scores, device=device)
-            weight_sum = weight
+        if target_scores is None:
+            target_scores = torch.ones(weight_shape, device=device)
+            weight_sum = weight_shape[-1]
+        elif isinstance(target_scores, float) or isinstance(target_scores, int):
+            weight = torch.ones(weight_shape, device=device) * target_scores
+            weight_sum = target_scores * weight_shape[-1]
         elif isinstance(target_scores, torch.Tensor):
+            # 转换成 [B, N, x] 形式
             if target_scores.dim() == 0:
                 weight = target_scores
-            elif target_scores.dim() == 1:
-                weight = target_scores.unsqueeze(dim=-1)
-            elif target_scores.dim() == 2:
-                weight = target_scores.sum(dim=-1).unsqueeze(dim=-1)
+            elif target_scores.dim() == 1 and target_scores.shape[0] == weight_shape[0]:
+                weight = target_scores.view(-1, 1, 1).repeat(1, weight_shape[-2], weight_shape[-1])
+            elif target_scores.dim() == 2 and target_scores.shape[0] == weight_shape[0]:
+                weight = target_scores.unsqueeze(dim=-1).repeat(1, 1, weight_shape[-1])
             else:
-                raise ValueError("target_scores a tensor must be with shape=[N, 1], shape=[N, x] or shape=[], "
+                raise ValueError("target_scores a tensor must be with shape=[B, N, 1], shape=[B, N, x] or shape=[], "
                                  f"instead of {target_scores.shape} with content {target_scores}")
-            weight_sum = torch.max(weight.sum(), 1)
+            print(weight.sum(dim=-1).shape, weight_shape[-1])
+            weight_sum = torch.clamp(
+                weight.sum(dim=-1),
+                min=torch.tensor(-weight_shape[-1], device=device),
+                max=torch.tensor(weight_shape[-1], device=device))
+            print(weight_sum.shape)
         if weight is None:
             raise ValueError("target_scores must be a tensor or a float, "
                              f"instead of {target_scores} with type {type(target_scores)}")
 
         return weight, weight_sum
 
+    @staticmethod
+    def check_image_size(image_size, device):
+        """
+        将 image_size 转换成二维 torch.Tensor，即类似 (256, 256) 形式的数据
+        Args:
+            image_size:
+            device:
+        Returns:
+        """
+        if isinstance(image_size, int):
+            image_size = torch.tensor((image_size, image_size), device=device)
+        elif isinstance(image_size, (list, tuple)):
+            image_size = torch.tensor(image_size, device=device)
+        elif isinstance(image_size, torch.Tensor):
+            image_size = image_size.detach().to(device)
+        else:
+            raise ValueError("image_size must be a list, tuple or tensor")
+
+        if image_size.shape[-1] >= 2:
+            image_size = image_size[-2:]
+        if image_size.dim() > 1 or image_size.shape[-1] != 2:
+            raise ValueError(f"image_size must be a tensor with shape=[2], "
+                             f"instead of {image_size.shape} with content {image_size}")
+
+        return image_size
+
 
 class OBBLoss(AABBboxLoss):
     def __init__(self):
         super().__init__()
 
-    def forward(self, pred_bboxes, target_bboxes, target_scores, iou_type="IoU"):
+    def forward(self, pred_bboxes, target_bboxes, target_scores=None, iou_type="IoU"):
         """
         计算 AABB 边界框的交并比损失值
         Args:
-            pred_bboxes: 预测的边界框。可以取 shape=[N, 5]，或者 shape=[5]
-            target_bboxes: 真实的边界框。可以取 shape=[N, 5]，或者 shape=[5]
-            target_scores: 真实的边界框的置信度。可以取 shape=[N, 1], shape=[N, x]（x可以取任意值），或者 shape=[]（标量）
+            pred_bboxes: 预测的边界框。可以取 shape=[B, N, 5]，或者 shape=[..., 5]
+            target_bboxes: 真实的边界框。可以取 shape=[B, x, 5]，或者 shape=[..., 5]
+            target_scores: 真实的边界框的置信度。可以取 shape=[B, N, x], shape=[B, N, 1]，可以是标量，但是没有意义
             iou_type:
         Returns:
-            loss: 交并比损失值，为标量
-            iou: 边界框的交并比，shape=[N]
+            loss: 交并比损失值，shape=[B, N]
+            iou: 边界框的交并比，shape=[B, N, x]
         """
-        weight, weight_sum = self.check_target_scores(target_scores, pred_bboxes.device)
+        weight_shape = (*pred_bboxes.shape[:-1], target_bboxes.shape[-2])   # (B, N, x)
+        weight, weight_sum = self.check_target_scores(weight_shape, target_scores, pred_bboxes.device)
 
-        iou = obbox_iou(pred_bboxes, target_bboxes, iou_type=iou_type)  # [N, 1]
-        loss_iou = ((1.0 - iou) * weight).sum() / weight_sum
+        ious = []
+        for i in range(target_bboxes.shape[-2]):
+            iou = obbox_iou(pred_bboxes,
+                            target_bboxes[..., i, :].unsqueeze(dim=-2),
+                            iou_type=iou_type)                              # [B, N, 1]
+            ious.append(iou)
+        ious = torch.cat(ious, dim=-1)                                      # [B, N, x]
+        loss_iou = ((1.0 - ious) * weight).sum(dim=-1) / weight_sum         # [B, N]
 
-        return loss_iou, iou.T.squeeze(dim=0)
+        return loss_iou, ious
+
+
+class OBBLoss_without_position(OBBLoss):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, pred_bboxes, target_bboxes, target_scores=None, iou_type="IoU"):
+        """
+        计算 AABB 边界框的交并比损失值
+        Args:
+            pred_bboxes: 预测的边界框。可以取 shape=[B, N, 5]，或者 shape=[..., 5]
+            target_bboxes: 真实的边界框。可以取 shape=[B, x, 5]，或者 shape=[..., 5]
+            target_scores: 真实的边界框的置信度。可以取 shape=[B, N, x], shape=[B, N, 1]，可以是标量，但是没有意义
+            iou_type:
+        Returns:
+            loss: 交并比损失值，shape=[B, N]
+            iou: 边界框的交并比，shape=[B, N, x]
+        """
+        pred_bboxes, target_bboxes = self.exclude_position(pred_bboxes), self.exclude_position(target_bboxes)
+
+        return super().forward(pred_bboxes, target_bboxes, target_scores, iou_type)
+
+    def exclude_position(self, rr):
+        center, size, angle = rr.split(split_size=(2, 2, 1), dim=-1)
+        zeros = torch.zeros_like(center)
+        rr = torch.cat([zeros, size, angle], dim=-1)
+        return rr
 
 
 class EllipseLoss(OBBLoss):
     def __init__(self, image_size):
         super(EllipseLoss, self).__init__()
         self.pred_loss_func = OBBLoss()
+        # self.rotation_loss_func = OBBLoss_without_position()
         self.score_loss_func = nn.CrossEntropyLoss()
         self.image_size = image_size
 
     def __call__(self, pred, target):
         """
         Args:
-            pred (torch.Tensor): 预测的边界框。可以取 shape=[batch_size, 64, 6]
+            pred (torch.Tensor): 预测的边界框。可以取 shape=[batch_size, 64, 5]
             target (torch.Tensor): 目标的边界框。可以取 shape=[batch_size, x, 5]
         Returns:
-            loss_iou: 所有 batch 的交并比损失值的平均值，为标量
-            iou: 每个 batch 边界框的交并比，shape=[batch_size]
+            l_iou: 所有 batch 的交并比损失值的平均值，为标量
+            iou: 每个 batch 边界框的交并比，shape=[B, N, x]
+            pred: 每个 batch 预测的边界框，shape=[B, k, 5] 其中 k = x
         """
         # 0,1 是椭圆中心坐标
         # 2,3 是椭圆长短轴长度
         # 4   是椭圆旋转角度
-        # pred 中的 5 是预测分数
         device = pred.device
-        batch_size = pred.shape[0]
-        pred_rr, pred_scores = self.split_pred(pred)
-        pred_rr, pred_scores, target_rr = self.get_argmax_pred(pred_rr, pred_scores, target)
-        pred_rr = self.regress_pred_rr(pred_rr, self.image_size)
+        batch_size = pred.shape[0]      # [B, N, 5] 中的 B
+        dim_rr = pred.shape[-1]         # [B, N, 5] 中的 5
+        num_target = target.shape[-2]   # [B, x, 5] 中的 x
 
-        losses_iou, losses_score, ious = [], [], []
-        for i in range(batch_size):
-            loss_iou, iou = self.pred_loss_func(pred_rr[i], target_rr[i], 1)
-            _pred = torch.cat(
-                tensors=[
-                    iou.unsqueeze(dim=-1),
-                    self.regress_pred_scores(pred_scores[i])
-                ],
-                dim=-1)
-            _target = torch.zeros(iou.shape[0], dtype=torch.long, device=device)
-            loss_score = self.score_loss_func(_pred, _target)
+        # 计算交并比损失
+        pred = self.regress_rr(pred, self.image_size)      # box 归一化处理，使得 box 在图像范围内（去除负值等）
+        ls_iou, ious = self.pred_loss_func(pred, target, 1)                 # [B, N], [B, N, x]
+        # ls_rotation, rots = self.rotation_loss_func(pred, target, 1)        # [B, N]
+        ious_max, _ = ious.max(dim=-1)                                      # [B, N, x] -> [B, N] 找到 x 中的最大值
+        ious_max = ious_max.unsqueeze(dim=-1)                               # [B, N] -> [B, N, 1]
+        pred, pred_ious = self.get_argmax_pred(pred, ious_max, target)      # [B, k, 5], [B, k, 1] 其中 k = x
 
-            losses_iou.append(loss_iou)
-            ious.append(iou)
-            losses_score.append(loss_score)
+        # 计算 score 损失，以下损失都是标量
+        l_iou = ious.mean()
+        # l_rotation = rots.mean()
+        pred_ious = pred_ious.squeeze(dim=-1).transpose(0, 1)
+        l_score = self.score_loss_func(pred_ious, torch.ones_like(pred_ious))
+        if l_score.isnan().any():
+            print("l_score is nan")
+            exit()
+        loss = l_iou + l_score / batch_size
 
-        ious = torch.stack(ious)
-        if ious.dim() == 2:
-            ious, _ = ious.max(dim=-1)
-
-        loss = torch.stack(losses_iou) + torch.stack(losses_score)
-        loss = loss.mean()
-        return loss, ious
+        return loss, ious, pred               # 标量, [B, N, x], [B, k, 5] 其中 k = x
 
     @staticmethod
     def split_pred(pred):
@@ -144,11 +216,11 @@ class EllipseLoss(OBBLoss):
     @staticmethod
     def get_argmax_pred(pred_rr, pred_scores, target_rr):
         """
-        [batch_size, num_preds, 6] -> [batch_size, k, 5]，其中 k 对应着 target 中边框的数量
+        [B, N, 5] -> [B, k, 5]，其中 k 对应着 target 中边框的数量
         Args:
-            pred_rr: 预测得到的边界框，shape=[batch_size, num_preds, 5]
-            pred_scores: 预测得到的分数，shape=[batch_size, num_preds, 1]
-            target_rr: 真实的边界框，shape=[batch_size, x, 5]
+            pred_rr: 预测得到的边界框，shape=[B, N, 5]
+            pred_scores: 预测得到的分数，shape=[B, N, 1]
+            target_rr: 真实的边界框，shape=[B, x, 5]
         Returns:
             pred_rr: 分数前 k 高的预测边界框
             pred_scores: 分数前 k 高的预测分数
@@ -166,28 +238,22 @@ class EllipseLoss(OBBLoss):
                 ])
         # print("pred:", pred.shape, "target:",  target.shape, "topk:", pred_rr.shape)
 
-        return pred_rr, pred_scores, target_rr
+        return pred_rr, pred_scores
 
     @staticmethod
-    def regress_pred_rr(rotated_rect, image_size):
-        if isinstance(image_size, (list, tuple)):
-            image_size = torch.tensor(image_size, device=rotated_rect.device)
-        elif isinstance(image_size, torch.Tensor):
-            image_size = image_size.detach().to(rotated_rect.device)
-        else:
-            raise ValueError("image_size must be a list, tuple or tensor")
-
-        if image_size.shape[-1] >= 2:
-            image_size = image_size[-2:]
-        if image_size.dim() > 1 or image_size.shape[-1] != 2:
-            raise ValueError(f"image_size must be a tensor with shape=[2], "
-                             f"instead of {image_size.shape} with content {image_size}")
+    def regress_rr(rotated_rect, image_size):
+        image_size = AABBboxLoss.check_image_size(image_size, rotated_rect.device)
 
         # 回归到原图坐标系
         center, size, angle = rotated_rect.split(split_size=(2, 2, 1), dim=-1)
 
-        center = center.sigmoid() * image_size
-        size = (size.sigmoid() ** 2 * image_size).clamp_min(1.0)
+        factor = 11.1
+
+        def _normalize(x):
+            return (x * factor / image_size).sigmoid()
+
+        center = _normalize(center) * image_size
+        size = (_normalize(size) ** 2 * image_size).clamp_min(1.0)
         angle = torch.sin(angle * math.pi / 180).asin() * 180 / math.pi
         rotated_rect = torch.cat([center, size, angle], dim=-1)
         return rotated_rect
@@ -330,7 +396,7 @@ def _get_covariance_matrix(boxes):
         (torch.Tensor): Covariance metrixs corresponding to original rotated bounding boxes.
     """
     # Gaussian bounding boxes, ignore the center points (the first two columns) because they are not needed here.
-    gbbs = torch.cat((boxes[:, 2:4].pow(2) / 12, boxes[:, 4:]), dim=-1)
+    gbbs = torch.cat((boxes[..., 2:4].pow(2) / 12, boxes[..., 4:]), dim=-1)
     a, b, c = gbbs.split(1, dim=-1)
     cos = c.cos()
     sin = c.sin()
@@ -763,9 +829,10 @@ def _obbox_iou(pred_boxes, target_boxes, iou_type='DIoU'):
 
 
 if __name__ == '__main__':
-    a = torch.randn(8, 64, 6)
-    b = torch.randn(8, 2, 5)
-    loss, iou = EllipseLoss((256, 256))(a, b)
+    batch_size = 8
+    _pred = torch.randn(batch_size, 64, 5) * 8
+    _target = EllipseLoss.regress_rr(torch.randn(batch_size, 1, 5), (256, 256))
+    loss, iou, _ = EllipseLoss((256, 256))(_pred, _target)
     print(loss)
     exit()
     # 计算两个旋转矩形的IOU

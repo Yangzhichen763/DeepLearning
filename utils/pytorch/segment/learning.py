@@ -24,6 +24,8 @@ def train_model_in_single_epoch(model, training_loader, optimizer, criterion, de
     max_loss = float('-inf')
     total_loss = 0
 
+    # len(training_loader) 即训练集的总样本数 / batch_size
+    # len(training_loader.dataset) 即训练集的总样本数
     dataset_size = len(training_loader.dataset)
     dataset_batches = len(training_loader)
     batch_size = math.ceil(dataset_size / dataset_batches)
@@ -48,9 +50,8 @@ def train_model_in_single_epoch(model, training_loader, optimizer, criterion, de
 
             # 打印训练进度
             i_current_batch = i + 1
+            pbar.set_postfix(loss=loss.item())
             pbar.update(batch_size)
-            # len(training_loader) 即训练集的总样本数 / batch_size
-            # len(training_loader.dataset) 即训练集的总样本数
 
             if writer is not None:
                 writer.add_scalar('./logs/tensorboard/loss', loss.item(), i_current_batch)
@@ -131,7 +132,8 @@ def validate_model(
             total_loss += loss.item()
             correct += iou.item()
 
-            # 打印测试进度
+            # 更新进度条
+            pbar.set_postfix(loss=loss.item())
             pbar.update(batch_size)
 
             if i <= 10:
@@ -148,13 +150,11 @@ def validate_model(
                     dir_path='./logs/outputs',
                     file_name=f"output_{i}")
 
-        pbar.close()
-
     average_loss = total_loss / dataset_batches
-    accuracy = 100. * correct / dataset_batches
+    accuracy = correct / dataset_batches
     tqdm.write(
         f"\nTest set: Average loss: {average_loss:.4f}, Accuracy: {int(correct * batch_size)}/{dataset_size} "
-        f"({accuracy:.0f}%)\n")
+        f"({accuracy * 100:.0f}%)")
     # 在测试集上，如果平均损失越大，说明模型过拟合
     # 1. 寻找更多数据
     # 2. 正则化
