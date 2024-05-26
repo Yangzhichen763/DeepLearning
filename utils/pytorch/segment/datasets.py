@@ -53,8 +53,8 @@ class VOCSegmentationDataset(torchvision.datasets.VOCSegmentation):
             year="2012",
             image_set="train",
             download=False,
-            transform_image=None,
-            transform_label=None):
+            image_transform=None,
+            label_transform=None):
         root = os.path.join(get_root_path(), 'datas', 'VOCSegmentation')
         root = os.path.relpath(root)
 
@@ -64,12 +64,12 @@ class VOCSegmentationDataset(torchvision.datasets.VOCSegmentation):
             image_set=image_set,
             download=download)
 
-        if transform_image is None:
-            transform_image = transforms.ToTensor()
-        if transform_label is None:
-            transform_label = transforms.ToTensor()
-        self.transform_image = transform_image
-        self.transform_label = transform_label
+        if image_transform is None:
+            image_transform = transforms.ToTensor()
+        if label_transform is None:
+            label_transform = transforms.ToTensor()
+        self.transform_image = image_transform
+        self.transform_label = label_transform
 
     def __getitem__(self, index):
         """
@@ -77,7 +77,7 @@ class VOCSegmentationDataset(torchvision.datasets.VOCSegmentation):
         Args:
             index:
 
-        Returns: image: [3, H, W], label: [H, W]
+        Returns: image: [3, H, W](float), label: [H, W](long)
 
         """
         image = Image.open(self.images[index]).convert("RGB")
@@ -93,7 +93,7 @@ class VOCSegmentationDataset(torchvision.datasets.VOCSegmentation):
             color = color.reshape(3, 1, 1)
             label += i * torch.eq(target, color).all(dim=0)  # target: [3, H, W], color: [3, 1, 1]
 
-        return image, label     # [3, H, W], [H, W]
+        return image, label     # [3, H, W](float), [H, W](long)
 
 
 class CarvanaDataset(Dataset):
@@ -104,9 +104,18 @@ class CarvanaDataset(Dataset):
             self,
             image_dir_name="images",
             mask_dir_name="masks",
-            transform_image=None,
-            transform_label=None,
+            image_transform=None,
+            label_transform=None,
             transform=None):
+        """
+
+        Args:
+            image_dir_name: 存放图像的目录名，无需完整路径
+            mask_dir_name: 存放标签的目录名，无需完整路径
+            image_transform: 图像预处理器
+            label_transform: 标签预处理器
+            transform: 通用预处理器
+        """
         root = os.path.join(get_root_path(), 'datas', 'Carvana', 'train')
         root = os.path.relpath(root)
         self.image_dir = os.path.join(root, image_dir_name)
@@ -114,12 +123,8 @@ class CarvanaDataset(Dataset):
 
         self.images = os.listdir(self.image_dir)
 
-        if transform_image is None:
-            transform_image = transforms.ToTensor()
-        if transform_label is None:
-            transform_label = transforms.ToTensor()
-        self.transform_image = transform_image
-        self.transform_label = transform_label
+        self.image_transform = image_transform
+        self.label_transform = label_transform
         self.transform = transform
 
     def __len__(self):
@@ -130,6 +135,7 @@ class CarvanaDataset(Dataset):
         Args:
             index:
         Returns:
+            image: [3, H, W](float), label: [H, W](long)
         """
         img_path = os.path.join(self.image_dir, self.images[index])
         mask_path = os.path.join(self.mask_dir, self.images[index].replace('.jpg', '_mask.gif'))
@@ -142,14 +148,21 @@ class CarvanaDataset(Dataset):
                 augmentation = self.transform(image=np.array(image), mask=np.array(mask))
                 image = augmentation['image']
                 mask = augmentation['mask']
-        elif self.transform_image is not None:
-            image = self.transform_image(image)
-            mask = self.transform_label(mask)
+        else:
+            if self.image_transform is not None:
+                image = self.image_transform(image)
+            else:
+                image = transforms.ToTensor()(image)
+
+            if self.label_transform is not None:
+                mask = self.label_transform(mask)
+            else:
+                mask = transforms.ToTensor()(mask)
             if not (mask > 1).any():
                 mask = mask / 255.0
             mask = mask.long()
 
-        return image, mask
+        return image, mask  # [3, H, W](float), [H, W](long)
 
 
 def get_transform(channels=3):
@@ -181,8 +194,8 @@ def get_transform(channels=3):
 if __name__ == '__main__':
     # 测试 CarvanaDataset
     carvana_dataset = CarvanaDataset(
-        transform_image=get_transform(3),
-        transform_label=get_transform(1)
+        image_transform=get_transform(3),
+        label_transform=get_transform(1)
     )
     carvana_loader = DataLoader(
         carvana_dataset,
@@ -196,7 +209,6 @@ if __name__ == '__main__':
             targets,
             device='cpu',
             color_map=CarvanaDataset.color_map,
-            dir_path='./logs/labels',
             file_name=f"carvana_label_{_i}")
         if _i == 10:
             break

@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     # 加载最佳模型
     load_model = model_creator(num_classes=10).to(device)
-    load.from_model(load_model, f'models/{model_creator.__name__}.pt', device)
+    load.from_model(load_model, device, f'models/{model_creator.__name__}.pt')
 
     # 测试模型
     # test_model(load_model, x_input, device)

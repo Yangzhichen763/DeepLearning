@@ -141,13 +141,11 @@ def validate_model(
                     true_masks,
                     device,
                     VOCSegmentationDataset.color_map,
-                    dir_path='./logs/targets',
                     file_name=f"target_{i}")
                 save_label_as_png(
                     output,
                     device,
                     VOCSegmentationDataset.color_map,
-                    dir_path='./logs/outputs',
                     file_name=f"output_{i}")
 
     average_loss = total_loss / dataset_batches

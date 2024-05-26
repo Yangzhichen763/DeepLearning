@@ -31,10 +31,10 @@ def get_data_set(transform_image, transform_label):
     year = '2012'
     training_dataset = VOCSegmentationDataset(
         year=year, image_set='train', download=True,
-        transform_image=transform_image, transform_label=transform_label)    # 训练集
+        image_transform=transform_image, label_transform=transform_label)    # 训练集
     test_dataset = VOCSegmentationDataset(
         year=year, image_set='val', download=True,
-        transform_image=transform_image, transform_label=transform_label)    # 测试集
+        image_transform=transform_image, label_transform=transform_label)    # 测试集
     return training_dataset, test_dataset
 
 

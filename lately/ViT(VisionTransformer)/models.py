@@ -27,7 +27,7 @@ class PatchEmbedding(nn.Module):
         )
 
         self.cls_token = nn.Parameter(torch.randn(size=(1, 1, embedding_dim)), requires_grad=True)
-        self.position_embedding = nn.Parameter(torch.randn(size=(1, num_patches+1, embedding_dim)), requires_grad=True)
+        self.position_embedding = nn.Parameter(torch.randn(size=(1, num_patches + 1, embedding_dim)), requires_grad=True)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):

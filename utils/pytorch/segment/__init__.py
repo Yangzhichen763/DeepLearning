@@ -1,11 +1,12 @@
 import os
+from utils.pytorch import *
 
 import numpy as np
 import torch
 from PIL import Image
 
 
-def save_label_as_png(mask, device, color_map, dir_path='./logs/labels', file_name=None):
+def save_label_as_png(mask, device, color_map, file_name=None):
     """
     将 mask 按照 colormap 进行颜色映射，并保存为图像文件
     Args:
@@ -23,12 +24,7 @@ def save_label_as_png(mask, device, color_map, dir_path='./logs/labels', file_na
 
     colormap = color_map.to(device)
 
-    if not os.path.exists(dir_path):
-        try:
-            os.makedirs(dir_path)
-        finally:
-            pass
-
+    mask = mask.detach()
     if not isinstance(mask, torch.Tensor):
         mask = torch.tensor(mask)
 
@@ -45,47 +41,10 @@ def save_label_as_png(mask, device, color_map, dir_path='./logs/labels', file_na
 
     # batch_size = mask.shape[0]
     masks_rgb = colormap[output_label]                  # [8, 256, 256] -> [8, 256, 256, 3]
-    masks_rgb = masks_rgb.permute(0, 3, 1, 2)           # [8, 256, 256, 3] -> [8, 3, 256, 256]
-    masks_rgb = torch.chunk(masks_rgb, masks_rgb.shape[0], dim=0)
-    for j, image in enumerate(masks_rgb):
-        image = image.squeeze(dim=0)                    # [1, 3, 256, 256] -> [3, 256, 256]
-        image = image.permute(1, 2, 0)                  # [3, 256, 256] -> [256, 256, 3]
-        print("unique:", torch.flatten(image, start_dim=0, end_dim=1).unique(dim=0).squeeze())
-        image = Image.fromarray(image.cpu().numpy().astype(np.uint8), mode='RGB')
-        image_path = os.path.join(dir_path, f"{file_name}_{j}")
-        image.save(image_path, format='PNG')
+    save.tensor_to_image(masks_rgb, './logs/labels', file_name)
 
 
-def save_mask_as_png(mask, dir_path='./logs/masks', file_name=None):
-    """
-    将 mask 保存为图像文件，比如 [3, 256, 256] -> [256, 256, 3] 然后储存
-    Args:
-        mask:
-        dir_path:
-        file_name:
-
-    Returns:
-
-    """
-    if not os.path.exists(dir_path):
-        try:
-            os.makedirs(dir_path)
-        except:
-            pass
-    k = 0
-
-    if not isinstance(mask, torch.Tensor):
-        mask = torch.tensor(mask)
-
-    mask = mask.permute(1, 2, 0)                  # [3, 256, 256] -> [256, 256, 3]
-    mask = mask * 255.0                           # 0 ~ 1 -> 0 ~ 255
-    image = Image.fromarray(mask.cpu().numpy().astype(np.uint8), mode='RGB')
-    while True:
-        save_file_name = f"{file_name}{k}.png" if file_name is not None else f"{k}.png"
-        image_path = os.path.join(dir_path, save_file_name)
-        if not os.path.exists(image_path):
-            break
-        k += 1
-    image.save(image_path, format='PNG')
+def save_mask_as_png(mask, file_name=None):
+    save.tensor_to_image(mask, './logs/masks', file_name)
 
 

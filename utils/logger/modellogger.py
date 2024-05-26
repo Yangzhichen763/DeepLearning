@@ -108,4 +108,9 @@ def log_model_params(model, input_shape):
     x_input = torch.Tensor(*input_shape)        # *input_shape 是 1 3 224 224
     x_input = x_input.to(device)
     print("Input shape: ", x_input.shape)
-    print("Output shape: ", model(x_input).shape)
+    y_output = model(x_input)
+    if isinstance(y_output, torch.Tensor):
+        print("Output shape: ", y_output.shape)
+    elif isinstance(y_output, (list, tuple)):
+        for i, y in enumerate(y_output):
+            print(f"Output {i} shape: ", y.shape)
