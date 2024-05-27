@@ -6,12 +6,13 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from custom.EllipseDetectionNeuralNetwork.datasets import EllipseDetectionDataset
+from modules.residual import ResNetEncoder
 from utils.tensorboard import *
 from utils.pytorch import *
 from utils.pytorch.dataset import *
 from utils.os import *
 
-from model import EllipseDetectionNetwork
+from model import *
 from loss import *
 
 import cv2
@@ -107,10 +108,8 @@ def train():
 
     if epoch is not None:
         tqdm.write(
-            f"Epoch {epoch} training finished. "
-            f"Min loss: {min_loss:.6f}, "
-            f"Max loss: {max_loss:.6f}, "
-            f"Avg loss: {total_loss / len(train_loader):.6f}")
+            f"\nEpoch {epoch} training finished. [learning rate: {scheduler.get_last_lr()[0]: .8f}] "
+            f"\nMin-Avg-Max loss: [{min_loss:.6f}, {total_loss / len(train_loader):.6f}, {max_loss:.6f}]")
 
 
 def validate():
@@ -138,7 +137,7 @@ def validate():
     average_loss = total_loss / dataset_batches
     accuracy = 100. * correct / dataset_size
     tqdm.write(
-        f"\nTest set: Average loss: {average_loss:.4f}, Accuracy: {correct:.00f}/{dataset_size} "
+        f"Test set: Average loss: {average_loss:.4f}, Accuracy: {correct:.00f}/{dataset_size} "
         f"({accuracy:.00f}%)")
 
     if (writer is not None) & (epoch is not None):
@@ -148,11 +147,56 @@ def validate():
     return average_loss, accuracy
 
 
+def get_model(input_shape, config):
+    if config == "ResNet v1.0":
+        _in_channels = image_shape[0]
+        _dim_classifiers = [64, 16]
+        _center_encoder = ResNetEncoder(
+            _in_channels,
+            num_blocks=[2, 2, 3, 3, 2],
+            dim_hidden=[16, 32, 64, 128, 256])
+        _size_encoder = ResNetEncoder(
+            _in_channels,
+            num_blocks=[3, 4, 6, 3],
+            dim_hidden=[16, 32, 64, 128])
+
+        _model = EllipseDetectionNetwork_ResNet_v1(
+            center_encoder=_center_encoder,
+            size_encoder=_size_encoder,
+            dim_classifiers=_dim_classifiers,
+            device=device
+        )
+        return _model
+    elif config == "ResNet v2.0":
+        _in_channels = image_shape[0]
+        _dim_classifiers = [128, 64]
+        _encoder = ResNetEncoder(
+            _in_channels,
+            num_blocks=[2, 3, 4, 6, 3],
+            dim_hidden=[16, 32, 64, 128, 256])
+
+        _model = EllipseDetectionNetwork_ResNet_v2(
+            encoder=_encoder,
+            dim_classifiers=_dim_classifiers,
+            device=device
+        )
+        return _model
+    elif config == "AlexNet":
+        _model = EllipseDetectionNetwork_AlexNet(
+            input_shape=input_shape,
+            dim_features=[16, 32, 64, 128, 256],
+            num_layers_in_features=[2, 2, 3, 3, 2],
+            dim_classifiers=[32, 16],
+            device=device
+        )
+        return _model
+
+
 if __name__ == '__main__':
     # 超参数设置
     batch_size = 8
     num_epochs = 50
-    learning_rate = 1e-5
+    learning_rate = 0.0001
     weight_decay = 0.0001
     momentum = 0.9
     scheduler_step_size = 2
@@ -178,13 +222,7 @@ if __name__ == '__main__':
 
     # 定义模型
     image_shape = (1, 256, 256)
-    model = EllipseDetectionNetwork(
-        input_shape=image_shape,
-        dim_features=[16, 32, 64, 128, 256],
-        num_layers_in_features=[2, 2, 3, 3, 2],
-        dim_classifiers=[64, 32],
-        device=device
-    )
+    model = get_model(image_shape, "ResNet v1.0")
     model.to(device)
 
     # 定义损失函数和优化器

@@ -4,13 +4,14 @@ import torch.nn.functional as F
 import numpy as np
 
 import math
+from lossFunc.BBLoss import *
 
 
 class AABBboxLoss(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, pred_bboxes, target_bboxes, target_scores, iou_type="DIoU"):
+    def forward(self, pred_bboxes, target_bboxes, target_scores, iou_type="CIoU"):
         """
         计算 AABB 边界框的交并比损失值
         Args:
@@ -100,7 +101,7 @@ class OBBLoss(AABBboxLoss):
     def __init__(self):
         super().__init__()
 
-    def forward(self, pred_bboxes, target_bboxes, target_scores=None, iou_type="IoU"):
+    def forward(self, pred_bboxes, target_bboxes, target_scores=None, iou_type="CIoU"):
         """
         计算 AABB 边界框的交并比损失值
         Args:
@@ -110,7 +111,8 @@ class OBBLoss(AABBboxLoss):
             iou_type:
         Returns:
             loss: 交并比损失值，shape=[B, N]
-            iou: 边界框的交并比，shape=[B, N, x]
+            iou: 边界框的交并比，shape=[B, N, x]，交并比越大，说明预测的边界框与真实的边界框越相似
+            其中 loss.mean() = 1 - iou
         """
         weight_shape = (*pred_bboxes.shape[:-1], target_bboxes.shape[-2])   # (B, N, x)
         weight, weight_sum = self.check_target_scores(weight_shape, target_scores, pred_bboxes.device)
@@ -131,7 +133,7 @@ class OBBLoss_without_position(OBBLoss):
     def __init__(self):
         super().__init__()
 
-    def forward(self, pred_bboxes, target_bboxes, target_scores=None, iou_type="IoU"):
+    def forward(self, pred_bboxes, target_bboxes, target_scores=None, iou_type="CIoU"):
         """
         计算 AABB 边界框的交并比损失值
         Args:
@@ -158,8 +160,8 @@ class EllipseLoss(OBBLoss):
     def __init__(self, image_size):
         super(EllipseLoss, self).__init__()
         self.pred_loss_func = OBBLoss()
-        # self.rotation_loss_func = OBBLoss_without_position()
-        self.score_loss_func = nn.CrossEntropyLoss()
+        self.rotation_loss_func = OBBLoss_without_position()
+        self.score_loss_func = nn.MSELoss()
         self.image_size = image_size
 
     def __call__(self, pred, target):
@@ -183,20 +185,24 @@ class EllipseLoss(OBBLoss):
         # 计算交并比损失
         pred = self.regress_rr(pred, self.image_size)      # box 归一化处理，使得 box 在图像范围内（去除负值等）
         ls_iou, ious = self.pred_loss_func(pred, target, 1)                 # [B, N], [B, N, x]
-        # ls_rotation, rots = self.rotation_loss_func(pred, target, 1)        # [B, N]
+        ls_rotation, rots = self.rotation_loss_func(pred, target, 1)        # [B, N]
         ious_max, _ = ious.max(dim=-1)                                      # [B, N, x] -> [B, N] 找到 x 中的最大值
         ious_max = ious_max.unsqueeze(dim=-1)                               # [B, N] -> [B, N, 1]
         pred, pred_ious = self.get_argmax_pred(pred, ious_max, target)      # [B, k, 5], [B, k, 1] 其中 k = x
 
         # 计算 score 损失，以下损失都是标量
-        l_iou = ious.mean()
-        # l_rotation = rots.mean()
+        l_iou = ls_iou.mean()
+        l_rotation = ls_rotation.mean()
         pred_ious = pred_ious.squeeze(dim=-1).transpose(0, 1)
         l_score = self.score_loss_func(pred_ious, torch.ones_like(pred_ious))
         if l_score.isnan().any():
-            print("l_score is nan")
+            print(f"l_score is nan, ious: {pred_ious}")
             exit()
-        loss = l_iou + l_score / batch_size
+
+        l_score *= 5
+        l_rotation *= 4
+        l_iou *= 1
+        loss = l_score + l_rotation + l_iou  # l_iou * (1 + l_score / (2 * batch_size))  # 2 * (l_iou + l_rotation * l_score / batch_size)
 
         return loss, ious, pred               # 标量, [B, N, x], [B, k, 5] 其中 k = x
 
@@ -247,13 +253,15 @@ class EllipseLoss(OBBLoss):
         # 回归到原图坐标系
         center, size, angle = rotated_rect.split(split_size=(2, 2, 1), dim=-1)
 
+        # std_center, std_size, std_angle = torch.std(center), torch.std(size), torch.std(angle)
+        # print(std_center, std_size, std_angle)
         factor = 11.1
 
         def _normalize(x):
             return (x * factor / image_size).sigmoid()
 
         center = _normalize(center) * image_size
-        size = (_normalize(size) ** 2 * image_size).clamp_min(1.0)
+        size = (_normalize(size) * image_size).clamp_min(1.0)   # (_normalize(size) ** 2 * image_size)clamp(1.0, image_size)
         angle = torch.sin(angle * math.pi / 180).asin() * 180 / math.pi
         rotated_rect = torch.cat([center, size, angle], dim=-1)
         return rotated_rect
@@ -287,7 +295,7 @@ def box_iou(box1, box2, eps=1e-7):
     return inter / ((a2 - a1).prod(2) + (b2 - b1).prod(2) - inter + eps)
 
 
-def aabbox_iou(box1, box2, xywh=True, iou_type="IoU", eps=1e-7):
+def aabbox_iou(box1, box2, xywh=True, iou_type="CIoU", eps=1e-7):
     """
     Calculate Intersection over Union (IoU) of box1(1, 4) to box2(n, 4).
 
@@ -346,7 +354,7 @@ def aabbox_iou(box1, box2, xywh=True, iou_type="IoU", eps=1e-7):
     return iou  # IoU
 
 
-def obbox_iou(obb1, obb2, iou_type="IoU", eps=1e-7):
+def obbox_iou(obb1, obb2, iou_type="CIoU", eps=1e-7):
     """
     Calculate the prob IoU between oriented bounding boxes, https://arxiv.org/pdf/2106.06072v1.pdf.
 
@@ -360,8 +368,8 @@ def obbox_iou(obb1, obb2, iou_type="IoU", eps=1e-7):
     """
     x1, y1 = obb1[..., :2].split(1, dim=-1)
     x2, y2 = obb2[..., :2].split(1, dim=-1)
-    a1, b1, c1 = _get_covariance_matrix(obb1)
-    a2, b2, c2 = _get_covariance_matrix(obb2)
+    a1, b1, c1 = get_covariance_matrix(obb1)
+    a2, b2, c2 = get_covariance_matrix(obb2)
 
     t1 = (
         ((a1 + a2) * (y1 - y2).pow(2) + (b1 + b2) * (x1 - x2).pow(2)) / ((a1 + a2) * (b1 + b2) - (c1 + c2).pow(2) + eps)
@@ -378,31 +386,11 @@ def obbox_iou(obb1, obb2, iou_type="IoU", eps=1e-7):
     if iou_type in ["CIoU"]:  # only include the wh aspect ratio part
         w1, h1 = obb1[..., 2:4].split(1, dim=-1)
         w2, h2 = obb2[..., 2:4].split(1, dim=-1)
-        v = (4 / math.pi**2) * ((w2 / h2).atan() - (w1 / h1).atan()).pow(2)
+        v = (4 / math.pi ** 2) * ((w2 / h2).atan() - (w1 / h1).atan()).pow(2)
         with torch.no_grad():
             alpha = v / (v - iou + (1 + eps))
         return iou - v * alpha  # CIoU
     return iou
-
-
-def _get_covariance_matrix(boxes):
-    """
-    Generating covariance matrix from obbs.
-
-    Args:
-        boxes (torch.Tensor): A tensor of shape (N, 5) representing rotated bounding boxes, with xywhr format.
-
-    Returns:
-        (torch.Tensor): Covariance metrixs corresponding to original rotated bounding boxes.
-    """
-    # Gaussian bounding boxes, ignore the center points (the first two columns) because they are not needed here.
-    gbbs = torch.cat((boxes[..., 2:4].pow(2) / 12, boxes[..., 4:]), dim=-1)
-    a, b, c = gbbs.split(1, dim=-1)
-    cos = c.cos()
-    sin = c.sin()
-    cos2 = cos.pow(2)
-    sin2 = sin.pow(2)
-    return a * cos2 + b * sin2, a * sin2 + b * cos2, (a - b) * cos * sin
 # --------- 以上代码来自 https://github.com/ultralytics/ultralytics ----------
 
 
@@ -538,62 +526,6 @@ def _check_corners_batch(rotated_rects_ref, rotated_rects_obj):
     corners_obj = rotated_rect_to_corners(rotated_rects_obj)
 
     return corners_ref, corners_obj
-
-
-def rotated_rect_to_corners(rotated_rect):
-    """
-    包围盒转化为角点
-    Args:
-        rotated_rect (torch.Tensor | list(torch.Tensor)): torch.tensor([x, y, w, h, angle])，其中 angle 为弧度制
-
-    Returns:
-        顺时针方向返回角点位置
-        [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
-    """
-    if isinstance(rotated_rect, list):
-        rotated_rect = torch.stack(rotated_rect)
-
-    if rotated_rect.dim() == 1:
-        rotated_rect = rotated_rect.unsqueeze(0)
-    elif rotated_rect.dim() == 3 and rotated_rect.shape[-1] == 5:
-        rotated_rect = rotated_rect.flatten(start_dim=0, end_dim=-2)
-
-    if rotated_rect.dim() not in [1, 2, 3]:
-        raise ValueError("rotated_rect should be a tensor with 1, 2 or 3 dimensions, "
-                         f"instead of dims={rotated_rect.dim()}, shape={rotated_rect.shape}")
-
-    num_rect = rotated_rect.shape[0]
-    center, size, angle = rotated_rect.split((2, 2, 1), dim=-1)
-    center = center.unsqueeze(-2)                               # [num_rect, 2] -> [num_rect, 1, 2]
-    size = size.unsqueeze(-2)                                   # [num_rect, 2] -> [num_rect, 1, 2]
-
-    half_size = size / 2
-    a_cos, a_sin = torch.cos(angle), torch.sin(angle)           # [num_rect, 1]
-    k = (torch
-         .stack(tensors=[a_cos, -a_sin, a_sin, a_cos], dim=-1)  # [num_rect, 1, 4]
-         .view(num_rect, 2, 2))                                 # [num_rect, 2, 2]
-    offset = \
-        (torch
-         .tensor([[-1, -1, 1, 1],  # width
-                  [-1, 1, 1, -1]   # height
-                  ])                                            # [1, 4, 2]
-         .repeat(num_rect, 1, 1))                               # [num_rect, 4, 2]
-
-    corners = center + (half_size * offset.transpose(-2, -1)) @ k.transpose(-2, -1)
-
-    return corners
-    # 当 rotated_rect.dim == 1 时，代码可以转换为：
-    #
-    # center, size, angle = rotated_rect.split((2, 2, 1), dim=-1)
-    # half_size = size / 2
-    # a_cos, a_sin = math.cos(angle), math.sin(angle)
-    # k = torch.tensor([[a_cos, a_sin], [-a_sin, a_cos]])
-    # offset = torch.tensor([[-1, -1, 1, 1],  # width
-    #                        [-1, 1, 1, -1]   # height
-    #                        ])
-    #
-    # corners = center + (half_size * offset.T) @ k.T
-    # return corners
 
 
 def is_point_inside_rotated_rect(point, corners):
