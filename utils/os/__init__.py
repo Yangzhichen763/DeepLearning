@@ -42,7 +42,7 @@ def get_unique_file_name(directory, file_name, suffix, unique=True):
     return image_path
 
 
-def get_unique_file_name(full_path, unique=True):
+def get_unique_full_path(full_path, unique=True):
     """
     获取一个唯一的文件名
     Args:

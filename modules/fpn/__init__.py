@@ -2,35 +2,8 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+
 from utils.logger.modellogger import *
-
-
-class BottleneckResNet(nn.Module):
-    expansion = 4  # 通道倍增数
-
-    def __init__(self, in_planes, planes, stride=1, down_sample=None):
-        super(BottleneckResNet, self).__init__()
-        self.bottleneck = nn.Sequential(
-            nn.Conv2d(in_planes, planes, 1, bias=False),
-            nn.BatchNorm2d(planes),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(planes, planes, 3, stride, 1, bias=False),
-            nn.BatchNorm2d(planes),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(planes, self.expansion * planes, 1, bias=False),
-            nn.BatchNorm2d(self.expansion * planes),
-        )
-        self.relu = nn.ReLU(inplace=True)
-        self.down_sample = down_sample
-
-    def forward(self, x):
-        identity = x
-        out = self.bottleneck(x)
-        if self.down_sample is not None:
-            identity = self.down_sample(x)
-        out += identity
-        out = self.relu(out)
-        return out
 
 
 class FeaturePyramidNetwork(nn.Module):
@@ -45,10 +18,19 @@ class FeaturePyramidNetwork(nn.Module):
     def __init__(
             self,
             in_channels=3,
-            bottleneck=BottleneckResNet,
+            bottleneck=None,
             num_blocks=None,
             dim_planes=None,
             dim_smooth=256):
+        """
+
+        Args:
+            in_channels:
+            bottleneck: 可以取 resnet bottleneck 或者 inception bottleneck
+            num_blocks:
+            dim_planes:
+            dim_smooth:
+        """
         super(FeaturePyramidNetwork, self).__init__()
         if num_blocks is None:
             num_blocks = [3, 4, 6, 3]

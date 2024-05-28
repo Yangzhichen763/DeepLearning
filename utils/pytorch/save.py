@@ -1,5 +1,5 @@
 import os
-from utils.os import get_unique_file_name
+from utils.os import get_unique_full_path
 
 import numpy as np
 from torchvision import transforms
@@ -100,6 +100,6 @@ def tensor_to_image(tensor, save_path=None, file_name=None, epoch=None):
         if epoch is not None:
             image_save_path = save_path.replace(".png", f"_{epoch * batch_size + i}.png")
         else:
-            image_save_path = get_unique_file_name(save_path)
+            image_save_path = get_unique_full_path(save_path)
         img.save(image_save_path)
 

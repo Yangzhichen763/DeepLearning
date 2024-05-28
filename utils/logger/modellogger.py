@@ -88,6 +88,7 @@ def log_model_params(model, input_shape):
     Args:
         model: 要输出信息的模型
         input_shape (torch.Size | tuple): 输入形状，比如 (1, 3, 224, 224)
+        consider_batch_size (bool): 是否考虑输入数据的 batch_size
     """
     if input_shape is None:
         logger.warning("input cannot be None.")
@@ -114,3 +115,4 @@ def log_model_params(model, input_shape):
     elif isinstance(y_output, (list, tuple)):
         for i, y in enumerate(y_output):
             print(f"Output {i} shape: ", y.shape)
+    print('\n')
