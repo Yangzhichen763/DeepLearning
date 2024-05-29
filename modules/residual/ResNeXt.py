@@ -12,10 +12,11 @@ from torchvision.models import (
 )
 from utils.logger import *
 
-import modules.residual as residual
+from modules.residual.ResNet import BasicBlock as ResNetBasicBlock
+from modules.residual.ResNet import num_blocks_dict
 
 
-class BasicBlock(residual.ResNet.BasicBlock):
+class BasicBlock(ResNetBasicBlock):
     """
     ResNeXt 的 BasicBlock 与 ResNet 的 BasicBlock 一样。
     """
@@ -183,7 +184,7 @@ def ResNeXt101_32x8d(in_channels=3, num_classes=10, pretrained=False):
         weights = ResNeXt101_32X8D_Weights.IMAGENET1K_V1
         model = resnext101_32x8d(weights=weights)
     else:
-        model = ResNeXt(in_channels=in_channels, block=Bottleneck, num_blocks=[3, 4, 23, 3], num_classes=num_classes,
+        model = ResNeXt(in_channels=in_channels, block=Bottleneck, num_blocks=num_blocks_dict["ResNet101"], num_classes=num_classes,
                         groups=groups, width_per_group=width_per_group)
     return model
 
@@ -196,7 +197,7 @@ def ResNeXt101_64x4d(in_channels=3, num_classes=10, pretrained=False):
         weights = ResNeXt101_64X4D_Weights.IMAGENET1K_V1
         model = resnext101_64x4d(weights=weights)
     else:
-        model = ResNeXt(in_channels=in_channels, block=Bottleneck, num_blocks=[3, 4, 23, 3], num_classes=num_classes,
+        model = ResNeXt(in_channels=in_channels, block=Bottleneck, num_blocks=num_blocks_dict["ResNet101"], num_classes=num_classes,
                         groups=groups, width_per_group=width_per_group)
     return model
 

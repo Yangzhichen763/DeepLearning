@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+from lossFunc import LogLoss
 
 import math
 from lossFunc.BBLoss import *
@@ -161,7 +162,7 @@ class EllipseLoss(OBBLoss):
         super(EllipseLoss, self).__init__()
         self.pred_loss_func = OBBLoss()
         self.rotation_loss_func = OBBLoss_without_position()
-        self.score_loss_func = nn.MSELoss()
+        self.score_loss_func = LogLoss()
         self.image_size = image_size
 
     def __call__(self, pred, target):
@@ -171,7 +172,7 @@ class EllipseLoss(OBBLoss):
             target (torch.Tensor): 目标的边界框。可以取 shape=[batch_size, x, 5]
         Returns:
             l_iou: 所有 batch 的交并比损失值的平均值，为标量
-            iou: 每个 batch 边界框的交并比，shape=[B, N, x]
+            iou: 每个 batch 边界框的交并比，shape=[B, k, 1]
             pred: 每个 batch 预测的边界框，shape=[B, k, 5] 其中 k = x
         """
         # 0,1 是椭圆中心坐标
@@ -184,27 +185,30 @@ class EllipseLoss(OBBLoss):
 
         # 计算交并比损失
         pred = self.regress_rr(pred, self.image_size)      # box 归一化处理，使得 box 在图像范围内（去除负值等）
-        ls_iou, ious = self.pred_loss_func(pred, target, 1)                 # [B, N], [B, N, x]
-        ls_rotation, rots = self.rotation_loss_func(pred, target, 1)        # [B, N]
-        ious_max, _ = ious.max(dim=-1)                                      # [B, N, x] -> [B, N] 找到 x 中的最大值
-        ious_max = ious_max.unsqueeze(dim=-1)                               # [B, N] -> [B, N, 1]
-        pred, pred_ious = self.get_argmax_pred(pred, ious_max, target)      # [B, k, 5], [B, k, 1] 其中 k = x
+        _, ious = self.pred_loss_func(pred, target, 1)                  # [B, N], [B, N, x]
+
+        ious_max, _ = ious.max(dim=-1)                                  # [B, N, x] -> [B, N] 找到 x 中的最大值
+        ious_max = ious_max.unsqueeze(dim=-1)                           # [B, N] -> [B, N, 1]
+        pred, pred_ious = self.get_argmax_pred(pred, ious_max, target)  # [B, k, 5], [B, k, 1] 其中 k = x
+
+        _, pred_rots = self.rotation_loss_func(pred, target, 1)         # [B, N], [B, N, x]
 
         # 计算 score 损失，以下损失都是标量
-        l_iou = ls_iou.mean()
-        l_rotation = ls_rotation.mean()
-        pred_ious = pred_ious.squeeze(dim=-1).transpose(0, 1)
-        l_score = self.score_loss_func(pred_ious, torch.ones_like(pred_ious))
-        if l_score.isnan().any():
-            print(f"l_score is nan, ious: {pred_ious}")
-            exit()
+        def _iou_to_loss(_ious):
+            scores = _ious.squeeze(dim=-1).transpose(0, 1)
+            l_score = self.score_loss_func(scores, torch.ones_like(scores))
+            return l_score
 
-        l_score *= 5
-        l_rotation *= 4
-        l_iou *= 1
-        loss = l_score + l_rotation + l_iou  # l_iou * (1 + l_score / (2 * batch_size))  # 2 * (l_iou + l_rotation * l_score / batch_size)
+        l_scores_iou = _iou_to_loss(pred_ious)
+        l_scores_rotation = _iou_to_loss(pred_rots)
 
-        return loss, ious, pred               # 标量, [B, N, x], [B, k, 5] 其中 k = x
+        # l_iou = pred_ious.mean()
+        # l_rotation = pred_rots.mean()
+        l_scores_iou *= 1
+        l_scores_rotation *= 3
+        loss = l_scores_iou + l_scores_rotation  # l_iou * (1 + l_score / (2 * batch_size))  # 2 * (l_iou + l_rotation * l_score / batch_size)
+
+        return loss, pred_ious, pred               # 标量, [B, k, 1], [B, k, 5] 其中 k = x
 
     @staticmethod
     def split_pred(pred):
@@ -260,9 +264,12 @@ class EllipseLoss(OBBLoss):
         def _normalize(x):
             return (x * factor / image_size).sigmoid()
 
+        def _ease_in_out_cubic(x):
+            return 3 * x ** 2 - 2 * x ** 3
+
         center = _normalize(center) * image_size
-        size = (_normalize(size) * image_size).clamp_min(1.0)   # (_normalize(size) ** 2 * image_size)clamp(1.0, image_size)
-        angle = torch.sin(angle * math.pi / 180).asin() * 180 / math.pi
+        size = (_normalize(size) * image_size).clamp(torch.ones(1).to(rotated_rect.device), image_size.max())   # (_normalize(size) ** 2 * image_size)clamp(1.0, image_size)
+        # angle = torch.sin(angle).asin()
         rotated_rect = torch.cat([center, size, angle], dim=-1)
         return rotated_rect
 

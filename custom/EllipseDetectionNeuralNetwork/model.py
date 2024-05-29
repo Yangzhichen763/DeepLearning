@@ -4,7 +4,7 @@ from torch.nn import functional as F
 
 from torchvision.models import resnet18
 from utils.logger import *
-from modules.residual import ResNetEncoder
+from modules.residual import ResNetEncoder, ResNeXtEncoder
 from modules.fpn import FeaturePyramidNetwork
 
 
@@ -55,6 +55,7 @@ class EllipseDetectionNetwork_AlexNet(nn.Module):
 
         self.flatten = nn.Flatten()
 
+        self.out_features = dim_classifiers[-1]
         classifiers = []
         in_features = in_channels * h * w
         for dim_classifier in dim_classifiers[:-1]:
@@ -67,19 +68,21 @@ class EllipseDetectionNetwork_AlexNet(nn.Module):
             )
             in_features = dim_classifier
         classifiers.append(
-            nn.Linear(in_features=in_features, out_features=dim_classifiers[-1], device=device),
+            nn.Linear(in_features=in_features, out_features=self.out_features, device=device),
         )
         self.classifiers = nn.Sequential(*classifiers)
 
-        self.outputs = []
         # 如果 dim_output = 5，则输出为 x, y, w, h, angle
-        for i in range(dim_output):
-            self.outputs.append(
+        self.outputs = nn.ModuleList([
+            nn.Sequential(
+                nn.ReLU(),
                 nn.Linear(
-                    in_features=dim_classifiers[-1],
+                    in_features=self.out_features,
                     out_features=num_output,
                     device=device)
             )
+            for _ in range(dim_output)
+        ])
 
 
     def forward(self, x):
@@ -107,8 +110,8 @@ class EllipseDetectionNetwork_ResNet_v1(nn.Module):
         """
 
         Args:
-            center_encoder (ResNetEncoder):
-            size_encoder (ResNetEncoder):
+            center_encoder (ResNetEncoder | ResNeXtEncoder):
+            size_encoder (ResNetEncoder | ResNeXtEncoder):
             dim_classifiers:
             dim_output:
             num_output:
@@ -139,18 +142,17 @@ class EllipseDetectionNetwork_ResNet_v1(nn.Module):
         )
         self.classifiers = nn.Sequential(*classifiers)
 
-        self.outputs = []
         # 如果 dim_output = 5，则输出为 x, y, w, h, angle
-        for i in range(dim_output):
-            self.outputs.append(
-                nn.Sequential(
-                    nn.ReLU(),
-                    nn.Linear(
-                        in_features=self.out_features,
-                        out_features=num_output,
-                        device=device)
-                )
+        self.outputs = nn.ModuleList([
+            nn.Sequential(
+                nn.ReLU(),
+                nn.Linear(
+                    in_features=self.out_features,
+                    out_features=num_output,
+                    device=device)
             )
+            for _ in range(dim_output)
+        ])
 
     def forward(self, x):
         # 假设 dim_features = [16, 32, 64, 128, 256]
@@ -174,9 +176,12 @@ class EllipseDetectionNetwork_ResNet_v1(nn.Module):
         cy = self.outputs[1](x_center)
         w = self.outputs[2](x_size)
         h = self.outputs[3](x_size)
+        # for param in self.outputs[4][1].parameters():
+        #     param.data = param.data.sin().asin()
         angle = self.outputs[4](x_size)
         # 5 * [B, 64] -> [B, 5, 64] -> [B, 64, 5]
         x = torch.stack([cx, cy, w, h, angle], dim=1).permute(0, 2, 1)
+
         return x
 
 
@@ -207,6 +212,7 @@ class EllipseDetectionNetwork_ResNet_v2(nn.Module):
 
         self.encoder = encoder
 
+        self.out_features = dim_classifiers[-1]
         classifiers = []
         in_features = encoder.out_channels
         for dim_classifier in dim_classifiers[:-1]:
@@ -219,19 +225,21 @@ class EllipseDetectionNetwork_ResNet_v2(nn.Module):
             )
             in_features = dim_classifier
         classifiers.append(
-            nn.Linear(in_features=in_features, out_features=dim_classifiers[-1], device=device),
+            nn.Linear(in_features=in_features, out_features=self.out_features, device=device),
         )
         self.classifiers = nn.Sequential(*classifiers)
 
-        self.outputs = []
         # 如果 dim_output = 5，则输出为 x, y, w, h, angle
-        for i in range(dim_output):
-            self.outputs.append(
+        self.outputs = nn.ModuleList([
+            nn.Sequential(
+                nn.ReLU(),
                 nn.Linear(
-                    in_features=dim_classifiers[-1],
+                    in_features=self.out_features,
                     out_features=num_output,
                     device=device)
             )
+            for _ in range(dim_output)
+        ])
 
     def forward(self, x):
         # 假设 dim_features = [16, 32, 64, 128, 256]
@@ -265,19 +273,15 @@ if __name__ == '__main__':
     _in_channels = _input_shape[1]
     x_input = torch.randn(*_input_shape)
 
-    # ResNet v2.0
-    _dim_classifiers = [32, 16]
-    _center_encoder = ResNetEncoder(
-        _in_channels,
-        num_blocks=[3, 4, 6, 3],
-        dim_hidden=[64, 128, 256, 512])
-    _size_encoder = ResNetEncoder(
+    # ============= ResNet v1.0
+    _dim_classifiers = [64, 16]
+    _center_encoder = ResNeXtEncoder(
         _in_channels,
         num_blocks=[2, 2, 3, 3, 2],
         dim_hidden=[16, 32, 64, 128, 256])
-    _angle_encoder = ResNetEncoder(
+    _size_encoder = ResNeXtEncoder(
         _in_channels,
-        num_blocks=[2, 2, 2, 2],
+        num_blocks=[3, 4, 6, 3],
         dim_hidden=[16, 32, 64, 128])
 
     model = EllipseDetectionNetwork_ResNet_v1(
@@ -289,12 +293,12 @@ if __name__ == '__main__':
 
     log_model_params(model, _input_shape)
 
-    # ResNet v2.1
+    # ============= ResNet v2.0
     _dim_classifiers = [32, 16]
     _encoder = ResNetEncoder(
         _in_channels,
         num_blocks=[3, 4, 6, 3],
-        dim_hidden=[16, 32, 128, 256])
+        dim_hidden=[32, 64, 128, 256])
     model = EllipseDetectionNetwork_ResNet_v2(
         encoder=_encoder,
         dim_classifiers=_dim_classifiers,
@@ -303,7 +307,7 @@ if __name__ == '__main__':
 
     log_model_params(model, _input_shape)
 
-    # AlexNet
+    # ============= AlexNet
     model = EllipseDetectionNetwork_AlexNet(
         input_shape=_input_shape,
         dim_features=[16, 32, 64, 128, 256],
