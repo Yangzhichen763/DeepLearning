@@ -1,5 +1,6 @@
 import os
 from utils.os import get_unique_full_path
+from tqdm import tqdm
 
 import numpy as np
 from torchvision import transforms
@@ -21,13 +22,12 @@ def as_pt(model, save_path=None, file_name=None):
         else:
             save_path = f"./models/{file_name}.pt"
 
-    print("Saving model to: ", save_path)
+    tqdm.write(f"Saving model to: {save_path}")
     directory = os.path.dirname(save_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
 
     torch.save(model.state_dict(), save_path)
-    print("Model saved.")
 
 
 def as_onnx(model, dummy_input, save_path=None, file_name=None, input_names=None, output_names=None):

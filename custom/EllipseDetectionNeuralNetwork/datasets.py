@@ -22,7 +22,7 @@ class EllipseDetectionDataset(Dataset):
             image_dir_name:
             label_dir_name:
         """
-        print("Loading EllipseDetectionDataset...")
+        print("Loading EllipseDetectionDataset...", end="")
         root = os.path.join(get_root_path(), 'datas', 'EllipseDetection', 'train', f'{data_set}')
         root = os.path.relpath(root)
         self.image_dir = os.path.join(root, image_dir_name)
@@ -31,7 +31,7 @@ class EllipseDetectionDataset(Dataset):
         self.label_length = int(data_set[:data_set.index('x')])
         label_csv_file = os.path.join(self.label_dir, 'labels.csv')
         self.labels = pd.read_csv(label_csv_file, sep=',', header=None)
-        print(f"EllipseDetectionDataset loaded, {int(len(self.labels) / self.label_length)} labels found.")
+        print(f"\rEllipseDetectionDataset loaded, {int(len(self.labels) / self.label_length)} labels found.")
 
     def __getitem__(self, index):
         row = self.labels.values[index * self.label_length: (index + 1) * self.label_length, :]  # ndarray<str> [x, 5]

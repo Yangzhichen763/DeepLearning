@@ -17,6 +17,15 @@ from torchvision.models import (
 from utils.logger import *
 
 
+num_blocks_dict = {
+    "ResNet18": [2, 2, 2, 2],
+    "ResNet34": [3, 4, 6, 3],
+    "ResNet50": [3, 4, 6, 3],
+    "ResNet101": [3, 4, 23, 3],
+    "ResNet152": [3, 8, 36, 3]
+}
+
+
 class BasicBlock(nn.Module):
     expansion = 1
 
@@ -25,7 +34,7 @@ class BasicBlock(nn.Module):
         self.feature_layer = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(),
+            nn.ReLU(inplace=True),
             nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(out_channels)
         )
@@ -52,14 +61,17 @@ class Bottleneck(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1):
         super(Bottleneck, self).__init__()
         self.feature_layer = nn.Sequential(
+            # conv1x1
             nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),    # 后面接 BN，所以 bias=False
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(),
+            nn.ReLU(inplace=True),
+            # conv3x3
             nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(),
-            nn.Conv2d(out_channels, self.expansion * out_channels, kernel_size=1, bias=False),
-            nn.BatchNorm2d(self.expansion * out_channels)
+            nn.ReLU(inplace=True),
+            # conv1x1
+            nn.Conv2d(out_channels, out_channels * self.expansion, kernel_size=1, bias=False),
+            nn.BatchNorm2d(out_channels * self.expansion)
         )
 
         self.shortcut = nn.Sequential()
@@ -69,7 +81,7 @@ class Bottleneck(nn.Module):
                 nn.BatchNorm2d(self.expansion * out_channels)
             )
 
-        self.relu = nn.ReLU()
+        self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
         out = self.feature_layer(x)
@@ -127,6 +139,14 @@ class ResNetEncoder(nn.Module):
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
         """
 
+        # 初始化权重
+        for module in self.modules():
+            if isinstance(module, nn.Conv2d):
+                nn.init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
+            elif isinstance(module, (nn.BatchNorm2d, nn.GroupNorm)):
+                nn.init.constant_(module.weight, 1)
+                nn.init.constant_(module.bias, 0)
+
     def _make_layer(self, block, out_channels, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)   # 除了第一个 block 其他的都设置 stride=1
         layers = []
@@ -143,12 +163,24 @@ class ResNetEncoder(nn.Module):
 
 
 class ResNet(nn.Module):
+    """
+    Residual Network (ResNet)
+    论文链接 2015：https://arxiv.org/abs/1512.03385
+    """
     def __init__(self, in_channels, block, num_blocks, num_classes=10):
+        """
+
+        Args:
+            in_channels:
+            block: BasicBlock、Bottleneck 或者自定义的 ResNet 块
+            num_blocks: 每一层的 block 数量
+            num_classes:
+        """
         super(ResNet, self).__init__()
         self.encoder = ResNetEncoder(in_channels, block, num_blocks)
         self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
         self.flattener = nn.Flatten()
-        self.linear = nn.Linear(512 * block.expansion, num_classes)
+        self.linear = nn.Linear(self.encoder.out_channels, num_classes)
 
     def forward(self, x):
         x = self.encoder(x)
@@ -164,43 +196,43 @@ def ResNet18(in_channels=3, num_classes=10, pretrained=False):
         model = resnet18(weights=weights)
         return model
     else:
-        return ResNet(in_channels, BasicBlock, [2, 2, 2, 2], num_classes)
+        return ResNet(in_channels, BasicBlock, num_blocks_dict["ResNet18"], num_classes)
 
 
 def ResNet34(in_channels=3, num_classes=10, pretrained=False):
     if pretrained:
         weights = ResNet34_Weights.IMAGENET1K_V1
         model = resnet34(weights=weights)
-        return model
     else:
-        return ResNet(in_channels, BasicBlock, [3, 4, 6, 3], num_classes)
+        model = ResNet(in_channels, BasicBlock, num_blocks_dict["ResNet34"], num_classes)
+    return model
 
 
 def ResNet50(in_channels=3, num_classes=10, pretrained=False):
     if pretrained:
         weights = ResNet50_Weights.IMAGENET1K_V1
         model = resnet50(weights=weights)
-        return model
     else:
-        return ResNet(in_channels, Bottleneck, [3, 4, 6, 3], num_classes)
+        model = ResNet(in_channels, Bottleneck, num_blocks_dict["ResNet50"], num_classes)
+    return model
 
 
 def ResNet101(in_channels=3, num_classes=10, pretrained=False):
     if pretrained:
         weights = ResNet101_Weights.IMAGENET1K_V1
         model = resnet101(weights=weights)
-        return model
     else:
-        return ResNet(in_channels, Bottleneck, [3, 4, 23, 3], num_classes)
+        model = ResNet(in_channels, Bottleneck, num_blocks_dict["ResNet101"], num_classes)
+    return model
 
 
 def ResNet152(in_channels=3, num_classes=10, pretrained=False):
     if pretrained:
         weights = ResNet152_Weights.IMAGENET1K_V1
         model = resnet152(weights=weights)
-        return model
     else:
-        return ResNet(in_channels, Bottleneck, [3, 8, 36, 3], num_classes)
+        model = ResNet(in_channels, Bottleneck, num_blocks_dict["ResNet152"], num_classes)
+    return model
 
 
 if __name__ == '__main__':

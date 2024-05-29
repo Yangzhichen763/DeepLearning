@@ -87,7 +87,7 @@ def get_covariance_matrix(rotated_rects):
         (torch.Tensor): rotated_rects 的协方差矩阵。
     """
     # 计算 Gaussian Bounding Boxes
-    wh, angle = rotated_rects[..., 2:4], rotated_rects[..., 4]
+    wh, angle = rotated_rects[..., 2:4], rotated_rects[..., 4:]     # 不能写成 [..., 4]，提取出来的张量会少一维
     gbbs = torch.cat((wh.pow(2) / 12, angle), dim=-1)
     w, h, a = gbbs.split(1, dim=-1)
     cos_a, sin_a = a.cos(), a.sin()
