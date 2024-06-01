@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from lossFunc.BBLoss import WHRatioLoss, FocalLoss
+
 
 class LogLoss(nn.Module):
     def __init__(self, eps=1e-15):

@@ -4,7 +4,7 @@ from torch.nn import functional as F
 
 from torchvision.models import resnet18
 from utils.logger import *
-from modules.residual import ResNetEncoder, ResNeXtEncoder
+from modules.residual import ResNetEncoder, ResNeXtEncoder, BasicBlock, Bottleneck
 from modules.fpn import FeaturePyramidNetwork
 
 
@@ -274,13 +274,15 @@ if __name__ == '__main__':
     x_input = torch.randn(*_input_shape)
 
     # ============= ResNet v1.0
-    _dim_classifiers = [64, 16]
-    _center_encoder = ResNeXtEncoder(
+    _dim_classifiers = [512, 256]
+    _center_encoder = ResNetEncoder(
         _in_channels,
+        BasicBlock,
         num_blocks=[2, 2, 3, 3, 2],
         dim_hidden=[16, 32, 64, 128, 256])
-    _size_encoder = ResNeXtEncoder(
+    _size_encoder = ResNetEncoder(
         _in_channels,
+        Bottleneck,
         num_blocks=[3, 4, 6, 3],
         dim_hidden=[16, 32, 64, 128])
 
@@ -292,6 +294,7 @@ if __name__ == '__main__':
     )
 
     log_model_params(model, _input_shape)
+    exit()
 
     # ============= ResNet v2.0
     _dim_classifiers = [32, 16]
@@ -312,7 +315,7 @@ if __name__ == '__main__':
         input_shape=_input_shape,
         dim_features=[16, 32, 64, 128, 256],
         num_layers_in_features=[2, 2, 3, 3, 2],
-        dim_classifiers=_dim_classifiers,
+        dim_classifiers=[32, 16],
         device='cuda'
     )
 

@@ -1,0 +1,277 @@
+Index: test/test.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import torch\r\nfrom torch import nn\r\nimport numpy as np\r\nimport matplotlib.pyplot as plt\r\nimport matplotlib as mpl\r\nfrom pathlib import Path\r\nimport os\r\nfrom PIL import Image\r\n\r\nimport math\r\n\r\nfrom custom.EllipseDetectionNeuralNetwork.loss import EllipseLoss\r\n\r\nloss_func = nn.CrossEntropyLoss()\r\npre = torch.tensor([0.8, 0.5, 0.2, 0.5], dtype=torch.float)\r\ntgt = torch.tensor([1, 0, 0, 0], dtype=torch.float)\r\nloss = loss_func(pre, tgt)\r\nprint(loss)\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/test/test.py b/test/test.py
+--- a/test/test.py	(revision 7cb0f5ebacd4e7f1b751f4d3644280eca206c547)
++++ b/test/test.py	(date 1716984309830)
+@@ -1,3 +1,5 @@
++import time
++
+ import torch
+ from torch import nn
+ import numpy as np
+@@ -9,10 +11,16 @@
+ 
+ import math
+ 
++from tqdm import tqdm
++
+ from custom.EllipseDetectionNeuralNetwork.loss import EllipseLoss
+ 
+-loss_func = nn.CrossEntropyLoss()
+-pre = torch.tensor([0.8, 0.5, 0.2, 0.5], dtype=torch.float)
+-tgt = torch.tensor([1, 0, 0, 0], dtype=torch.float)
+-loss = loss_func(pre, tgt)
+-print(loss)
++with tqdm(
++        total=512,
++        unit='image') as pbar:
++    for i in range(37):
++        pbar.update(14)
++        time.sleep(0.01)
++
++    print(pbar.n, pbar.total)
++    pbar.update(pbar.total - pbar.n)
+\ No newline at end of file
+Index: lately/UNet/train.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import torch\r\nfrom torch import optim, nn\r\nfrom torch.utils.data import DataLoader, Subset\r\nfrom torch.cuda.amp import autocast, GradScaler\r\nimport albumentations as A\r\nfrom albumentations.pytorch import ToTensorV2\r\nfrom torchvision.transforms import transforms\r\nfrom tqdm import tqdm\r\n\r\nfrom utils.tensorboard import *\r\n\r\nfrom model import (UNet, UNetCustom)\r\nfrom model import (UNet_custom_light)\r\nfrom lately.segment_utils import get_transform, train_and_validate\r\nfrom utils.pytorch import *\r\nfrom utils.pytorch.segment.datasets import CarvanaDataset, VOCSegmentationDataset\r\n\r\n\r\ndef carvana(test_model=False):\r\n    def train_epoch():\r\n        total_loss = 0.0\r\n        min_loss = float('inf')\r\n        max_loss = float('-inf')\r\n        dataset_size = len(train_loader.dataset)\r\n        dataset_batches = len(train_loader)\r\n\r\n        model.train()\r\n        with tqdm(\r\n                total=dataset_size,\r\n                unit='image') as pbar:\r\n            for (i, (images, labels)) in enumerate(train_loader):\r\n                images, labels = images.to(device), labels.unsqueeze(1).float().to(device)\r\n\r\n                with torch.cuda.amp.autocast():\r\n                    predict = model(images)\r\n                    loss = criterion(predict, labels)\r\n\r\n                optimizer.zero_grad()\r\n                scaler.scale(loss).backward()\r\n                scaler.step(optimizer)\r\n                scaler.update()\r\n\r\n                # 记录损失最小值和最大值以及总损失\r\n                min_loss = min(min_loss, loss.item())\r\n                max_loss = max(max_loss, loss.item())\r\n                total_loss += loss.item()\r\n\r\n                # 更新进度条\r\n                pbar.set_postfix(loss=loss.item())\r\n                pbar.update(batch_size)\r\n\r\n        average_loss = total_loss / dataset_batches\r\n        tqdm.write(\r\n            \"\\n\"\r\n            f\"Epoch {epoch} training finished. \"\r\n            f\"Min loss: {min_loss:.6f}, \"\r\n            f\"Max loss: {max_loss:.6f}, \"\r\n            f\"Avg loss: {average_loss:.6f}\")\r\n        return average_loss\r\n\r\n    def validate_epoch():\r\n        total_loss = 0.0\r\n        num_correct = 0\r\n        num_pixels = 0\r\n        dice_score = 0.0\r\n        dataset_size = len(val_loader.dataset)\r\n        dataset_batches = len(val_loader)\r\n\r\n        model.eval()\r\n        with (tqdm(\r\n                total=dataset_size,\r\n                unit='image') as pbar, torch.no_grad()):\r\n            for (images, labels) in val_loader:\r\n                images, labels = images.to(device), labels.unsqueeze(1).float().to(device)\r\n\r\n                predict = model(images)\r\n\r\n                # 计算损失\r\n                loss = criterion(predict, labels)\r\n                total_loss += loss.item()\r\n\r\n                # 预测和计算准确率和 Dice 系数\r\n                predict = torch.sigmoid(predict)\r\n                predict = (predict > 0.5).float()\r\n                num_correct += (predict == labels).sum()\r\n                num_pixels += torch.numel(predict)\r\n                dice_score += ((2 * (predict * labels).sum())\r\n                               / (2 * (predict * labels).sum()\r\n                               + ((predict * labels) < 1).sum()))\r\n                if test_model:\r\n                    save.tensor_to_image(predict, file_name=\"pred\")\r\n\r\n                # 更新进度条\r\n                pbar.set_postfix(loss=loss.item())\r\n                pbar.update(batch_size)\r\n\r\n        accuracy = num_correct / num_pixels\r\n        average_loss = 0 # total_loss / dataset_batches\r\n        dice = dice_score / dataset_batches\r\n        tqdm.write(\r\n            \"\\n\"\r\n            f\"Accuracy: {num_correct}/{num_pixels}({accuracy * 100:.2f})%, \"\r\n            f\"Average loss: {average_loss:.4f}, \"\r\n            f\"Dice Score: {dice:.2f}\")\r\n\r\n        return accuracy, dice\r\n\r\n    # 超参数设置\r\n    batch_size = 8\r\n    num_workers = 4\r\n    num_epochs = 2\r\n    learning_rate = 1e-8\r\n    weight_decay = 0.0001\r\n    momentum = 0.9\r\n    scheduler_step_size = 2\r\n    scheduler_gamma = 0.5\r\n    image_size = (160, 240)\r\n\r\n    # 部署 GPU 设备\r\n    device = assert_on_cuda()\r\n    torch.backends.cudnn.deterministic = True\r\n    torch.backends.cudnn.benchmark = False\r\n\r\n    train_transform = A.Compose([\r\n        A.Resize(*image_size),\r\n        A.Rotate(limit=35, p=1.0),\r\n        A.HorizontalFlip(p=0.5),\r\n        A.VerticalFlip(p=0.1),\r\n        A.Normalize(\r\n            mean=[0.0, 0.0, 0.0],\r\n            std=[1.0, 1.0, 1.0],\r\n            max_pixel_value=255.0\r\n        ),\r\n        ToTensorV2(),\r\n    ],)\r\n    val_transform = A.Compose([\r\n        A.Resize(*image_size),\r\n        A.Normalize(\r\n            mean=[0.0, 0.0, 0.0],\r\n            std=[1.0, 1.0, 1.0],\r\n            max_pixel_value=255.0\r\n        ),\r\n        ToTensorV2(),\r\n    ],)\r\n\r\n    # 加载数据集\r\n    if not test_model:\r\n        train_dataset = CarvanaDataset(transform=train_transform)\r\n        train_dataset = Subset(train_dataset, range(0, 50))\r\n        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)\r\n    val_dataset = CarvanaDataset(transform=val_transform)\r\n    val_dataset = Subset(val_dataset, range(0, 50))\r\n    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)\r\n\r\n    # 定义模型\r\n    model = UNet_custom_light(num_classes=1).to(device)\r\n    criterion = nn.BCEWithLogitsLoss()\r\n    if not test_model:\r\n        optimizer = optim.Adam(model.parameters(), lr=learning_rate)  # optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=weight_decay)\r\n        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=scheduler_step_size, gamma=scheduler_gamma)\r\n        scaler = GradScaler()\r\n\r\n        # 训练模型\r\n        for epoch in range(num_epochs):\r\n            train_loss = train_epoch()\r\n            val_accuracy, val_loss = validate_epoch()\r\n            scheduler.step()\r\n            print(f\"Epoch: {epoch+1}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}\")\r\n\r\n        # 保存模型\r\n        torch.save(model.state_dict(), f\"models/{model.__class__.__name__}.pt\")\r\n    else:\r\n        # 加载模型\r\n        model.load_state_dict(torch.load(f\"models/{model.__class__.__name__}.pt\"))\r\n\r\n        # 测试模型\r\n        val_accuracy, val_loss = validate_epoch()\r\n        print(f\"Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.4f}\")\r\n\r\n\r\ndef voc_segmentation(test_model=False):\r\n    def train_epoch():\r\n        total_loss = 0.0\r\n        min_loss = float('inf')\r\n        max_loss = float('-inf')\r\n        dataset_size = len(train_loader.dataset)\r\n        dataset_batches = len(train_loader)\r\n\r\n        model.train()\r\n        with tqdm(\r\n                total=dataset_size,\r\n                unit='image') as pbar:\r\n            for (i, (images, labels)) in enumerate(train_loader):\r\n                images, labels = images.to(device), labels.unsqueeze(1).float().to(device)\r\n\r\n                with torch.cuda.amp.autocast():\r\n                    predict = model(images)\r\n                    loss = criterion(predict, labels)\r\n\r\n                optimizer.zero_grad()\r\n                scaler.scale(loss).backward()\r\n                scaler.step(optimizer)\r\n                scaler.update()\r\n\r\n                # 记录损失最小值和最大值以及总损失\r\n                min_loss = min(min_loss, loss.item())\r\n                max_loss = max(max_loss, loss.item())\r\n                total_loss += loss.item()\r\n\r\n                # 更新进度条\r\n                pbar.set_postfix(loss=loss.item())\r\n                pbar.update(batch_size)\r\n\r\n        average_loss = total_loss / dataset_batches\r\n        tqdm.write(\r\n            \"\\n\"\r\n            f\"Epoch {epoch} training finished. \"\r\n            f\"Min loss: {min_loss:.6f}, \"\r\n            f\"Max loss: {max_loss:.6f}, \"\r\n            f\"Avg loss: {average_loss:.6f}\")\r\n        return average_loss\r\n\r\n    def validate_epoch():\r\n        total_loss = 0.0\r\n        num_correct = 0\r\n        num_pixels = 0\r\n        dice_score = 0.0\r\n        dataset_size = len(val_loader.dataset)\r\n        dataset_batches = len(val_loader)\r\n\r\n        model.eval()\r\n        with (tqdm(\r\n                total=dataset_size,\r\n                unit='image') as pbar, torch.no_grad()):\r\n            for (images, labels) in val_loader:\r\n                images, labels = images.to(device), labels.unsqueeze(1).float().to(device)\r\n\r\n                predict = model(images)\r\n\r\n                # 计算损失\r\n                loss = criterion(predict, labels)\r\n                total_loss += loss.item()\r\n\r\n                # 预测和计算准确率和 Dice 系数\r\n                predict = torch.sigmoid(predict)\r\n                predict = (predict > 0.5).float()\r\n                num_correct += (predict == labels).sum()\r\n                num_pixels += torch.numel(predict)\r\n                dice_score += ((2 * (predict * labels).sum())\r\n                               / (2 * (predict * labels).sum()\r\n                               + ((predict * labels) < 1).sum()))\r\n                if test_model:\r\n                    save.tensor_to_image(predict, file_name=\"pred\")\r\n\r\n                # 更新进度条\r\n                pbar.set_postfix(loss=loss.item())\r\n                pbar.update(batch_size)\r\n\r\n        accuracy = num_correct / num_pixels\r\n        average_loss = 0 # total_loss / dataset_batches\r\n        dice = dice_score / dataset_batches\r\n        tqdm.write(\r\n            \"\\n\"\r\n            f\"Accuracy: {num_correct}/{num_pixels}({accuracy * 100:.2f})%, \"\r\n            f\"Average loss: {average_loss:.4f}, \"\r\n            f\"Dice Score: {dice:.2f}\")\r\n\r\n        return accuracy, dice\r\n\r\n    # 超参数设置\r\n    batch_size = 8\r\n    num_workers = 4\r\n    num_epochs = 2\r\n    learning_rate = 1e-8\r\n    weight_decay = 0.0001\r\n    momentum = 0.9\r\n    scheduler_step_size = 2\r\n    scheduler_gamma = 0.5\r\n    image_size = (160, 240)\r\n\r\n    # 部署 GPU 设备\r\n    device = assert_on_cuda()\r\n    torch.backends.cudnn.deterministic = True\r\n    torch.backends.cudnn.benchmark = False\r\n\r\n    image_transform = transforms.Compose(\r\n        [\r\n            transforms.Resize(256),\r\n            transforms.CenterCrop(256),\r\n            transforms.ToTensor(),\r\n            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))\r\n        ])\r\n    label_transform = transforms.Compose(\r\n        [\r\n            transforms.Resize(256),\r\n            transforms.CenterCrop(256),\r\n            transforms.ToTensor()\r\n        ])\r\n\r\n    # 加载数据集\r\n    if not test_model:\r\n        train_dataset = VOCSegmentationDataset(image_transform=image_transform, label_transform=label_transform)\r\n        train_dataset = Subset(train_dataset, range(0, 50))\r\n        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)\r\n    val_dataset = VOCSegmentationDataset(image_transform=image_transform, label_transform=label_transform)\r\n    val_dataset = Subset(val_dataset, range(0, 50))\r\n    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)\r\n\r\n    # 定义模型\r\n    model = UNet_custom_light(num_classes=1).to(device)\r\n    criterion = torch.nn.CrossEntropyLoss()\r\n    if not test_model:\r\n        optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=weight_decay)\r\n        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=scheduler_step_size, gamma=scheduler_gamma)\r\n        scaler = GradScaler()\r\n\r\n        # 训练模型\r\n        for epoch in range(num_epochs):\r\n            train_loss = train_epoch()\r\n            val_accuracy, val_loss = validate_epoch()\r\n            scheduler.step()\r\n            print(f\"Epoch: {epoch+1}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}\")\r\n\r\n        # 保存模型\r\n        torch.save(model.state_dict(), f\"models/{model.__class__.__name__}.pt\")\r\n    else:\r\n        # 加载模型\r\n        model.load_state_dict(torch.load(f\"models/{model.__class__.__name__}.pt\"))\r\n\r\n        # 测试模型\r\n        val_accuracy, val_loss = validate_epoch()\r\n        print(f\"Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.4f}\")\r\n\r\n\r\nif __name__ == '__main__':\r\n    carvana(True)\r\n\r\n\r\n\r\n\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lately/UNet/train.py b/lately/UNet/train.py
+--- a/lately/UNet/train.py	(revision 7cb0f5ebacd4e7f1b751f4d3644280eca206c547)
++++ b/lately/UNet/train.py	(date 1716973241849)
+@@ -156,7 +156,7 @@
+     model = UNet_custom_light(num_classes=1).to(device)
+     criterion = nn.BCEWithLogitsLoss()
+     if not test_model:
+-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)  # optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
++        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=scheduler_step_size, gamma=scheduler_gamma)
+         scaler = GradScaler()
+ 
+Index: .gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># 在 .gitignore 文件中，每一行的忽略规则的语法如下：\r\n# 1、空格不匹配任意文件，可作为分隔符，可用反斜杠转义\r\n# 2、以“＃”开头的行都会被 Git 忽略。即#开头的文件标识注释，可以使用反斜杠进行转义。\r\n# 3、可以使用标准的glob模式匹配。所谓的glob模式是指shell所使用的简化了的正则表达式。\r\n# 4、以斜杠\"/\"开头表示目录；\"/\"结束的模式只匹配文件夹以及在该文件夹路径下的内容，但是不匹配该文件；\"/\"开始的模式匹配项目跟目录；如果一个模式不包含\r\n#    斜杠，则它匹配相对于当前 .gitignore 文件路径的内容，如果该模式不在 .gitignore 文件中，则相对于项目根目录。\r\n# 5、以星号\"*\"通配多个字符，即匹配多个任意字符；使用两个星号\"**\" 表示匹配任意中间目录，比如a/**/z可以匹配 a/z, a/b/z 或 a/b/c/z等。\r\n# 6、以问号\"?\"通配单个字符，即匹配一个任意字符；\r\n# 7、以方括号\"[]\"包含单个字符的匹配列表，即匹配任何一个列在方括号中的字符。比如[abc]表示要么匹配一个a，要么匹配一个b，要么匹配一个c；如果在方括号\r\n#    中使用短划线分隔两个字符，表示所有在这两个字符范围内的都可以匹配。比如[0-9]表示匹配所有0到9的数字，[a-z]表示匹配任意的小写字母）。\r\n# 8、以叹号\"!\"表示不忽略(跟踪)匹配到的文件或目录，即要忽略指定模式以外的文件或目录，可以在模式前加上惊叹号（!）取反。需要特别注意的是：如果文件的父\r\n#    目录已经被前面的规则排除掉了，那么对这个文件用\"!\"规则是不起作用的。也就是说\"!\"开头的模式表示否定，该文件将会再次被包含，如果排除了该文件的父级目录，则使用\"!\"也不会再次被包含。可以使用反斜杠进行转义。\r\n**/logs*/\r\n**/datas/\r\n*.png\r\n*.jpg\r\n*.jpeg\r\n*.gif\r\n*.pt\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.gitignore b/.gitignore
+--- a/.gitignore	(revision 7cb0f5ebacd4e7f1b751f4d3644280eca206c547)
++++ b/.gitignore	(date 1716824466335)
+@@ -12,6 +12,7 @@
+ #    目录已经被前面的规则排除掉了，那么对这个文件用"!"规则是不起作用的。也就是说"!"开头的模式表示否定，该文件将会再次被包含，如果排除了该文件的父级目录，则使用"!"也不会再次被包含。可以使用反斜杠进行转义。
+ **/logs*/
+ **/datas/
++**/pictures/
+ *.png
+ *.jpg
+ *.jpeg
+Index: legacy/AlexNet/model.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import torch\r\nimport torch.nn as nn\r\nfrom utils.logger import *\r\n\r\n\r\nclass AlexNet(nn.Module):\r\n    \"\"\"\r\n    论文地址：https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf\r\n    \"\"\"\r\n    \r\n    def __init__(self, num_features=4096, num_classes=1000):\r\n        \"\"\"\r\n        图像的输入形状为 [3, 227, 277]\r\n        :param num_classes: 分类个数\r\n        \"\"\"\r\n        super(AlexNet, self).__init__()\r\n        # 图像的输入形状为 [3, 227, 227]\r\n        self.net = nn.Sequential(  # [C, H, W]\r\n            # C1\r\n            nn.Conv2d(in_channels=3, out_channels=96, kernel_size=11, stride=4),  # [96, 55, 55]\r\n            nn.ReLU(inplace=True),\r\n            # LRN 对局部神经元的活动创建竞争机制，使得其中响应比较大的值变得相对更大，并抑制其他反馈较小的神经元，增强了模型的泛化能力\r\n            nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=2),  # 论文中使用 size=5, alpha=0.0001, beta=0.75, k=2\r\n            # 使用最大池化避免平均池化层的模糊效果，步长比核尺寸小提升了特征的丰富性、避免过拟合\r\n            nn.MaxPool2d(kernel_size=3, stride=2),  # [96, 27, 27]\r\n\r\n            # C2\r\n            nn.Conv2d(in_channels=96, out_channels=256, kernel_size=5, padding=2),  # [256, 27, 27]\r\n            nn.ReLU(inplace=True),\r\n            nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=2),\r\n            nn.MaxPool2d(kernel_size=3, stride=2),  # [256, 13, 13]\r\n\r\n            # C3\r\n            nn.Conv2d(in_channels=256, out_channels=384, kernel_size=3, padding=1),  # [384, 13, 13]\r\n            nn.ReLU(inplace=True),\r\n\r\n            # C4\r\n            nn.Conv2d(in_channels=384, out_channels=384, kernel_size=3, padding=1),  # [384, 13, 13]\r\n            nn.ReLU(inplace=True),\r\n\r\n            # C5\r\n            nn.Conv2d(in_channels=384, out_channels=256, kernel_size=3, padding=1),  # [256, 13, 13]\r\n            nn.ReLU(inplace=True),\r\n            nn.MaxPool2d(kernel_size=3, stride=2),  # [256, 6, 6]\r\n        )\r\n        self.flatten = nn.Flatten()     # 将张量压平到一维\r\n        self.classifier = nn.Sequential(\r\n            # Dropout 过大容易欠拟合，Dropout 过小速度慢、或容易过拟合\r\n            nn.Dropout(p=0.5),  # inplace 操作会导致梯度计算所需的变量被修改\r\n            nn.Linear(in_features=256 * 6 * 6, out_features=num_features),\r\n            nn.ReLU(),\r\n\r\n            nn.Dropout(p=0.5),\r\n            nn.Linear(in_features=num_features, out_features=num_features),\r\n            nn.ReLU(),\r\n\r\n            nn.Linear(in_features=num_features, out_features=num_classes),\r\n        )\r\n\r\n    def forward(self, x):\r\n        x = self.net(x)  # 卷积层，特征提取\r\n        x = self.flatten(x)  # 将张量维度压平到一维，以便全连接层计算\r\n        x = self.classifier(x)  # 全连接层以及分类\r\n        return x\r\n\r\n\r\nclass AlexNet_CIFAR10(nn.Module):\r\n    \"\"\"\r\n    用于测试模型的轻量化版本，减少模型参数量\r\n    \"\"\"\r\n\r\n    def __init__(self, num_features=None, num_classes=10):\r\n        \"\"\"\r\n        图像的输入形状为 [3, 32, 32]\r\n        Args:\r\n            num_features: 全连接层的输入维度，如果不指定，则默认为 16 * num_classes\r\n            num_classes: 分类个数\r\n        \"\"\"\r\n        if num_features is None:\r\n            num_features = 16 * num_classes\r\n        super(AlexNet_CIFAR10, self).__init__()\r\n        self.net = nn.Sequential(\r\n            # C1\r\n            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=2, padding=1),\r\n            nn.ReLU(inplace=True),\r\n            nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=2),\r\n            nn.MaxPool2d(kernel_size=3, stride=2),\r\n\r\n            # C2\r\n            nn.Conv2d(in_channels=32, out_channels=128, kernel_size=3, padding=1),\r\n            nn.ReLU(inplace=True),\r\n            nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=2),\r\n            nn.MaxPool2d(kernel_size=3, stride=2),\r\n\r\n            # C3\r\n            nn.Conv2d(in_channels=128, out_channels=192, kernel_size=3, padding=1),\r\n            nn.ReLU(inplace=True),\r\n\r\n            # C4\r\n            nn.Conv2d(in_channels=192, out_channels=192, kernel_size=3, padding=1),\r\n            nn.ReLU(inplace=True),\r\n\r\n            # C5\r\n            nn.Conv2d(in_channels=192, out_channels=128, kernel_size=3, padding=1),\r\n            nn.ReLU(inplace=True),\r\n            nn.MaxPool2d(kernel_size=3, stride=2),\r\n        )\r\n        self.flatten = nn.Flatten()\r\n        self.classifier = nn.Sequential(\r\n            nn.Dropout(p=0.5),\r\n            nn.Linear(in_features=128 * 1 * 1, out_features=num_features),\r\n            nn.ReLU(),\r\n\r\n            nn.Dropout(p=0.5),\r\n            nn.Linear(in_features=num_features, out_features=num_features),\r\n            nn.ReLU(),\r\n\r\n            nn.Linear(in_features=num_features, out_features=num_classes),\r\n        )\r\n\r\n    def forward(self, x):\r\n        x = self.net(x)  # 卷积层，特征提取\r\n        x = self.flatten(x)  # 将张量维度压平到一维，以便全连接层计算\r\n        x = self.classifier(x)  # 全连接层以及分类\r\n        return x\r\n\r\n\r\nif __name__ == '__main__':\r\n    _model = AlexNet_CIFAR10(40, 10)\r\n    x_input = torch.randn(1, 3, 32, 32)\r\n    y_pred = _model(x_input)\r\n    print(y_pred.shape)\r\n\r\n    log_model_params(_model, x_input.shape)\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/legacy/AlexNet/model.py b/legacy/AlexNet/model.py
+--- a/legacy/AlexNet/model.py	(revision 7cb0f5ebacd4e7f1b751f4d3644280eca206c547)
++++ b/legacy/AlexNet/model.py	(date 1716773638888)
+@@ -127,7 +127,7 @@
+ 
+ if __name__ == '__main__':
+     _model = AlexNet_CIFAR10(40, 10)
+-    x_input = torch.randn(1, 3, 32, 32)
++    x_input = torch.randn(4, 3, 32, 32)
+     y_pred = _model(x_input)
+     print(y_pred.shape)
+ 
+Index: legacy/ResNet/model.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import torch\r\nimport torch.nn as nn\r\nfrom torchvision import models\r\nfrom torchvision.models import (\r\n    ResNet18_Weights,\r\n    ResNet34_Weights,\r\n    ResNet50_Weights,\r\n    ResNet101_Weights,\r\n    ResNet152_Weights\r\n)\r\nfrom torchvision.models import (\r\n    resnet18,\r\n    resnet34,\r\n    resnet50,\r\n    resnet101,\r\n    resnet152\r\n)\r\nfrom utils.logger import *\r\n\r\n\r\nclass BasicBlock(nn.Module):\r\n    expansion = 1\r\n\r\n    def __init__(self, in_channels, out_channels, stride=1):\r\n        super(BasicBlock, self).__init__()\r\n        self.feature_layer = nn.Sequential(\r\n            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),\r\n            nn.BatchNorm2d(out_channels),\r\n            nn.ReLU(),\r\n            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),\r\n            nn.BatchNorm2d(out_channels)\r\n        )\r\n\r\n        self.shortcut = nn.Sequential()\r\n        if stride != 1 or in_channels != self.expansion * out_channels:\r\n            self.shortcut = nn.Sequential(\r\n                nn.Conv2d(in_channels, self.expansion * out_channels, kernel_size=1, stride=stride, bias=False),\r\n                nn.BatchNorm2d(self.expansion * out_channels)\r\n            )\r\n\r\n        self.relu = nn.ReLU()\r\n\r\n    def forward(self, x):\r\n        out = self.feature_layer(x)\r\n        out += self.shortcut(x)\r\n        out = self.relu(out)\r\n        return out\r\n\r\n\r\nclass Bottleneck(nn.Module):\r\n    expansion = 4\r\n\r\n    def __init__(self, in_channels, out_channels, stride=1):\r\n        super(Bottleneck, self).__init__()\r\n        self.feature_layer = nn.Sequential(\r\n            nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),    # 后面接 BN，所以 bias=False\r\n            nn.BatchNorm2d(out_channels),\r\n            nn.ReLU(),\r\n            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),\r\n            nn.BatchNorm2d(out_channels),\r\n            nn.ReLU(),\r\n            nn.Conv2d(out_channels, self.expansion * out_channels, kernel_size=1, bias=False),\r\n            nn.BatchNorm2d(self.expansion * out_channels)\r\n        )\r\n\r\n        self.shortcut = nn.Sequential()\r\n        if stride != 1 or in_channels != self.expansion * out_channels:\r\n            self.shortcut = nn.Sequential(\r\n                nn.Conv2d(in_channels, self.expansion * out_channels, kernel_size=1, stride=stride, bias=False),\r\n                nn.BatchNorm2d(self.expansion * out_channels)\r\n            )\r\n\r\n        self.relu = nn.ReLU()\r\n\r\n    def forward(self, x):\r\n        out = self.feature_layer(x)\r\n        out += self.shortcut(x)\r\n        out = self.relu(out)\r\n        return out\r\n\r\n\r\nclass ResNet(nn.Module):\r\n    def __init__(self, block, num_blocks, num_classes=10):\r\n        super(ResNet, self).__init__()\r\n        self.in_channels = 64\r\n\r\n        self.layer0 = nn.Sequential(\r\n            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),\r\n            nn.BatchNorm2d(64),\r\n            nn.ReLU(inplace=True),\r\n            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)\r\n        )\r\n        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)\r\n        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)\r\n        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)\r\n        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)\r\n        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))\r\n        self.flattener = nn.Flatten()\r\n        self.linear = nn.Linear(512 * block.expansion, num_classes)\r\n\r\n    def _make_layer(self, block, out_channels, num_blocks, stride):\r\n        strides = [stride] + [1] * (num_blocks-1)   # 除了第一个 block 其他的都设置 stride=1\r\n        layers = []\r\n        for stride in strides:\r\n            layers.append(block(self.in_channels, out_channels, stride))\r\n            self.in_channels = out_channels * block.expansion\r\n        return nn.Sequential(*layers)\r\n\r\n    def forward(self, x):\r\n        x = self.layer0(x)\r\n        x = self.layer1(x)\r\n        x = self.layer2(x)\r\n        x = self.layer3(x)\r\n        x = self.layer4(x)\r\n        x = self.avg_pool(x)\r\n        x = self.flattener(x)\r\n        x = self.linear(x)\r\n        return x\r\n\r\n\r\ndef ResNet18(num_classes=10, pretrained=False):\r\n    if pretrained:\r\n        weights = ResNet18_Weights.IMAGENET1K_V1\r\n        model = resnet18(weights=weights)\r\n        return model\r\n    else:\r\n        return ResNet(BasicBlock, [2, 2, 2, 2], num_classes)\r\n\r\n\r\ndef ResNet34(num_classes=10, pretrained=False):\r\n    if pretrained:\r\n        weights = ResNet34_Weights.IMAGENET1K_V1\r\n        model = resnet34(weights=weights)\r\n        return model\r\n    else:\r\n        return ResNet(BasicBlock, [3, 4, 6, 3], num_classes)\r\n\r\n\r\ndef ResNet50(num_classes=10, pretrained=False):\r\n    if pretrained:\r\n        weights = ResNet50_Weights.IMAGENET1K_V1\r\n        model = resnet50(weights=weights)\r\n        return model\r\n    else:\r\n        return ResNet(Bottleneck, [3, 4, 6, 3], num_classes)\r\n\r\n\r\ndef ResNet101(num_classes=10, pretrained=False):\r\n    if pretrained:\r\n        weights = ResNet101_Weights.IMAGENET1K_V1\r\n        model = resnet101(weights=weights)\r\n        return model\r\n    else:\r\n        return ResNet(Bottleneck, [3, 4, 23, 3], num_classes)\r\n\r\n\r\ndef ResNet152(num_classes=10, pretrained=False):\r\n    if pretrained:\r\n        return models.resnet152(pretrained=True)\r\n    else:\r\n        return ResNet(Bottleneck, [3, 8, 36, 3], num_classes)\r\n\r\n\r\nif __name__ == '__main__':\r\n    _model = ResNet34()\r\n    x_input = torch.randn(1, 3, 32, 32)\r\n    y_pred = _model(x_input)\r\n    print(y_pred.shape)\r\n\r\n    log_model_params(_model, x_input.shape)\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/legacy/ResNet/model.py b/legacy/ResNet/model.py
+--- a/legacy/ResNet/model.py	(revision 7cb0f5ebacd4e7f1b751f4d3644280eca206c547)
++++ b/legacy/ResNet/model.py	(date 1716738778598)
+@@ -1,170 +1,1 @@
+-import torch
+-import torch.nn as nn
+-from torchvision import models
+-from torchvision.models import (
+-    ResNet18_Weights,
+-    ResNet34_Weights,
+-    ResNet50_Weights,
+-    ResNet101_Weights,
+-    ResNet152_Weights
+-)
+-from torchvision.models import (
+-    resnet18,
+-    resnet34,
+-    resnet50,
+-    resnet101,
+-    resnet152
+-)
+-from utils.logger import *
+-
+-
+-class BasicBlock(nn.Module):
+-    expansion = 1
+-
+-    def __init__(self, in_channels, out_channels, stride=1):
+-        super(BasicBlock, self).__init__()
+-        self.feature_layer = nn.Sequential(
+-            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
+-            nn.BatchNorm2d(out_channels),
+-            nn.ReLU(),
+-            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
+-            nn.BatchNorm2d(out_channels)
+-        )
+-
+-        self.shortcut = nn.Sequential()
+-        if stride != 1 or in_channels != self.expansion * out_channels:
+-            self.shortcut = nn.Sequential(
+-                nn.Conv2d(in_channels, self.expansion * out_channels, kernel_size=1, stride=stride, bias=False),
+-                nn.BatchNorm2d(self.expansion * out_channels)
+-            )
+-
+-        self.relu = nn.ReLU()
+-
+-    def forward(self, x):
+-        out = self.feature_layer(x)
+-        out += self.shortcut(x)
+-        out = self.relu(out)
+-        return out
+-
+-
+-class Bottleneck(nn.Module):
+-    expansion = 4
+-
+-    def __init__(self, in_channels, out_channels, stride=1):
+-        super(Bottleneck, self).__init__()
+-        self.feature_layer = nn.Sequential(
+-            nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),    # 后面接 BN，所以 bias=False
+-            nn.BatchNorm2d(out_channels),
+-            nn.ReLU(),
+-            nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
+-            nn.BatchNorm2d(out_channels),
+-            nn.ReLU(),
+-            nn.Conv2d(out_channels, self.expansion * out_channels, kernel_size=1, bias=False),
+-            nn.BatchNorm2d(self.expansion * out_channels)
+-        )
+-
+-        self.shortcut = nn.Sequential()
+-        if stride != 1 or in_channels != self.expansion * out_channels:
+-            self.shortcut = nn.Sequential(
+-                nn.Conv2d(in_channels, self.expansion * out_channels, kernel_size=1, stride=stride, bias=False),
+-                nn.BatchNorm2d(self.expansion * out_channels)
+-            )
+-
+-        self.relu = nn.ReLU()
+-
+-    def forward(self, x):
+-        out = self.feature_layer(x)
+-        out += self.shortcut(x)
+-        out = self.relu(out)
+-        return out
+-
+-
+-class ResNet(nn.Module):
+-    def __init__(self, block, num_blocks, num_classes=10):
+-        super(ResNet, self).__init__()
+-        self.in_channels = 64
+-
+-        self.layer0 = nn.Sequential(
+-            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
+-            nn.BatchNorm2d(64),
+-            nn.ReLU(inplace=True),
+-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+-        )
+-        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
+-        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
+-        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
+-        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
+-        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
+-        self.flattener = nn.Flatten()
+-        self.linear = nn.Linear(512 * block.expansion, num_classes)
+-
+-    def _make_layer(self, block, out_channels, num_blocks, stride):
+-        strides = [stride] + [1] * (num_blocks-1)   # 除了第一个 block 其他的都设置 stride=1
+-        layers = []
+-        for stride in strides:
+-            layers.append(block(self.in_channels, out_channels, stride))
+-            self.in_channels = out_channels * block.expansion
+-        return nn.Sequential(*layers)
+-
+-    def forward(self, x):
+-        x = self.layer0(x)
+-        x = self.layer1(x)
+-        x = self.layer2(x)
+-        x = self.layer3(x)
+-        x = self.layer4(x)
+-        x = self.avg_pool(x)
+-        x = self.flattener(x)
+-        x = self.linear(x)
+-        return x
+-
+-
+-def ResNet18(num_classes=10, pretrained=False):
+-    if pretrained:
+-        weights = ResNet18_Weights.IMAGENET1K_V1
+-        model = resnet18(weights=weights)
+-        return model
+-    else:
+-        return ResNet(BasicBlock, [2, 2, 2, 2], num_classes)
+-
+-
+-def ResNet34(num_classes=10, pretrained=False):
+-    if pretrained:
+-        weights = ResNet34_Weights.IMAGENET1K_V1
+-        model = resnet34(weights=weights)
+-        return model
+-    else:
+-        return ResNet(BasicBlock, [3, 4, 6, 3], num_classes)
+-
+-
+-def ResNet50(num_classes=10, pretrained=False):
+-    if pretrained:
+-        weights = ResNet50_Weights.IMAGENET1K_V1
+-        model = resnet50(weights=weights)
+-        return model
+-    else:
+-        return ResNet(Bottleneck, [3, 4, 6, 3], num_classes)
+-
+-
+-def ResNet101(num_classes=10, pretrained=False):
+-    if pretrained:
+-        weights = ResNet101_Weights.IMAGENET1K_V1
+-        model = resnet101(weights=weights)
+-        return model
+-    else:
+-        return ResNet(Bottleneck, [3, 4, 23, 3], num_classes)
+-
+-
+-def ResNet152(num_classes=10, pretrained=False):
+-    if pretrained:
+-        return models.resnet152(pretrained=True)
+-    else:
+-        return ResNet(Bottleneck, [3, 8, 36, 3], num_classes)
+-
+-
+-if __name__ == '__main__':
+-    _model = ResNet34()
+-    x_input = torch.randn(1, 3, 32, 32)
+-    y_pred = _model(x_input)
+-    print(y_pred.shape)
+-
+-    log_model_params(_model, x_input.shape)
++from modules.residual import *

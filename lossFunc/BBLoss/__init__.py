@@ -2,6 +2,77 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import math
+
+from lossFunc.BBLoss.AABB import *
+from lossFunc.BBLoss.OBB import *
+
+
+class WHRatioLoss(nn.Module):
+    """
+    旋转框的宽高比损失函数（如果将中心重合，宽高比之间的比值越接近 1，并且旋转角度之差越小，则损失越小）
+    """
+    def __init__(self, loss_func=None):
+        super(WHRatioLoss, self).__init__()
+        if loss_func is None:
+            loss_func = self.linear_regression  # 最好使用 linear，否则容易对宽高比为 1 的框过拟合
+        self.loss_func = loss_func
+
+    def forward(self, x, y, a_x, a_y):
+        """
+        计算两个宽高比（W/H）之间的损失，公式如下：
+        loss = (2 * (x.arctan() - y.arctan() + rotation).sin().asin() / math.pi) ** 2
+        其中 x, y 为宽高比，rotation 为旋转角度，loss 为损失值。
+        Args:
+            x: 包围盒A的宽高比，shape=[B, N, 1]
+            y: 包围盒B的宽高比，shape=[B, N, 1]
+            a_x: 包围盒A的旋转角度，shape=[B, N, 1]
+            a_y: 包围盒B的旋转角度，shape=[B, N, 1]
+
+        Returns:
+
+        """
+        score = self.arctan_regression(x, y, a_x, a_y)  # [B, N, 1]
+        score_log = self.loss_func(score)               # [B, N, 1]
+        loss = score_log.sum(dim=-1)                    # [B, N]
+        return loss, score_log                          # [B, N], [B, N, 1]
+
+    @staticmethod
+    def arctan_regression(x, y, a_x, a_y):
+        cos_a = (a_x - a_y).cos()
+        sin_a = (a_x - a_y).sin()
+        cos_r = (x.arctan() + y.arctan()).cos()
+        sin_r = (x.arctan() - y.arctan()).sin()
+        score = (sin_r * cos_a + cos_r * sin_a).arcsin() * (2 / math.pi)
+        return score
+
+    @staticmethod
+    def log_regression(x):
+        return -(1 + x).log() - (1 - x).log()
+
+    @staticmethod
+    def exp_regression(x):
+        return x.exp() + (-x).exp() - 2
+
+    @staticmethod
+    def square_regression(x):
+        return x ** 2
+
+    @staticmethod
+    def linear_regression(x):
+        return x.abs()
+
+
+class DirectionLoss(nn.Module):
+    """
+    旋转框主轴所指方向损失函数
+    """
+    def __init__(self):
+        super(DirectionLoss, self).__init__()
+
+    def forward(self, wha1, wha2):
+        pass
+
 
 class FocalLoss(nn.Module):
     def __init__(self, gamma=0.5):
@@ -18,63 +89,6 @@ class FocalLoss(nn.Module):
         loss = fl_p * target
         loss = loss.sum(dim=1)
         return loss
-
-
-def rotated_rect_to_corners(rotated_rect):
-    """
-    包围盒转化为角点，即 xywhr -> xy sigma
-    Args:
-        rotated_rect (torch.Tensor | list(torch.Tensor)): torch.tensor([x, y, w, h, angle])，其中 angle 为弧度制
-
-    Returns:
-        (torch.tensor): torch.tensor([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
-        顺时针方向返回角点位置
-        [x, y, w, h, angle] -> [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
-    """
-    if isinstance(rotated_rect, list):
-        rotated_rect = torch.stack(rotated_rect)
-
-    if rotated_rect.dim() == 1:
-        rotated_rect = rotated_rect.unsqueeze(0)
-    elif rotated_rect.dim() == 3 and rotated_rect.shape[-1] == 5:
-        rotated_rect = rotated_rect.flatten(start_dim=0, end_dim=-2)
-
-    if rotated_rect.dim() not in [1, 2, 3]:
-        raise ValueError("rotated_rect should be a tensor with 1, 2 or 3 dimensions, "
-                         f"instead of dims={rotated_rect.dim()}, shape={rotated_rect.shape}")
-
-    num_rect = rotated_rect.shape[0]
-    center, size, angle = rotated_rect.split((2, 2, 1), dim=-1)
-    center = center.unsqueeze(-2)                               # [num_rect, 2] -> [num_rect, 1, 2]
-    size = size.unsqueeze(-2)                                   # [num_rect, 2] -> [num_rect, 1, 2]
-
-    half_size = size / 2
-    cos_a, sin_a = torch.cos(angle), torch.sin(angle)           # [num_rect, 1]
-    k = (torch
-         .stack(tensors=[cos_a, -sin_a, sin_a, cos_a], dim=-1)  # [num_rect, 1, 4]
-         .reshape(-1, 2, 2))                                    # [num_rect, 2, 2]
-    offset = \
-        (torch
-         .tensor([[-1, -1, 1, 1],  # width
-                  [-1, 1, 1, -1]   # height
-                  ])                                            # [1, 4, 2]
-         .repeat(num_rect, 1, 1))                               # [num_rect, 4, 2]
-
-    corners = center + (half_size * offset.transpose(-2, -1)) @ k.transpose(-2, -1)
-
-    return corners
-    # 当 rotated_rect.dim == 1 时，代码可以转换为：
-    #
-    # center, size, angle = rotated_rect.split((2, 2, 1), dim=-1)
-    # half_size = size / 2
-    # cos_a, sin_a = math.cos(angle), math.sin(angle)
-    # k = torch.tensor([[cos_a, sin_a], [-sin_a, cos_a]])
-    # offset = torch.tensor([[-1, -1, 1, 1],  # width
-    #                        [-1, 1, 1, -1]   # height
-    #                        ])
-    #
-    # corners = center + (half_size * offset.T) @ k.T
-    # return corners
 
 
 def get_covariance_matrix(rotated_rects):

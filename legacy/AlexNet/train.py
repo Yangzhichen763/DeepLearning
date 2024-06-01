@@ -13,7 +13,7 @@ if __name__ == '__main__':
     model_creator = AlexNet_CIFAR10
     # 训练和验证模型，在 Terminal 激活 tensorboard 的指令:
     # tensorboard --logdir=./legacy/AlexNet/logs_tensorboard
-    writer = get_writer('./')
+    writer = get_writer()
     num_classes = train_and_validate(
         get_transform(),
         model_creator=model_creator,

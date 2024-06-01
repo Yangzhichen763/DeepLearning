@@ -67,6 +67,9 @@ def save_image(pred, target, target_images, batches, ioubs=None):
                           color=(255, 255, 255),
                           thickness=round(iou.item() * 10))
 
+        # writer.add_image(
+        #     "train_image", images[i], epoch * batch_size + i, dataformats="HWC"
+        # )
         path = get_unique_file_name(
             f"./logs/checkpoints",
             f"pred_{batches * batch_size + i}",
@@ -82,7 +85,9 @@ def train():
     dataset_size = len(train_loader.dataset)
     dataset_batches = len(train_loader)
 
-    tqdm.write(f"\nEpoch {epoch}: [learning rate: {scheduler.get_last_lr()[0]}]")
+    tqdm.write(f"\nEpoch {epoch}: ")
+    if scheduler_epoch is not None:
+        tqdm.write(f" - learning rate: {scheduler_epoch.get_last_lr()[0]}")
     datas = buffer_dataloader(train_loader)
 
     model.train()  # 设置模型为训练模式
@@ -101,9 +106,11 @@ def train():
             scaler.scale(loss).backward()                   # 反向传播
             scaler.step(optimizer)                          # 更新参数
             scaler.update()                                 # 更新 GradScaler
+            if scheduler_batch is not None:
+                scheduler_batch.step()                      # 更新学习率
 
-            if epoch % 5 == 0:
-                save_image(pred, target, images, i, iou)
+            # if epoch % 5 == 0:
+            save_image(pred, target, images, i, iou)
 
             # 记录损失最小值和最大值以及总损失
             min_loss = min(min_loss, loss.item())
@@ -115,14 +122,29 @@ def train():
             pbar.set_postfix(loss=loss.item())
             pbar.update(batch_size)
 
-            if writer is not None:
-                writer.add_scalar('./logs/tensorboard/loss', loss.item(), i_current_batch)
+            if (writer is not None) & (epoch is not None):
+                writer.add_scalar(
+                    "train_loss",
+                    loss.item(),
+                    epoch * dataset_batches + i_current_batch)
+                writer.add_scalar(
+                    "train_iou",
+                    iou.mean(dim=-1).mean(-1).sum().item(),
+                    epoch * dataset_batches + i_current_batch)
+                if scheduler_batch is not None:
+                    writer.add_scalar(
+                        "train_lr",
+                        scheduler_batch.get_last_lr()[0],
+                        epoch * dataset_batches + i_current_batch)
 
         pbar.set_postfix()                  # 清空进度条备注
         pbar.update(pbar.total - pbar.n)    # 防止进度条超过 100%
 
         tqdm.write(
             f"Min-Avg-Max loss: [{min_loss:.4f}, {total_loss / len(train_loader):.4f}, {max_loss:.4f}]")
+
+    if scheduler_epoch is not None:
+        scheduler_epoch.step()  # 更新学习率
 
 
 def validate():
@@ -162,8 +184,8 @@ def validate():
             f"Accuracy: {correct:.0f}/{dataset_size} ({accuracy:.2f}%)")
 
     if (writer is not None) & (epoch is not None):
-        writer.add_scalar('./logs/tensorboard/loss', average_loss, epoch)
-        writer.add_scalar('./logs/tensorboard/accuracy', accuracy, epoch)
+        writer.add_scalar("test_loss", average_loss, epoch)
+        writer.add_scalar("accuracy", accuracy, epoch)
 
     return average_loss, accuracy
 
@@ -190,17 +212,40 @@ def get_model(input_shape, config):
             device=device
         )
         return _model
-    elif config == "ResNet v2.0":
+    elif config == "ResNeXt v1.0":
         _in_channels = image_shape[0]
         _dim_classifiers = [64, 16]
         _center_encoder = ResNeXtEncoder(
             _in_channels,
-            num_blocks=[3, 4, 6, 3],
-            dim_hidden=[32, 64, 128, 256])
+            BasicBlock,
+            num_blocks=[2, 2, 3, 3, 2],
+            dim_hidden=[16, 32, 64, 128, 256])
         _size_encoder = ResNeXtEncoder(
             _in_channels,
+            Bottleneck,
             num_blocks=[3, 4, 6, 3],
-            dim_hidden=[32, 64, 128, 256])
+            dim_hidden=[16, 32, 64, 128])
+
+        _model = EllipseDetectionNetwork_ResNet_v1(
+            center_encoder=_center_encoder,
+            size_encoder=_size_encoder,
+            dim_classifiers=_dim_classifiers,
+            device=device
+        )
+        return _model
+    elif config == "ResNeXt v2.0":
+        _in_channels = image_shape[0]
+        _dim_classifiers = [64, 32]
+        _center_encoder = ResNeXtEncoder(
+            _in_channels,
+            Bottleneck,
+            num_blocks=[3, 4, 6, 3],
+            dim_hidden=[16, 32, 64, 128])
+        _size_encoder = ResNeXtEncoder(
+            _in_channels,
+            Bottleneck,
+            num_blocks=[3, 4, 23, 3],
+            dim_hidden=[16, 32, 64, 128])
 
         _model = EllipseDetectionNetwork_ResNet_v1(
             center_encoder=_center_encoder,
@@ -224,18 +269,20 @@ if __name__ == '__main__':
     # 超参数设置
     batch_size = 32
     num_epochs = 50
-    num_workers = os.cpu_count()
+    num_workers = 2  # os.cpu_count()
     learning_rate = 0.001
     weight_decay = 0.0001
     momentum = 0.9
     scheduler_step_size = 5
     scheduler_gamma = 0.5
 
+    # batch_size = 8
     # _position = torch.randn(batch_size, 1, 2) * 32
-    # _position_offset = torch.randn(batch_size, 1, 2) * 4
+    # _position_offset = torch.randn(batch_size, 1, 2) * 32
     # _size = torch.randn(batch_size, 1, 2) * 16 - 24
     # _offset_size = torch.randn(batch_size, 1, 2) * 64
     # for k in range(60):
+    #     print(k)
     #     _target_image = torch.zeros((batch_size, 1, 256, 256))
     #
     #     _position_pred = _position + _position_offset
@@ -254,7 +301,7 @@ if __name__ == '__main__':
     # 部署 GPU 设备
     device = assert_on_cuda()
 
-    writer = get_writer('./')
+    writer = get_writer()
 
     # 加载数据集
     print(f"Using {num_workers} workers")
@@ -271,7 +318,8 @@ if __name__ == '__main__':
 
     # 定义模型
     image_shape = (1, 256, 256)
-    model = get_model(image_shape, "AlexNet")
+    model_config = "ResNeXt v1.0"
+    model = get_model(image_shape, model_config)
     model.to(device)
 
     # 定义损失函数和优化器
@@ -279,22 +327,41 @@ if __name__ == '__main__':
     optimizer = optim.AdamW(
         model.parameters(),
         lr=learning_rate)
-    scheduler = optim.lr_scheduler.StepLR(
-        optimizer,
-        step_size=scheduler_step_size,
-        gamma=scheduler_gamma)
+    # scheduler_epoch = optim.lr_scheduler.StepLR(
+    #     optimizer,
+    #     step_size=scheduler_step_size,
+    #     gamma=scheduler_gamma)
+    # scheduler_batch = None
+    scheduler_epoch = None
+    scheduler_batch = optim.lr_scheduler.CyclicLR(
+            optimizer,
+            base_lr=0.0005, max_lr=0.01,
+            step_size_up=100, mode='triangular2',
+            cycle_momentum=False)
     scaler = GradScaler()
 
     # 训练模型
     # 训练和验证模型，在 Terminal 激活 tensorboard 的指令:
     # tensorboard --logdir=./custom/EllipseDetectionNeuralNetwork/logs/tensorboard
-    best_accuracy = 0.0
+    best_accuracy, last_accuracy = 0.0, 0.0
     for epoch in range(1, num_epochs + 1):
         train()
-        _, accuracy = validate()
-        if accuracy > best_accuracy:
-            best_accuracy = accuracy
+        _, last_accuracy = validate()
+        if last_accuracy > best_accuracy:
+            best_accuracy = last_accuracy
             save.as_pt(model, "models/best.pt")
-        scheduler.step()  # 更新学习率
+        save.as_pt(model, "models/last.pt")
+
+    # 打印训练结果
+    final_learning_rate = (
+        scheduler_batch.get_last_lr()[0] if scheduler_batch is not None
+        else scheduler_epoch.get_last_lr()[0] if scheduler_epoch is not None
+        else learning_rate)
+    print(f"\nSummary: "
+          f"\n - [Model Config]: {model_config}"
+          f"\n - [Total Epochs]: {num_epochs} "
+          f"\n - [Batch Size]: {batch_size} "
+          f"\n - [Final Learning Rate]: {final_learning_rate} "
+          f"\n - [Best Accuracy]: {best_accuracy:.2f}%  [Last Accuracy]: {last_accuracy:.2f}%")
 
     close_writer(writer)

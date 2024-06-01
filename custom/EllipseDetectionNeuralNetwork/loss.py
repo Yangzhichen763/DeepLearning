@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from lossFunc import LogLoss
+from lossFunc import LogLoss, WHRatioLoss
+from lossFunc.BBLoss import CornerLoss
 
 import math
 from lossFunc.BBLoss import *
@@ -10,9 +11,9 @@ from lossFunc.BBLoss import *
 
 class AABBboxLoss(nn.Module):
     def __init__(self):
-        super().__init__()
+        super(AABBboxLoss, self).__init__()
 
-    def forward(self, pred_bboxes, target_bboxes, target_scores, iou_type="CIoU"):
+    def forward(self, pred_bboxes, target_bboxes, target_scores=1, iou_type="CIoU"):
         """
         计算 AABB 边界框的交并比损失值
         Args:
@@ -40,6 +41,16 @@ class AABBboxLoss(nn.Module):
 
     @staticmethod
     def check_target_scores(weight_shape, target_scores, device):
+        """
+        将得分值转换为权重值
+        Args:
+            weight_shape:
+            target_scores:
+            device:
+
+        Returns:
+
+        """
         weight = None
         weight_sum = 1.0
         if target_scores is None:
@@ -100,11 +111,11 @@ class AABBboxLoss(nn.Module):
 
 class OBBLoss(AABBboxLoss):
     def __init__(self):
-        super().__init__()
+        super(OBBLoss, self).__init__()
 
-    def forward(self, pred_bboxes, target_bboxes, target_scores=None, iou_type="CIoU"):
+    def forward(self, pred_bboxes, target_bboxes, target_scores=1, iou_type="CIoU"):
         """
-        计算 AABB 边界框的交并比损失值
+        计算 OBB 边界框的交并比损失值
         Args:
             pred_bboxes: 预测的边界框。可以取 shape=[B, N, 5]，或者 shape=[..., 5]
             target_bboxes: 真实的边界框。可以取 shape=[B, x, 5]，或者 shape=[..., 5]
@@ -130,13 +141,14 @@ class OBBLoss(AABBboxLoss):
         return loss_iou, ious
 
 
-class OBBLoss_without_position(OBBLoss):
+class OBBConcentricLoss(OBBLoss):
     def __init__(self):
-        super().__init__()
+        super(OBBConcentricLoss, self).__init__()
 
-    def forward(self, pred_bboxes, target_bboxes, target_scores=None, iou_type="CIoU"):
+    def forward(self, pred_bboxes, target_bboxes, target_scores=1, iou_type="CIoU"):
         """
-        计算 AABB 边界框的交并比损失值
+        计算 OBB 边界框的交并比损失值，
+        如果两个 OBB 不是同心框，则计算损失时强制归到同心
         Args:
             pred_bboxes: 预测的边界框。可以取 shape=[B, N, 5]，或者 shape=[..., 5]
             target_bboxes: 真实的边界框。可以取 shape=[B, x, 5]，或者 shape=[..., 5]
@@ -157,19 +169,43 @@ class OBBLoss_without_position(OBBLoss):
         return rr
 
 
+class OBBDirectionLoss(nn.Module):
+    def __init__(self):
+        super(OBBDirectionLoss, self).__init__()
+        self.loss_func = WHRatioLoss()
+
+    def forward(self, pred, target):
+        """
+        计算 OBB 边界框的方向损失值，方向一致 loss -> 0，方向不一致 loss -> 1
+        Args:
+            pred (torch.Tensor): 长宽合法（已回归过的）的预测边界框。可以取 shape=[batch_size, 64, 5]
+            target (torch.Tensor): 长宽合法（已回归过的）的目标边界框。可以取 shape=[batch_size, x, 5]
+
+        Returns:
+
+        """
+        w_p, h_p, a_p = pred[..., 2:].split(split_size=1, dim=-1)
+        w_t, h_t, a_t = target[..., 2:].split(split_size=1, dim=-1)
+        loss, score = self.loss_func(w_p / h_p, w_t / h_t, a_p, a_t)
+        return loss, score
+
+
 class EllipseLoss(OBBLoss):
     def __init__(self, image_size):
         super(EllipseLoss, self).__init__()
         self.pred_loss_func = OBBLoss()
-        self.rotation_loss_func = OBBLoss_without_position()
+        self.size_loss_func = OBBConcentricLoss()
+        self.rotation_loss_func = OBBDirectionLoss()
+        self.corner_loss_func = CornerLoss()
         self.score_loss_func = LogLoss()
         self.image_size = image_size
 
-    def __call__(self, pred, target):
+    def __call__(self, pred, target, regress_pred=True):
         """
         Args:
             pred (torch.Tensor): 预测的边界框。可以取 shape=[batch_size, 64, 5]
-            target (torch.Tensor): 目标的边界框。可以取 shape=[batch_size, x, 5]
+            target (torch.Tensor): 合法的目标的边界框。可以取 shape=[batch_size, x, 5]
+            regress_pred (bool): 是否对预测的边界框进行回归（合法化），默认 True
         Returns:
             l_iou: 所有 batch 的交并比损失值的平均值，为标量
             iou: 每个 batch 边界框的交并比，shape=[B, k, 1]
@@ -184,14 +220,17 @@ class EllipseLoss(OBBLoss):
         num_target = target.shape[-2]   # [B, x, 5] 中的 x
 
         # 计算交并比损失
-        pred = self.regress_rr(pred, self.image_size)      # box 归一化处理，使得 box 在图像范围内（去除负值等）
-        _, ious = self.pred_loss_func(pred, target, 1)                  # [B, N], [B, N, x]
+        if regress_pred:
+            pred = self.regress_rr(pred, self.image_size)      # box 归一化处理，使得 box 在图像范围内（去除负值等）
+        _, ious = self.pred_loss_func(pred, target)                     # [B, N], [B, N, x] = ~0, ~1
 
         ious_max, _ = ious.max(dim=-1)                                  # [B, N, x] -> [B, N] 找到 x 中的最大值
         ious_max = ious_max.unsqueeze(dim=-1)                           # [B, N] -> [B, N, 1]
         pred, pred_ious = self.get_argmax_pred(pred, ious_max, target)  # [B, k, 5], [B, k, 1] 其中 k = x
 
-        _, pred_rots = self.rotation_loss_func(pred, target, 1)         # [B, N], [B, N, x]
+        loss_size, pred_size = self.size_loss_func(pred, target)        # [B, N], [B, N, x] = ~0, ~1
+        loss_rots, pred_rots = self.rotation_loss_func(pred, target)    # [B, N], [B, N, x] = ~0, ~0
+        loss_cors, pred_cors = self.corner_loss_func(pred, target)      # [B, N], [B, N, x] = ~0, ~0
 
         # 计算 score 损失，以下损失都是标量
         def _iou_to_loss(_ious):
@@ -199,14 +238,19 @@ class EllipseLoss(OBBLoss):
             l_score = self.score_loss_func(scores, torch.ones_like(scores))
             return l_score
 
-        l_scores_iou = _iou_to_loss(pred_ious)
-        l_scores_rotation = _iou_to_loss(pred_rots)
+        l_scores_iou = 1 - pred_ious.mean()  # _iou_to_loss(pred_ious)
+        l_scores_size = 1 - pred_size.mean()  # _iou_to_loss(pred_size)
+        l_scores_rotation = loss_rots.mean()
+        l_scores_corner = loss_cors.mean() / math.sqrt(self.image_size[0] ** 2 + self.image_size[1] ** 2)
 
-        # l_iou = pred_ious.mean()
-        # l_rotation = pred_rots.mean()
         l_scores_iou *= 1
+        l_scores_size *= 2
         l_scores_rotation *= 3
-        loss = l_scores_iou + l_scores_rotation  # l_iou * (1 + l_score / (2 * batch_size))  # 2 * (l_iou + l_rotation * l_score / batch_size)
+        l_scores_corner *= 4
+        # print(pred_ious.mean(), pred_size.mean(), pred_rots.mean())
+        # print(l_scores_iou, l_scores_size, l_scores_rotation, l_scores_corner)
+        loss = l_scores_iou + l_scores_size + l_scores_rotation + l_scores_corner
+        # l_iou * (1 + l_score / (2 * batch_size))  # 2 * (l_iou + l_rotation * l_score / batch_size)
 
         return loss, pred_ious, pred               # 标量, [B, k, 1], [B, k, 5] 其中 k = x
 
@@ -239,14 +283,19 @@ class EllipseLoss(OBBLoss):
         num_targets, num_preds = target_rr.shape[-2], pred_rr.shape[-2]
 
         # 获取 topk 最高分的预测边界框
-        if num_targets < num_preds:
-            pred_scores, top_indices = pred_scores.topk(k=num_targets, dim=-2)
-            pred_rr = torch.stack(
-                [
-                    pred_rr[..., i, index.squeeze(dim=-1), :]
-                    for i, index in enumerate(top_indices)
-                ])
-        # print("pred:", pred.shape, "target:",  target.shape, "topk:", pred_rr.shape)
+        if num_targets <= num_preds:
+            pred_scores, top_indices = pred_scores.topk(k=num_targets, dim=-2)      # [B, k, 1], [B, k, 1]
+
+            top_indices = (top_indices                                              # [B, k, 1]
+                           .repeat_interleave(repeats=pred_rr.shape[-1], dim=-1))   # [B, k, 5]
+            # 得到 top_indices 索引值对应的每个边框的 rr 值
+            pred_rr = torch.gather(pred_rr, dim=-2, index=top_indices)              # [B, k, 5] -> [B, k, 5]
+            # 修改前的方案：
+            # pred_rr = torch.stack(
+            #     [
+            #         pred_rr[..., i, index.squeeze(dim=-1), :]
+            #         for i, index in enumerate(top_indices)
+            #     ])
 
         return pred_rr, pred_scores
 
@@ -280,7 +329,7 @@ class EllipseLoss(OBBLoss):
 
 
 # --------- 以下代码来自 https://github.com/ultralytics/ultralytics ----------
-def box_iou(box1, box2, eps=1e-7):
+def box_iou(box1, box2, eps=1e-9):
     """
     Calculate intersection-over-union (IoU) of boxes. Both sets of boxes are expected to be in (x1, y1, x2, y2) format.
     Based on https://github.com/pytorch/vision/blob/master/torchvision/ops/boxes.py
@@ -302,7 +351,7 @@ def box_iou(box1, box2, eps=1e-7):
     return inter / ((a2 - a1).prod(2) + (b2 - b1).prod(2) - inter + eps)
 
 
-def aabbox_iou(box1, box2, xywh=True, iou_type="CIoU", eps=1e-7):
+def aabbox_iou(box1, box2, xywh=True, iou_type="CIoU", eps=1e-9):
     """
     Calculate Intersection over Union (IoU) of box1(1, 4) to box2(n, 4).
 
@@ -361,7 +410,7 @@ def aabbox_iou(box1, box2, xywh=True, iou_type="CIoU", eps=1e-7):
     return iou  # IoU
 
 
-def obbox_iou(obb1, obb2, iou_type="CIoU", eps=1e-7):
+def obbox_iou(obb1, obb2, iou_type="CIoU", eps=1e-9):
     """
     Calculate the prob IoU between oriented bounding boxes, https://arxiv.org/pdf/2106.06072v1.pdf.
 
@@ -404,7 +453,7 @@ def obbox_iou(obb1, obb2, iou_type="CIoU", eps=1e-7):
 # --------------------------- AABB ---------------------------
 
 def AABB_iou(box_1, box_2, box_minmax=False):
-    boxes = torch.tensor([box_1, box_2]).permute(1, 0)
+    boxes = torch.cat([box_1, box_2]).permute(1, 0)
     if box_minmax:
         x_min, y_min, x_max, y_max = boxes
     else:
@@ -501,8 +550,8 @@ def _check_corners(box_1, box_2):
     Returns:
     """
     if box_1.dim() == 1 and box_1.shape == torch.Size([5]):
-        corners_1 = rotated_rect_to_corners(box_1)
-        corners_2 = rotated_rect_to_corners(box_2)
+        corners_1 = obb_to_corners(box_1)
+        corners_2 = obb_to_corners(box_2)
     elif box_1.dim() == 2 and box_1.shape[-2:] == torch.Size([4, 2]):
         corners_1 = box_1
         corners_2 = box_2
@@ -529,8 +578,8 @@ def _check_corners_batch(rotated_rects_ref, rotated_rects_obj):
         rotated_rects_obj = rotated_rects_obj.unsqueeze(0)
 
     # [B, 5] -> [B, 4, 2]
-    corners_ref = rotated_rect_to_corners(rotated_rects_ref)
-    corners_obj = rotated_rect_to_corners(rotated_rects_obj)
+    corners_ref = obb_to_corners(rotated_rects_ref)
+    corners_obj = obb_to_corners(rotated_rects_obj)
 
     return corners_ref, corners_obj
 
@@ -768,8 +817,17 @@ def _obbox_iou(pred_boxes, target_boxes, iou_type='DIoU'):
 
 
 if __name__ == '__main__':
+    _pred = torch.tensor([[0, 0, 100, 20, 0]]).view(1, -1, 5)
+    _target = torch.tensor([0, 0, 50, 50, 0]).view(1, -1, 5)
+    loss, iou, _ = EllipseLoss((256, 256))(_pred, _target, regress_pred=False)
+    print(loss)
+    exit()
+
     batch_size = 8
-    _pred = torch.randn(batch_size, 64, 5) * 8
+    _position = torch.randn(batch_size, 1, 2) * 1
+    _size = torch.randn(batch_size, 1, 2) * 16
+    _angle = torch.randn(batch_size, 1, 1) * 2 * math.pi
+    _pred = torch.cat([_position, _size, _angle], dim=-1)
     _target = EllipseLoss.regress_rr(torch.randn(batch_size, 1, 5), (256, 256))
     loss, iou, _ = EllipseLoss((256, 256))(_pred, _target)
     print(loss)
