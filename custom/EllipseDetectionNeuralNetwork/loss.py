@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+
+import lossFunc.FunctionalLoss
 from lossFunc import LogLoss, WHRatioLoss
 from lossFunc.BBLoss import CornerLoss
 
@@ -196,7 +198,6 @@ class EllipseLoss(OBBLoss):
         self.pred_loss_func = OBBLoss()
         self.size_loss_func = OBBConcentricLoss()
         self.rotation_loss_func = OBBDirectionLoss()
-        self.corner_loss_func = CornerLoss()
         self.score_loss_func = LogLoss()
         self.image_size = image_size
 
@@ -228,9 +229,8 @@ class EllipseLoss(OBBLoss):
         ious_max = ious_max.unsqueeze(dim=-1)                           # [B, N] -> [B, N, 1]
         pred, pred_ious = self.get_argmax_pred(pred, ious_max, target)  # [B, k, 5], [B, k, 1] 其中 k = x
 
-        loss_size, pred_size = self.size_loss_func(pred, target)        # [B, N], [B, N, x] = ~0, ~1
-        loss_rots, pred_rots = self.rotation_loss_func(pred, target)    # [B, N], [B, N, x] = ~0, ~0
-        loss_cors, pred_cors = self.corner_loss_func(pred, target)      # [B, N], [B, N, x] = ~0, ~0
+        # loss_size, pred_size = self.size_loss_func(pred, target)        # [B, N], [B, N, x] = ~0, ~1
+        # loss_rots, pred_rots = self.rotation_loss_func(pred, target)    # [B, N], [B, N, x] = ~0, ~0
 
         # 计算 score 损失，以下损失都是标量
         def _iou_to_loss(_ious):
@@ -239,17 +239,15 @@ class EllipseLoss(OBBLoss):
             return l_score
 
         l_scores_iou = 1 - pred_ious.mean()  # _iou_to_loss(pred_ious)
-        l_scores_size = 1 - pred_size.mean()  # _iou_to_loss(pred_size)
-        l_scores_rotation = loss_rots.mean()
-        l_scores_corner = loss_cors.mean() / math.sqrt(self.image_size[0] ** 2 + self.image_size[1] ** 2)
+        # l_scores_size = 1 - pred_size.mean()  # _iou_to_loss(pred_size)
+        # l_scores_rotation = loss_rots.mean()
 
         l_scores_iou *= 1
-        l_scores_size *= 2
-        l_scores_rotation *= 3
-        l_scores_corner *= 4
+        # l_scores_size *= 2
+        # l_scores_rotation = lossFunc.FunctionalLoss.L1Loss()(l_scores_rotation)
         # print(pred_ious.mean(), pred_size.mean(), pred_rots.mean())
-        # print(l_scores_iou, l_scores_size, l_scores_rotation, l_scores_corner)
-        loss = l_scores_iou + l_scores_size + l_scores_rotation + l_scores_corner
+        # print(l_scores_iou, l_scores_size, l_scores_rotation)
+        loss = l_scores_iou  # + l_scores_size + l_scores_rotation  # + l_scores_corner
         # l_iou * (1 + l_score / (2 * batch_size))  # 2 * (l_iou + l_rotation * l_score / batch_size)
 
         return loss, pred_ious, pred               # 标量, [B, k, 1], [B, k, 5] 其中 k = x

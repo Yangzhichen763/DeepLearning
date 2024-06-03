@@ -6,9 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-
-
-
 def soft_iou(pred, target, eps=1e-9, theta=4):
     """
     传入的 pred、target 应该是 torch.tensor([x, y, w, h])

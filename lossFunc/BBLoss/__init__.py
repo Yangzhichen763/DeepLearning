@@ -12,11 +12,8 @@ class WHRatioLoss(nn.Module):
     """
     旋转框的宽高比损失函数（如果将中心重合，宽高比之间的比值越接近 1，并且旋转角度之差越小，则损失越小）
     """
-    def __init__(self, loss_func=None):
+    def __init__(self):
         super(WHRatioLoss, self).__init__()
-        if loss_func is None:
-            loss_func = self.linear_regression  # 最好使用 linear，否则容易对宽高比为 1 的框过拟合
-        self.loss_func = loss_func
 
     def forward(self, x, y, a_x, a_y):
         """
@@ -32,10 +29,9 @@ class WHRatioLoss(nn.Module):
         Returns:
 
         """
-        score = self.arctan_regression(x, y, a_x, a_y)  # [B, N, 1]
-        score_log = self.loss_func(score)               # [B, N, 1]
-        loss = score_log.sum(dim=-1)                    # [B, N]
-        return loss, score_log                          # [B, N], [B, N, 1]
+        score = self.arctan_regression(x, y, a_x, a_y)              # [B, N, 1]
+        loss = score.sum(dim=-1)                                    # [B, N]
+        return loss, score                                          # [B, N], [B, N, 1]
 
     @staticmethod
     def arctan_regression(x, y, a_x, a_y):
@@ -45,22 +41,6 @@ class WHRatioLoss(nn.Module):
         sin_r = (x.arctan() - y.arctan()).sin()
         score = (sin_r * cos_a + cos_r * sin_a).arcsin() * (2 / math.pi)
         return score
-
-    @staticmethod
-    def log_regression(x):
-        return -(1 + x).log() - (1 - x).log()
-
-    @staticmethod
-    def exp_regression(x):
-        return x.exp() + (-x).exp() - 2
-
-    @staticmethod
-    def square_regression(x):
-        return x ** 2
-
-    @staticmethod
-    def linear_regression(x):
-        return x.abs()
 
 
 class DirectionLoss(nn.Module):

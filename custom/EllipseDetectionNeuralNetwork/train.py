@@ -9,6 +9,7 @@ from torch.cuda.amp import autocast, GradScaler
 from custom.EllipseDetectionNeuralNetwork.datasets import EllipseDetectionDataset
 from modules.residual import ResNetEncoder, ResNeXtEncoder
 from modules.residual.ResNet import BasicBlock, Bottleneck
+from optim import CosineAnnealingWarmupRestarts
 from utils.tensorboard import *
 from utils.pytorch import *
 from utils.pytorch.dataset import *
@@ -87,7 +88,7 @@ def train():
 
     tqdm.write(f"\nEpoch {epoch}: ")
     if scheduler_epoch is not None:
-        tqdm.write(f" - learning rate: {scheduler_epoch.get_last_lr()[0]}")
+        tqdm.write(f" - learning rate: {optimizer.param_groups[0]['lr']}")
     datas = buffer_dataloader(train_loader)
 
     model.train()  # 设置模型为训练模式
@@ -134,7 +135,7 @@ def train():
                 if scheduler_batch is not None:
                     writer.add_scalar(
                         "train_lr",
-                        scheduler_batch.get_last_lr()[0],
+                        optimizer.param_groups[0]['lr'],
                         epoch * dataset_batches + i_current_batch)
 
         pbar.set_postfix()                  # 清空进度条备注
@@ -145,6 +146,10 @@ def train():
 
     if scheduler_epoch is not None:
         scheduler_epoch.step()  # 更新学习率
+        writer.add_scalar(
+            "train_lr",
+            optimizer.param_groups[0]['lr'],
+            epoch * dataset_batches + i_current_batch)
 
 
 def validate():
@@ -265,11 +270,41 @@ def get_model(input_shape, config):
         return _model
 
 
+def get_scheduler(config):
+    if config == "StepLR":
+        _scheduler_epoch = optim.lr_scheduler.StepLR(
+            optimizer,
+            step_size=scheduler_step_size,
+            gamma=scheduler_gamma)
+        _scheduler_batch = None
+    elif config == "CosineAnnealingWarmRestarts":
+        _scheduler_epoch = CosineAnnealingWarmupRestarts(
+            optimizer,
+            first_cycle_steps=int(num_epochs / 40),
+            max_lr=learning_rate,
+            min_lr=1e-8,
+            warmup_steps=5,
+            gamma=0.71)
+        _scheduler_batch = None
+    elif config == "CyclicLR":
+        _scheduler_epoch = None
+        _scheduler_batch = optim.lr_scheduler.CyclicLR(
+                optimizer,
+                base_lr=0.0005, max_lr=0.01,
+                step_size_up=100, mode='triangular2',
+                cycle_momentum=False)
+    else:
+        _scheduler_epoch = None
+        _scheduler_batch = None
+
+    return _scheduler_epoch, _scheduler_batch
+
+
 if __name__ == '__main__':
     # 超参数设置
     batch_size = 32
-    num_epochs = 50
-    num_workers = 2  # os.cpu_count()
+    num_epochs = 1000
+    num_workers = 4  # os.cpu_count()
     learning_rate = 0.001
     weight_decay = 0.0001
     momentum = 0.9
@@ -327,17 +362,8 @@ if __name__ == '__main__':
     optimizer = optim.AdamW(
         model.parameters(),
         lr=learning_rate)
-    # scheduler_epoch = optim.lr_scheduler.StepLR(
-    #     optimizer,
-    #     step_size=scheduler_step_size,
-    #     gamma=scheduler_gamma)
-    # scheduler_batch = None
-    scheduler_epoch = None
-    scheduler_batch = optim.lr_scheduler.CyclicLR(
-            optimizer,
-            base_lr=0.0005, max_lr=0.01,
-            step_size_up=100, mode='triangular2',
-            cycle_momentum=False)
+    scheduler_config = "CosineAnnealingWarmRestarts"
+    scheduler_epoch, scheduler_batch = get_scheduler(scheduler_config)
     scaler = GradScaler()
 
     # 训练模型
@@ -353,12 +379,9 @@ if __name__ == '__main__':
         save.as_pt(model, "models/last.pt")
 
     # 打印训练结果
-    final_learning_rate = (
-        scheduler_batch.get_last_lr()[0] if scheduler_batch is not None
-        else scheduler_epoch.get_last_lr()[0] if scheduler_epoch is not None
-        else learning_rate)
+    final_learning_rate = optimizer.param_groups[0]['lr']
     print(f"\nSummary: "
-          f"\n - [Model Config]: {model_config}"
+          f"\n - [Model Config]: {model_config}  [scheduler_config]: {scheduler_config} "
           f"\n - [Total Epochs]: {num_epochs} "
           f"\n - [Batch Size]: {batch_size} "
           f"\n - [Final Learning Rate]: {final_learning_rate} "
