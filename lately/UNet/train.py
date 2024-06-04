@@ -13,22 +13,27 @@ from model import (UNet, UNetCustom)
 from model import (UNet_custom_light)
 from lately.segment_utils import get_transform, train_and_validate
 from utils.pytorch import *
+from utils.pytorch.dataset import buffer_dataloader
 from utils.pytorch.segment.datasets import CarvanaDataset, VOCSegmentationDataset
 
 
 def carvana(test_model=False):
     def train_epoch():
-        total_loss = 0.0
         min_loss = float('inf')
         max_loss = float('-inf')
+        total_loss = 0
         dataset_size = len(train_loader.dataset)
         dataset_batches = len(train_loader)
+
+        tqdm.write(f"\nEpoch {epoch}: ")
+        tqdm.write(f" - learning rate: {optimizer.param_groups[0]['lr']}")
+        datas = buffer_dataloader(train_loader)
 
         model.train()
         with tqdm(
                 total=dataset_size,
                 unit='image') as pbar:
-            for (i, (images, labels)) in enumerate(train_loader):
+            for (i, (images, labels)) in datas:
                 images, labels = images.to(device), labels.unsqueeze(1).float().to(device)
 
                 with torch.cuda.amp.autocast():
@@ -49,9 +54,11 @@ def carvana(test_model=False):
                 pbar.set_postfix(loss=loss.item())
                 pbar.update(batch_size)
 
+            pbar.set_postfix()                  # 清空进度条备注
+            pbar.update(pbar.total - pbar.n)    # 防止进度条超过 100%
+
         average_loss = total_loss / dataset_batches
         tqdm.write(
-            "\n"
             f"Epoch {epoch} training finished. "
             f"Min loss: {min_loss:.6f}, "
             f"Max loss: {max_loss:.6f}, "
@@ -66,11 +73,13 @@ def carvana(test_model=False):
         dataset_size = len(val_loader.dataset)
         dataset_batches = len(val_loader)
 
+        datas = buffer_dataloader(val_loader)
+
         model.eval()
         with (tqdm(
                 total=dataset_size,
                 unit='image') as pbar, torch.no_grad()):
-            for (images, labels) in val_loader:
+            for (_, (images, labels)) in datas:
                 images, labels = images.to(device), labels.unsqueeze(1).float().to(device)
 
                 predict = model(images)
@@ -94,11 +103,13 @@ def carvana(test_model=False):
                 pbar.set_postfix(loss=loss.item())
                 pbar.update(batch_size)
 
+            pbar.set_postfix()                  # 清空进度条备注
+            pbar.update(pbar.total - pbar.n)    # 防止进度条超过 100%
+
         accuracy = num_correct / num_pixels
-        average_loss = 0 # total_loss / dataset_batches
+        average_loss = total_loss / dataset_batches
         dice = dice_score / dataset_batches
         tqdm.write(
-            "\n"
             f"Accuracy: {num_correct}/{num_pixels}({accuracy * 100:.2f})%, "
             f"Average loss: {average_loss:.4f}, "
             f"Dice Score: {dice:.2f}")
@@ -107,9 +118,9 @@ def carvana(test_model=False):
 
     # 超参数设置
     batch_size = 8
-    num_workers = 4
-    num_epochs = 2
-    learning_rate = 1e-8
+    num_workers = 2
+    num_epochs = 50
+    learning_rate = 1e-6
     weight_decay = 0.0001
     momentum = 0.9
     scheduler_step_size = 2
@@ -146,11 +157,15 @@ def carvana(test_model=False):
     # 加载数据集
     if not test_model:
         train_dataset = CarvanaDataset(transform=train_transform)
-        train_dataset = Subset(train_dataset, range(0, 50))
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+        train_dataset = Subset(train_dataset, range(0, 800))
+        train_loader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True,
+            num_workers=num_workers, persistent_workers=True, pin_memory=True)
     val_dataset = CarvanaDataset(transform=val_transform)
-    val_dataset = Subset(val_dataset, range(0, 50))
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    val_dataset = Subset(val_dataset, range(0, 200))
+    val_loader = DataLoader(
+        val_dataset, batch_size=batch_size, shuffle=False,
+        num_workers=num_workers, persistent_workers=True, pin_memory=True)
 
     # 定义模型
     model = UNet_custom_light(num_classes=1).to(device)
@@ -161,11 +176,11 @@ def carvana(test_model=False):
         scaler = GradScaler()
 
         # 训练模型
-        for epoch in range(num_epochs):
+        for epoch in range(1, num_epochs + 1):
             train_loss = train_epoch()
             val_accuracy, val_loss = validate_epoch()
             scheduler.step()
-            print(f"Epoch: {epoch+1}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
+            print(f"Epoch: {epoch}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 
         # 保存模型
         torch.save(model.state_dict(), f"models/{model.__class__.__name__}.pt")
@@ -180,17 +195,21 @@ def carvana(test_model=False):
 
 def voc_segmentation(test_model=False):
     def train_epoch():
-        total_loss = 0.0
         min_loss = float('inf')
         max_loss = float('-inf')
+        total_loss = 0
         dataset_size = len(train_loader.dataset)
         dataset_batches = len(train_loader)
+
+        tqdm.write(f"\nEpoch {epoch}: ")
+        tqdm.write(f" - learning rate: {optimizer.param_groups[0]['lr']}")
+        datas = buffer_dataloader(train_loader)
 
         model.train()
         with tqdm(
                 total=dataset_size,
                 unit='image') as pbar:
-            for (i, (images, labels)) in enumerate(train_loader):
+            for (i, (images, labels)) in datas:
                 images, labels = images.to(device), labels.unsqueeze(1).float().to(device)
 
                 with torch.cuda.amp.autocast():
@@ -228,11 +247,13 @@ def voc_segmentation(test_model=False):
         dataset_size = len(val_loader.dataset)
         dataset_batches = len(val_loader)
 
+        datas = buffer_dataloader(val_loader)
+
         model.eval()
         with (tqdm(
                 total=dataset_size,
                 unit='image') as pbar, torch.no_grad()):
-            for (images, labels) in val_loader:
+            for (_, (images, labels)) in datas:
                 images, labels = images.to(device), labels.unsqueeze(1).float().to(device)
 
                 predict = model(images)
@@ -257,7 +278,7 @@ def voc_segmentation(test_model=False):
                 pbar.update(batch_size)
 
         accuracy = num_correct / num_pixels
-        average_loss = 0 # total_loss / dataset_batches
+        average_loss = total_loss / dataset_batches
         dice = dice_score / dataset_batches
         tqdm.write(
             "\n"
@@ -301,10 +322,14 @@ def voc_segmentation(test_model=False):
     if not test_model:
         train_dataset = VOCSegmentationDataset(image_transform=image_transform, label_transform=label_transform)
         train_dataset = Subset(train_dataset, range(0, 50))
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+        train_loader = DataLoader(
+            train_dataset, batch_size=batch_size, shuffle=True,
+            num_workers=num_workers, persistent_workers=True, pin_memory=True)
     val_dataset = VOCSegmentationDataset(image_transform=image_transform, label_transform=label_transform)
     val_dataset = Subset(val_dataset, range(0, 50))
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    val_loader = DataLoader(
+        val_dataset, batch_size=batch_size, shuffle=False,
+        num_workers=num_workers, persistent_workers=True, pin_memory=True)
 
     # 定义模型
     model = UNet_custom_light(num_classes=1).to(device)
@@ -333,7 +358,7 @@ def voc_segmentation(test_model=False):
 
 
 if __name__ == '__main__':
-    carvana(True)
+    carvana(test_model=False)
 
 
 

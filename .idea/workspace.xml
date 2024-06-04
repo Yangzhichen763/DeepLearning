@@ -4,13 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 使用 ResNet 和 ResNeXt 改进椭圆检测模型，准确率从 30% 提升到 67%。&#10;2. 使用 torch.cuda.amp 和 num_worker、persistent_workers、pin_memory 等参数提升训练速度，从原本的一个 epoch 5 分钟提升到初始 epoch 4 分钟，后面的每个 epoch 1 分钟。">
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 实用 CosineAnnealingWarmupRestarts 学习步长优化器，椭圆检测模型的准确率从 70% 提升到 75%；&#10;2. 学习并编写了简单的 MoE 模块；">
+      <change afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2024_6_1_19_21_[Changes]/shelved.patch" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2024_6_1_19_21__Changes_.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lately/DiffusionModel/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lately/MOE/modules.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lossFunc/FunctionalLoss.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/optim/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork/loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork/loss.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork/train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lossFunc/BBLoss/AABB.py" beforeDir="false" afterPath="$PROJECT_DIR$/lossFunc/BBLoss/AABB.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lossFunc/BBLoss/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/lossFunc/BBLoss/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/UNet/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/lately/UNet/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/os/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/os/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/pytorch/save.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/pytorch/save.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -161,7 +167,9 @@
       <workItem from="1716985953888" duration="266000" />
       <workItem from="1716986313233" duration="91002000" />
       <workItem from="1717307036992" duration="14451000" />
-      <workItem from="1717343892458" duration="13036000" />
+      <workItem from="1717343892458" duration="13227000" />
+      <workItem from="1717430454901" duration="913000" />
+      <workItem from="1717466353057" duration="11772000" />
     </task>
     <task id="LOCAL-00001" summary="添加 MLPMixer 的网络结构代码">
       <option name="closed" value="true" />
@@ -331,7 +339,15 @@
       <option name="project" value="LOCAL" />
       <updated>1716985643751</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="1. 实用 CosineAnnealingWarmupRestarts 学习步长优化器，椭圆检测模型的准确率从 70% 提升到 75%；&#10;2. 学习并编写了简单的 MoE 模块；">
+      <option name="closed" value="true" />
+      <created>1717430408553</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1717430408553</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -418,7 +434,8 @@
     <MESSAGE value="1. 实现 ResNeXt 网络结构，包括 ResNeXt50_32x4d、ResNeXt101_32x8d、ResNeXt152_64x4d 等。" />
     <MESSAGE value="1. 使用 ResNet 和 ResNeXt 改进椭圆检测模型，准确率从 30% 提升到 67%。" />
     <MESSAGE value="1. 使用 ResNet 和 ResNeXt 改进椭圆检测模型，准确率从 30% 提升到 67%。&#10;2. 使用 torch.cuda.amp 和 num_worker、persistent_workers、pin_memory 等参数提升训练速度，从原本的一个 epoch 5 分钟提升到初始 epoch 4 分钟，后面的每个 epoch 1 分钟。" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 使用 ResNet 和 ResNeXt 改进椭圆检测模型，准确率从 30% 提升到 67%。&#10;2. 使用 torch.cuda.amp 和 num_worker、persistent_workers、pin_memory 等参数提升训练速度，从原本的一个 epoch 5 分钟提升到初始 epoch 4 分钟，后面的每个 epoch 1 分钟。" />
+    <MESSAGE value="1. 实用 CosineAnnealingWarmupRestarts 学习步长优化器，椭圆检测模型的准确率从 70% 提升到 75%；&#10;2. 学习并编写了简单的 MoE 模块；" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 实用 CosineAnnealingWarmupRestarts 学习步长优化器，椭圆检测模型的准确率从 70% 提升到 75%；&#10;2. 学习并编写了简单的 MoE 模块；" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
@@ -433,7 +450,7 @@
     <SUITE FILE_PATH="coverage/DeepLearning$FPN.coverage" NAME="FPN Coverage Results" MODIFIED="1716731835081" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules" />
     <SUITE FILE_PATH="coverage/DeepLearning$modules.coverage" NAME="modules Coverage Results" MODIFIED="1717307204820" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lately/MOE" />
     <SUITE FILE_PATH="coverage/DeepLearning$learning.coverage" NAME="learning Coverage Results" MODIFIED="1715751498928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch/segment" />
-    <SUITE FILE_PATH="coverage/DeepLearning$train.coverage" NAME="train Coverage Results" MODIFIED="1717389968690" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork" />
+    <SUITE FILE_PATH="coverage/DeepLearning$train.coverage" NAME="train Coverage Results" MODIFIED="1717469621637" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lately/UNet" />
     <SUITE FILE_PATH="coverage/DeepLearning$part.coverage" NAME="part Coverage Results" MODIFIED="1715424131810" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/legacy/DenseNet" />
     <SUITE FILE_PATH="coverage/DeepLearning$Models.coverage" NAME="Models Coverage Results" MODIFIED="1715155425885" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/MLPMixer" />
     <SUITE FILE_PATH="coverage/DeepLearning$Image.coverage" NAME="Image Coverage Results" MODIFIED="1715606972619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Programs/Python/Python39/Lib/site-packages/PIL" />

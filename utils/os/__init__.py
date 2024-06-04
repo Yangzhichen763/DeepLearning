@@ -62,7 +62,7 @@ def get_unique_full_path(full_path, unique=True):
     file_name, suffix = os.path.splitext(file_name)
     k = 0
     while True:
-        save_file_name = f"{file_name}_{k}.{suffix}"
+        save_file_name = f"{file_name}_{k}{suffix}"
         image_path = os.path.join(directory, save_file_name)
         if not os.path.exists(image_path):
             break

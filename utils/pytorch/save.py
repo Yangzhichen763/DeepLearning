@@ -88,18 +88,19 @@ def tensor_to_image(tensor, save_path=None, file_name=None, epoch=None):
         tensor = tensor.unsqueeze(0)        # [C, H, W] -> [1, C, H, W]
     batch_size = tensor.shape[0]
 
-    print(1, torch.unique(tensor))
     tensor = (tensor
               .permute(0, 2, 3, 1)          # [N, C, H, W] -> [N, H, W, C]
               .cpu().numpy())
 
     to_pil = transforms.ToPILImage()
     for i in range(tensor.shape[0]):
-        img = to_pil(tensor[i])             # [H, W, C]
-        print(2, torch.unique(transforms.ToTensor()(img)))
+        print(torch.from_numpy(tensor[i]).unique())
+        if not (tensor[i] > 1).any():
+            tensor[i] *= 255
+        image = to_pil(tensor[i])             # [H, W, C]
         if epoch is not None:
             image_save_path = save_path.replace(".png", f"_{epoch * batch_size + i}.png")
         else:
             image_save_path = get_unique_full_path(save_path)
-        img.save(image_save_path)
+        image.save(image_save_path)
 

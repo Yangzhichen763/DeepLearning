@@ -10,10 +10,12 @@ from custom.EllipseDetectionNeuralNetwork.datasets import EllipseDetectionDatase
 from modules.residual import ResNetEncoder, ResNeXtEncoder
 from modules.residual.ResNet import BasicBlock, Bottleneck
 from optim import CosineAnnealingWarmupRestarts
+from utils.general import Trainer, Validator
 from utils.tensorboard import *
 from utils.pytorch import *
 from utils.pytorch.dataset import *
 from utils.os import *
+from utils import general
 
 import time
 
