@@ -4,6 +4,11 @@ import torch.nn.functional as F
 import torchvision
 
 
+__all__ = ['Inception_v1',
+           'Inception_v2_A', 'Inception_v2_B', 'Inception_v2_C',
+           'Inception_v4']
+
+
 class BasicConv2d(nn.Module):
     """
     Basic convolution block with batch normalization and ReLU activation

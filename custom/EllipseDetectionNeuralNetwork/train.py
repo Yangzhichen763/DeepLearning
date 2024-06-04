@@ -82,119 +82,41 @@ def save_image(pred, target, target_images, batches, ioubs=None):
 
 
 def train():
-    min_loss = float('inf')
-    max_loss = float('-inf')
-    total_loss = 0
-    dataset_size = len(train_loader.dataset)
-    dataset_batches = len(train_loader)
-
-    tqdm.write(f"\nEpoch {epoch}: ")
-    if scheduler_epoch is not None:
-        tqdm.write(f" - learning rate: {optimizer.param_groups[0]['lr']}")
-    datas = buffer_dataloader(train_loader)
+    datas = trainer.start(epoch, scheduler=scheduler_epoch)
 
     model.train()  # 设置模型为训练模式
-    with tqdm(
-            total=dataset_size,
-            desc=f"Training Epoch {epoch}",
-            unit='image') as pbar:
-        for (i, (images, target)) in datas:
-            images, target = images.to(device), target.to(device)
+    for (i, (images, target)) in datas:
+        images, target = images.to(device), target.to(device)
 
-            with torch.cuda.amp.autocast():
-                output = model(images)                          # 前向传播，获得输出
-                loss, iou, pred = criterion(output, target)     # 计算损失
+        with torch.cuda.amp.autocast():
+            output = model(images)                          # 前向传播，获得输出
+            loss, iou, pred = criterion(output, target)     # 计算损失
 
-            optimizer.zero_grad()                           # 清空梯度
-            scaler.scale(loss).backward()                   # 反向传播
-            scaler.step(optimizer)                          # 更新参数
-            scaler.update()                                 # 更新 GradScaler
-            if scheduler_batch is not None:
-                scheduler_batch.step()                      # 更新学习率
+        trainer.backward(loss, scheduler=scheduler_batch)
 
-            # if epoch % 5 == 0:
+        if epoch % 5 == 0:
             save_image(pred, target, images, i, iou)
 
-            # 记录损失最小值和最大值以及总损失
-            min_loss = min(min_loss, loss.item())
-            max_loss = max(max_loss, loss.item())
-            total_loss += loss.item()
+        trainer.step(i, loss, scheduler=scheduler_batch,
+                     iou=iou.mean(dim=-1).mean(-1).sum())
 
-            # 打印训练进度
-            i_current_batch = i + 1
-            pbar.set_postfix(loss=loss.item())
-            pbar.update(batch_size)
-
-            if (writer is not None) & (epoch is not None):
-                writer.add_scalar(
-                    "train_loss",
-                    loss.item(),
-                    epoch * dataset_batches + i_current_batch)
-                writer.add_scalar(
-                    "train_iou",
-                    iou.mean(dim=-1).mean(-1).sum().item(),
-                    epoch * dataset_batches + i_current_batch)
-                if scheduler_batch is not None:
-                    writer.add_scalar(
-                        "train_lr",
-                        optimizer.param_groups[0]['lr'],
-                        epoch * dataset_batches + i_current_batch)
-
-        pbar.set_postfix()                  # 清空进度条备注
-        pbar.update(pbar.total - pbar.n)    # 防止进度条超过 100%
-
-        tqdm.write(
-            f"Min-Avg-Max loss: [{min_loss:.4f}, {total_loss / len(train_loader):.4f}, {max_loss:.4f}]")
-
-    if scheduler_epoch is not None:
-        scheduler_epoch.step()  # 更新学习率
-        writer.add_scalar(
-            "train_lr",
-            optimizer.param_groups[0]['lr'],
-            epoch * dataset_batches + i_current_batch)
-
+    trainer.end(scheduler=scheduler_epoch)
 
 def validate():
-    total_loss = 0
-    correct = 0.
-    dataset_size = len(test_loader.dataset)
-    dataset_batches = len(test_loader)
-
-    datas = buffer_dataloader(test_loader)
+    datas = validator.start(epoch, optimizer)
 
     model.eval()
-    with tqdm(
-            total=dataset_size,
-            desc=f"Testing Epoch {epoch}",
-            unit='image') as pbar, torch.no_grad():
-        for (_, (data, target)) in datas:
+    with torch.no_grad():
+        for (i, (data, target)) in datas:
             data, target = data.to(device), target.to(device)
 
             output = model(data)                                # 获得输出
-
             loss, iou, _ = criterion(output, target)            # 计算损失
-            total_loss += loss.item()
+            correct = iou.mean(dim=-1).mean(-1).sum()           # 计算正确率
 
-            correct += iou.mean(dim=-1).mean(-1).sum().item()   # 计算正确率
+            validator.step(i, loss, correct)
 
-            # 打印测试进度
-            pbar.set_postfix(loss=loss.item())
-            pbar.update(batch_size)
-
-        pbar.set_postfix()                  # 清空进度条备注
-        pbar.update(pbar.total - pbar.n)    # 防止进度条超过 100%
-
-        average_loss = total_loss / dataset_batches
-        accuracy = 100. * correct / dataset_size
-        tqdm.write(
-            f"Average loss: {average_loss:.4f}, "
-            f"Accuracy: {correct:.0f}/{dataset_size} ({accuracy:.2f}%)")
-
-    if (writer is not None) & (epoch is not None):
-        writer.add_scalar("test_loss", average_loss, epoch)
-        writer.add_scalar("accuracy", accuracy, epoch)
-
-    return average_loss, accuracy
+    return validator.end()
 
 
 def get_model(input_shape, config):
@@ -366,11 +288,12 @@ if __name__ == '__main__':
         lr=learning_rate)
     scheduler_config = "CosineAnnealingWarmRestarts"
     scheduler_epoch, scheduler_batch = get_scheduler(scheduler_config)
-    scaler = GradScaler()
 
     # 训练模型
     # 训练和验证模型，在 Terminal 激活 tensorboard 的指令:
     # tensorboard --logdir=./custom/EllipseDetectionNeuralNetwork/logs/tensorboard
+    trainer = Trainer(train_loader, optimizer, writer=writer)
+    validator = Validator(test_loader)
     best_accuracy, last_accuracy = 0.0, 0.0
     for epoch in range(1, num_epochs + 1):
         train()

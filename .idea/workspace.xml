@@ -4,19 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 实用 CosineAnnealingWarmupRestarts 学习步长优化器，椭圆检测模型的准确率从 70% 提升到 75%；&#10;2. 学习并编写了简单的 MoE 模块；">
-      <change afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2024_6_1_19_21_[Changes]/shelved.patch" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2024_6_1_19_21__Changes_.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lately/DiffusionModel/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lately/MOE/modules.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lossFunc/FunctionalLoss.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/optim/__init__.py" afterDir="false" />
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 将 train 和 validate 中复用的部分写在一个类当中">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork/train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/UNet/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/lately/UNet/train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/os/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/os/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/pytorch/save.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/pytorch/save.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/Res2Net.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/residual/Res2Net.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/residual/Inception.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/residual/Inception.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/general.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/general.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,51 +64,53 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.FPN.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Image.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Inception.executor&quot;: &quot;Run&quot;,
-    &quot;Python.LSTM.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Models.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Modules.executor&quot;: &quot;Run&quot;,
-    &quot;Python.OBB.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ResNeXt.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ResNet.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Transformer.executor&quot;: &quot;Run&quot;,
-    &quot;Python.__init__.executor&quot;: &quot;Run&quot;,
-    &quot;Python.datapicker.executor&quot;: &quot;Run&quot;,
-    &quot;Python.datasets.executor&quot;: &quot;Run&quot;,
-    &quot;Python.learning.executor&quot;: &quot;Run&quot;,
-    &quot;Python.loss.executor&quot;: &quot;Run&quot;,
-    &quot;Python.model (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.model.executor&quot;: &quot;Run&quot;,
-    &quot;Python.modellogger.executor&quot;: &quot;Run&quot;,
-    &quot;Python.models.executor&quot;: &quot;Run&quot;,
-    &quot;Python.modules.executor&quot;: &quot;Run&quot;,
-    &quot;Python.part.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.train.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;E:/Developments/PythonLearning/_advance/yolov5-master&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.FPN.executor": "Run",
+    "Python.Image.executor": "Run",
+    "Python.Inception.executor": "Run",
+    "Python.LSTM.executor": "Run",
+    "Python.Models.executor": "Run",
+    "Python.Modules.executor": "Run",
+    "Python.OBB.executor": "Run",
+    "Python.Res2Net.executor": "Run",
+    "Python.ResNeXt.executor": "Run",
+    "Python.ResNet.executor": "Run",
+    "Python.Transformer.executor": "Run",
+    "Python.__init__.executor": "Run",
+    "Python.datapicker.executor": "Run",
+    "Python.datasets.executor": "Run",
+    "Python.general.executor": "Run",
+    "Python.learning.executor": "Run",
+    "Python.loss.executor": "Run",
+    "Python.model (1).executor": "Run",
+    "Python.model.executor": "Run",
+    "Python.modellogger.executor": "Run",
+    "Python.models.executor": "Run",
+    "Python.modules.executor": "Run",
+    "Python.part.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.train.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "E:/Developments/PythonLearning/_legacy/Res2Net-PretrainedModels-master",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Developments\PythonLearning\DeepLearning\modules\residual" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\residual\pictures" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\fpn\pictures" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\lately\UNet" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\utils\pytorch\segment" />
-      <recent name="E:\Developments\PythonLearning\DeepLearning\test" />
     </key>
   </component>
   <component name="SharedIndexes">
@@ -169,7 +164,8 @@
       <workItem from="1717307036992" duration="14451000" />
       <workItem from="1717343892458" duration="13227000" />
       <workItem from="1717430454901" duration="913000" />
-      <workItem from="1717466353057" duration="11772000" />
+      <workItem from="1717466353057" duration="16379000" />
+      <workItem from="1717507489684" duration="9795000" />
     </task>
     <task id="LOCAL-00001" summary="添加 MLPMixer 的网络结构代码">
       <option name="closed" value="true" />
@@ -347,7 +343,15 @@
       <option name="project" value="LOCAL" />
       <updated>1717430408553</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="1. 将 train 和 validate 中复用的部分写在一个类当中">
+      <option name="closed" value="true" />
+      <created>1717503138845</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1717503138845</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -435,7 +439,8 @@
     <MESSAGE value="1. 使用 ResNet 和 ResNeXt 改进椭圆检测模型，准确率从 30% 提升到 67%。" />
     <MESSAGE value="1. 使用 ResNet 和 ResNeXt 改进椭圆检测模型，准确率从 30% 提升到 67%。&#10;2. 使用 torch.cuda.amp 和 num_worker、persistent_workers、pin_memory 等参数提升训练速度，从原本的一个 epoch 5 分钟提升到初始 epoch 4 分钟，后面的每个 epoch 1 分钟。" />
     <MESSAGE value="1. 实用 CosineAnnealingWarmupRestarts 学习步长优化器，椭圆检测模型的准确率从 70% 提升到 75%；&#10;2. 学习并编写了简单的 MoE 模块；" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 实用 CosineAnnealingWarmupRestarts 学习步长优化器，椭圆检测模型的准确率从 70% 提升到 75%；&#10;2. 学习并编写了简单的 MoE 模块；" />
+    <MESSAGE value="1. 将 train 和 validate 中复用的部分写在一个类当中" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 将 train 和 validate 中复用的部分写在一个类当中" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
@@ -450,11 +455,13 @@
     <SUITE FILE_PATH="coverage/DeepLearning$FPN.coverage" NAME="FPN Coverage Results" MODIFIED="1716731835081" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules" />
     <SUITE FILE_PATH="coverage/DeepLearning$modules.coverage" NAME="modules Coverage Results" MODIFIED="1717307204820" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lately/MOE" />
     <SUITE FILE_PATH="coverage/DeepLearning$learning.coverage" NAME="learning Coverage Results" MODIFIED="1715751498928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch/segment" />
-    <SUITE FILE_PATH="coverage/DeepLearning$train.coverage" NAME="train Coverage Results" MODIFIED="1717469621637" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lately/UNet" />
+    <SUITE FILE_PATH="coverage/DeepLearning$train.coverage" NAME="train Coverage Results" MODIFIED="1717508678294" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork" />
     <SUITE FILE_PATH="coverage/DeepLearning$part.coverage" NAME="part Coverage Results" MODIFIED="1715424131810" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/legacy/DenseNet" />
+    <SUITE FILE_PATH="coverage/DeepLearning$Res2Net.coverage" NAME="Res2Net Coverage Results" MODIFIED="1717518061114" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$Models.coverage" NAME="Models Coverage Results" MODIFIED="1715155425885" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/MLPMixer" />
     <SUITE FILE_PATH="coverage/DeepLearning$Image.coverage" NAME="Image Coverage Results" MODIFIED="1715606972619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Programs/Python/Python39/Lib/site-packages/PIL" />
     <SUITE FILE_PATH="coverage/DeepLearning$modellogger.coverage" NAME="modellogger Coverage Results" MODIFIED="1716774867164" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/logger" />
+    <SUITE FILE_PATH="coverage/DeepLearning$general.coverage" NAME="general Coverage Results" MODIFIED="1717506648226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
     <SUITE FILE_PATH="coverage/DeepLearning$model.coverage" NAME="model Coverage Results" MODIFIED="1716992626873" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork" />
     <SUITE FILE_PATH="coverage/DeepLearning$Inception.coverage" NAME="Inception Coverage Results" MODIFIED="1716882238004" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
   </component>
