@@ -14,7 +14,14 @@ from torchvision.models import (
     resnet101,
     resnet152
 )
-from utils.logger import *
+
+from utils.logger import log_model_params
+
+
+"""
+Residual Network (ResNet)
+论文链接 2015：https://arxiv.org/abs/1512.03385
+"""
 
 
 num_blocks_dict = {
@@ -167,7 +174,7 @@ class ResNet(nn.Module):
     Residual Network (ResNet)
     论文链接 2015：https://arxiv.org/abs/1512.03385
     """
-    def __init__(self, in_channels, block, num_blocks, num_classes=10):
+    def __init__(self, in_channels=3, block=None, num_blocks=None, num_classes=10):
         """
 
         Args:
@@ -190,49 +197,49 @@ class ResNet(nn.Module):
         return x
 
 
-def ResNet18(in_channels=3, num_classes=10, pretrained=False):
+def ResNet18(pretrained=False, **kwargs):
     if pretrained:
         weights = ResNet18_Weights.IMAGENET1K_V1
         model = resnet18(weights=weights)
         return model
     else:
-        return ResNet(in_channels, BasicBlock, num_blocks_dict["ResNet18"], num_classes)
+        return ResNet(block=BasicBlock, num_blocks=num_blocks_dict["ResNet18"], **kwargs)
 
 
-def ResNet34(in_channels=3, num_classes=10, pretrained=False):
+def ResNet34(pretrained=False, **kwargs):
     if pretrained:
         weights = ResNet34_Weights.IMAGENET1K_V1
         model = resnet34(weights=weights)
+        return model
     else:
-        model = ResNet(in_channels, BasicBlock, num_blocks_dict["ResNet34"], num_classes)
-    return model
+        return ResNet(block=BasicBlock, num_blocks=num_blocks_dict["ResNet34"], **kwargs)
 
 
-def ResNet50(in_channels=3, num_classes=10, pretrained=False):
+def ResNet50(pretrained=False, **kwargs):
     if pretrained:
         weights = ResNet50_Weights.IMAGENET1K_V1
         model = resnet50(weights=weights)
+        return model
     else:
-        model = ResNet(in_channels, Bottleneck, num_blocks_dict["ResNet50"], num_classes)
-    return model
+        return ResNet(block=Bottleneck, num_blocks=num_blocks_dict["ResNet50"], **kwargs)
 
 
-def ResNet101(in_channels=3, num_classes=10, pretrained=False):
+def ResNet101(pretrained=False, **kwargs):
     if pretrained:
         weights = ResNet101_Weights.IMAGENET1K_V1
         model = resnet101(weights=weights)
+        return model
     else:
-        model = ResNet(in_channels, Bottleneck, num_blocks_dict["ResNet101"], num_classes)
-    return model
+        return ResNet(block=Bottleneck, num_blocks=num_blocks_dict["ResNet101"], **kwargs)
 
 
-def ResNet152(in_channels=3, num_classes=10, pretrained=False):
+def ResNet152(pretrained=False, **kwargs):
     if pretrained:
         weights = ResNet152_Weights.IMAGENET1K_V1
         model = resnet152(weights=weights)
+        return model
     else:
-        model = ResNet(in_channels, Bottleneck, num_blocks_dict["ResNet152"], num_classes)
-    return model
+        return ResNet(block=Bottleneck, num_blocks=num_blocks_dict["ResNet152"], **kwargs)
 
 
 if __name__ == '__main__':

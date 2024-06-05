@@ -8,6 +8,19 @@ from utils.pytorch.dataset import buffer_dataloader
 from utils.tensorboard import get_writer
 
 
+def is_value(value):
+    return isinstance(value, (int, float, torch.Tensor))
+
+
+def get_value(value):
+    if isinstance(value, torch.Tensor) and (value.dim() == 0 or value.dim() == 1):
+        return value.item()
+    elif isinstance(value, (int, float)):
+        return value
+    else:
+        raise ValueError(f"Unsupported value type: {type(value)}")
+
+
 class Trainer:
     def __init__(self, train_loader, optimizer, **kwargs):
         self.min_loss = None
@@ -15,7 +28,9 @@ class Trainer:
         self.train_loader = train_loader
         self.optimizer = optimizer
 
-        self.writer = get_writer() if kwargs.get('writer', None) is None else kwargs['writer']
+        self.writer_enabled = kwargs.get('writer_enabled', True)
+        if self.writer_enabled:
+            self.writer = get_writer() if kwargs.get('writer', None) is None else kwargs['writer']
         self.scaler = GradScaler() if kwargs.get('scaler', None) is None else kwargs['scaler']
 
     def __call__(self, epoch, **kwargs):
@@ -72,7 +87,7 @@ class Trainer:
 
         """
         # 记录损失最小值和最大值以及总损失
-        loss = loss.item() if isinstance(loss, torch.Tensor) else loss
+        loss = get_value(loss)
         self.min_loss = min(self.min_loss, loss)
         self.max_loss = max(self.max_loss, loss)
         self.total_loss += loss
@@ -82,22 +97,13 @@ class Trainer:
         self.process_bar.set_postfix(loss=loss)
         self.process_bar.update(self.batch_size)
 
-        if self.writer is not None:
-            self.writer.add_scalar(
-                f"train_loss",
-                loss,
-                i_current)
+        if self.writer_enabled:
+            self.writer.add_scalar(f"train_loss", loss, i_current)
             for key, value in kwargs.items():
-                if isinstance(value, torch.Tensor) and (value.dim() == 0 or value.dim() == 1):
-                    self.writer.add_scalar(
-                        f"train_{key}",
-                        value.item() if isinstance(value, torch.Tensor) else value,
-                        i_current)
+                if is_value(value):
+                    self.writer.add_scalar(f"train_{key}", get_value(value), self.epoch)
             if kwargs.get('scheduler', None) is not None:
-                self.writer.add_scalar(
-                    "train_lr",
-                    self.optimizer.param_groups[0]['lr'],
-                    i_current)
+                self.writer.add_scalar("train_lr", self.optimizer.param_groups[0]['lr'], i_current)
 
     def end(self, **kwargs):
         """
@@ -109,23 +115,47 @@ class Trainer:
         self.process_bar.update(self.process_bar.total - self.process_bar.n)    # 防止进度条超过 100%
         self.process_bar.close()
 
+        # 打印损失信息
         tqdm.write(
-            f"Min-Avg-Max loss: [{self.min_loss:.4f}, {self.total_loss / self.dataset_batches:.4f}, {self.max_loss:.4f}]")
+            f"Min-Avg-Max loss: [{self.min_loss:.4f}, {self.average_loss:.4f}, {self.max_loss:.4f}]")
 
+        # 更新学习率
         if kwargs.get('scheduler', None) is not None:
             scheduler: torch.optim.lr_scheduler.LRScheduler = kwargs['scheduler']
             scheduler.step()  # 更新学习率
-            self.writer.add_scalar(
-                "train_lr",
-                self.optimizer.param_groups[0]['lr'],
-                self.epoch)
+
+            if self.writer_enabled:
+                self.writer.add_scalar("train_lr", self.optimizer.param_groups[0]['lr'], self.epoch)
+
+    @property
+    def average_loss(self):
+        return self.total_loss / self.dataset_batches
+
+    @staticmethod
+    def predict(model, images, targets, criterion):
+        """
+        简单的标签预测
+        Args:
+            model: 模型
+            images: 输入图像
+            targets: 标签
+            criterion: 损失函数
+
+        Returns: 模型预测结果，损失值
+        """
+        with torch.cuda.amp.autocast():
+            predict = model(images)
+            loss = criterion(predict, targets)
+        return predict, loss
 
 
 class Validator:
     def __init__(self, test_loader, **kwargs):
         self.test_loader = test_loader
 
-        self.writer = get_writer() if kwargs.get('writer', None) is None else kwargs['writer']
+        self.writer_enabled = kwargs.get('writer_enabled', True)
+        if self.writer_enabled:
+            self.writer = get_writer() if kwargs.get('writer', None) is None else kwargs['writer']
 
     def __call__(self, epoch, optimizer, **kwargs):
         self.total_loss = 0
@@ -146,6 +176,16 @@ class Validator:
         return datas
 
     def start(self, epoch, optimizer, **kwargs):
+        """
+        需要以 (i, (images, labels)) 的方式遍历
+        Args:
+            epoch:
+            optimizer:
+            **kwargs:
+
+        Returns:
+
+        """
         return self.__call__(epoch, optimizer, **kwargs)
 
     def step(self, i, loss, correct, **kwargs):
@@ -157,10 +197,9 @@ class Validator:
             correct: 准确率
             **kwargs:
         """
-        loss = loss.item() if isinstance(loss, torch.Tensor) else loss
+        loss = get_value(loss)
         self.total_loss += loss
-
-        self.correct += correct.item() if isinstance(correct, torch.Tensor) else correct
+        self.correct += get_value(correct)
 
         # 打印训练进度
         self.process_bar.set_postfix(loss=loss)
@@ -171,13 +210,27 @@ class Validator:
         self.process_bar.update(self.process_bar.total - self.process_bar.n)    # 防止进度条超过 100%
         self.process_bar.close()
 
+        # 计算平均损失
         average_loss = self.total_loss / self.dataset_batches
-        accuracy = 100. * self.correct / self.dataset_size
-        tqdm.write(
-            f"Average loss: {average_loss:.4f}, "
-            f"Accuracy: {self.correct:.0f}/{self.dataset_size} ({accuracy:.2f}%)")
+        tqdm.write(f"Average loss: {average_loss:.4f}")
+        # 计算准确率
+        correct = self.correct if kwargs.get('correct', None) is None else kwargs['correct']
+        total = self.dataset_size if kwargs.get('total', None) is None else kwargs['total']
+        accuracy = 100. * correct / total
+        tqdm.write(f"Accuracy: {correct:.0f}/{total:.0f} ({accuracy:.2f}%)")
+        # 打印其他信息
+        output_list = []
+        for key, value in kwargs.items():
+            if is_value(value) and key not in ['correct', 'total']:
+                tqdm.write(f"{key}: {get_value(value):.4f}")
+                output_list.append(get_value(value))
 
-        self.writer.add_scalar("test_loss", average_loss, self.epoch)
-        self.writer.add_scalar("accuracy", accuracy, self.epoch)
+        # 记录到 TensorBoard
+        if self.writer_enabled:
+            self.writer.add_scalar("test_loss", average_loss, self.epoch)
+            self.writer.add_scalar("test_accuracy", accuracy, self.epoch)
+            for key, value in kwargs.items():
+                if is_value(value):
+                    self.writer.add_scalar(f"test_{key}", get_value(value), self.epoch)
 
-        return average_loss, accuracy
+        return average_loss, accuracy, *output_list

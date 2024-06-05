@@ -10,10 +10,17 @@ from torchvision.models import (
     resnext101_32x8d,
     resnext101_64x4d,
 )
-from utils.logger import *
+
+from utils.logger import log_model_params
 
 from modules.residual.ResNet import BasicBlock as ResNetBasicBlock
 from modules.residual.ResNet import num_blocks_dict
+
+
+"""
+Residual Network with Excitation Layers (ResNeXt)
+论文链接 2016：https://arxiv.org/abs/1611.05431
+"""
 
 
 class BasicBlock(ResNetBasicBlock):

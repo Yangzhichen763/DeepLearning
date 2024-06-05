@@ -7,6 +7,7 @@ from albumentations.pytorch import ToTensorV2
 from torchvision.transforms import transforms
 from tqdm import tqdm
 
+from utils.general import Trainer, Validator
 from utils.tensorboard import *
 
 from model import (UNet, UNetCustom)
@@ -19,74 +20,35 @@ from utils.pytorch.segment.datasets import CarvanaDataset, VOCSegmentationDatase
 
 def carvana(test_model=False):
     def train_epoch():
-        min_loss = float('inf')
-        max_loss = float('-inf')
-        total_loss = 0
-        dataset_size = len(train_loader.dataset)
-        dataset_batches = len(train_loader)
-
-        tqdm.write(f"\nEpoch {epoch}: ")
-        tqdm.write(f" - learning rate: {optimizer.param_groups[0]['lr']}")
-        datas = buffer_dataloader(train_loader)
+        datas = trainer.start(epoch, scheduler=scheduler)
 
         model.train()
-        with tqdm(
-                total=dataset_size,
-                unit='image') as pbar:
-            for (i, (images, labels)) in datas:
-                images, labels = images.to(device), labels.unsqueeze(1).float().to(device)
+        for (i, (images, labels)) in datas:
+            images, labels = images.to(device), labels.unsqueeze(1).float().to(device)
 
-                with torch.cuda.amp.autocast():
-                    predict = model(images)
-                    loss = criterion(predict, labels)
+            predict, loss = trainer.predict(model, images, labels, criterion)   # 预测和计算损失
+            trainer.backward(loss)                                              # 反向传播
+            trainer.step(i, loss)                                               # 更新参数
 
-                optimizer.zero_grad()
-                scaler.scale(loss).backward()
-                scaler.step(optimizer)
-                scaler.update()
-
-                # 记录损失最小值和最大值以及总损失
-                min_loss = min(min_loss, loss.item())
-                max_loss = max(max_loss, loss.item())
-                total_loss += loss.item()
-
-                # 更新进度条
-                pbar.set_postfix(loss=loss.item())
-                pbar.update(batch_size)
-
-            pbar.set_postfix()                  # 清空进度条备注
-            pbar.update(pbar.total - pbar.n)    # 防止进度条超过 100%
-
-        average_loss = total_loss / dataset_batches
-        tqdm.write(
-            f"Epoch {epoch} training finished. "
-            f"Min loss: {min_loss:.6f}, "
-            f"Max loss: {max_loss:.6f}, "
-            f"Avg loss: {average_loss:.6f}")
-        return average_loss
+        trainer.end(scheduler=scheduler)
+        return trainer.average_loss
 
     def validate_epoch():
-        total_loss = 0.0
+        datas = validator.start(epoch, optimizer)
+
         num_correct = 0
         num_pixels = 0
         dice_score = 0.0
-        dataset_size = len(val_loader.dataset)
-        dataset_batches = len(val_loader)
-
-        datas = buffer_dataloader(val_loader)
 
         model.eval()
-        with (tqdm(
-                total=dataset_size,
-                unit='image') as pbar, torch.no_grad()):
-            for (_, (images, labels)) in datas:
+        with torch.no_grad():
+            for (i, (images, labels)) in datas:
                 images, labels = images.to(device), labels.unsqueeze(1).float().to(device)
 
                 predict = model(images)
 
                 # 计算损失
                 loss = criterion(predict, labels)
-                total_loss += loss.item()
 
                 # 预测和计算准确率和 Dice 系数
                 predict = torch.sigmoid(predict)
@@ -96,35 +58,25 @@ def carvana(test_model=False):
                 dice_score += ((2 * (predict * labels).sum())
                                / (2 * (predict * labels).sum()
                                + ((predict * labels) < 1).sum()))
-                if test_model:
-                    save.tensor_to_image(predict, file_name="pred")
+                # if test_model:
+                save.tensor_to_image(predict, file_name="pred", batch=i)
 
-                # 更新进度条
-                pbar.set_postfix(loss=loss.item())
-                pbar.update(batch_size)
+                validator.step(i, loss, num_correct / num_pixels)
 
-            pbar.set_postfix()                  # 清空进度条备注
-            pbar.update(pbar.total - pbar.n)    # 防止进度条超过 100%
-
-        accuracy = num_correct / num_pixels
-        average_loss = total_loss / dataset_batches
-        dice = dice_score / dataset_batches
-        tqdm.write(
-            f"Accuracy: {num_correct}/{num_pixels}({accuracy * 100:.2f})%, "
-            f"Average loss: {average_loss:.4f}, "
-            f"Dice Score: {dice:.2f}")
-
-        return accuracy, dice
+        average_loss, accuracy, dice = validator.end(
+                correct=num_correct, total=num_pixels,
+                dice=dice_score / validator.dataset_batches)
+        return average_loss, accuracy, dice
 
     # 超参数设置
-    batch_size = 8
+    batch_size = 32
     num_workers = 2
     num_epochs = 50
-    learning_rate = 1e-6
+    learning_rate = 3e-4
     weight_decay = 0.0001
     momentum = 0.9
-    scheduler_step_size = 2
-    scheduler_gamma = 0.5
+    scheduler_step_size = 5
+    scheduler_gamma = 0.71
     image_size = (160, 240)
 
     # 部署 GPU 设备
@@ -171,14 +123,15 @@ def carvana(test_model=False):
     model = UNet_custom_light(num_classes=1).to(device)
     criterion = nn.BCEWithLogitsLoss()
     if not test_model:
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)  # optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
         scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=scheduler_step_size, gamma=scheduler_gamma)
-        scaler = GradScaler()
 
         # 训练模型
+        trainer = Trainer(train_loader, optimizer, writer_enabled=False)
+        validator = Validator(val_loader)
         for epoch in range(1, num_epochs + 1):
             train_loss = train_epoch()
-            val_accuracy, val_loss = validate_epoch()
+            val_loss, val_accuracy, val_dice = validate_epoch()
             scheduler.step()
             print(f"Epoch: {epoch}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 

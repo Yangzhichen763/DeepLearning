@@ -14,22 +14,10 @@ from custom.EllipseDetectionNeuralNetwork.loss import EllipseLoss
 from modules.residual.ResNet import resnet18
 from optim import CosineAnnealingWarmupRestarts
 
-learning_rate = 1e-2
-num_epochs = 100
 
-model = resnet18()
+def get_boo():
+    list = [4, 5, 6]
+    return 1, 2, *list
 
-optimizer = optim.AdamW(
-    model.parameters(),
-    lr=learning_rate)
-scheduler_epoch = CosineAnnealingWarmupRestarts(
-    optimizer,
-    first_cycle_steps=int(num_epochs / 10),
-    max_lr=learning_rate,
-    min_lr=1e-8,
-    warmup_steps=5,
-    gamma=0.1)
+print(get_boo())
 
-for epoch in range(1, num_epochs + 1):
-    scheduler_epoch.step()
-    print(f"Epoch {epoch}: learning rate = {optimizer.param_groups[0]['lr']}")

@@ -158,9 +158,9 @@ class CarvanaDataset(Dataset):
                 mask = self.label_transform(mask)
             else:
                 mask = transforms.ToTensor()(mask)
-            if not (mask > 1).any():
-                mask = mask / 255.0
-            mask = mask.long()
+        if (mask > 1).any():
+            mask = mask / 255.0
+        mask = mask.long()
 
         return image, mask  # [3, H, W](float), [H, W](long)
 
