@@ -96,7 +96,82 @@ class VOCSegmentationDataset(torchvision.datasets.VOCSegmentation):
         return image, label     # [3, H, W](float), [H, W](long)
 
 
-class CarvanaDataset(Dataset):
+class BinarySegmentationDataset(Dataset):
+    color_map = torch.tensor([[0, 0, 0], [255, 255, 255]])
+    classes = ['background', 'object']
+
+    def __init__(
+            self,
+            dir_name,
+            image_dir_name="images",
+            mask_dir_name="masks",
+            mode="train",
+            image_transform=None,
+            label_transform=None,
+            transform=None):
+        """
+
+        Args:
+            dir_name: 数据集在 datas 下的目录名
+            image_dir_name: 存放图像的目录名，无需完整路径
+            mask_dir_name: 存放标签的目录名，无需完整路径
+            mode: 数据集类型，可以是 "train"、"val"、"test"
+            image_transform: 图像预处理器
+            label_transform: 标签预处理器
+            transform: 通用预处理器
+        """
+        root = os.path.join(get_datas_path(), dir_name, mode)
+        root = os.path.relpath(root)
+        self.image_dir = os.path.join(root, image_dir_name)
+        self.mask_dir = os.path.join(root, mask_dir_name)
+
+        self.image_file_names = os.listdir(self.image_dir)
+
+        self.image_transform = image_transform
+        self.label_transform = label_transform
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.image_file_names)
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index:
+        Returns:
+            image: [3, H, W](float), label: [H, W](long)
+        """
+        i_dot = self.image_file_names[index].rindex('.')
+        image_file_name = self.image_file_names[index]
+        img_path = os.path.join(self.image_dir, image_file_name)
+        mask_path = os.path.join(self.mask_dir, insert(image_file_name, i_dot, "_mask"))
+
+        image = Image.open(img_path).convert("RGB")
+        mask = Image.open(mask_path).convert("L")
+
+        if self.transform is not None:
+            if isinstance(self.transform, A.Compose):
+                augmentation = self.transform(image=np.array(image), mask=np.array(mask))
+                image = augmentation['image']
+                mask = augmentation['mask']
+        else:
+            if self.image_transform is not None:
+                image = self.image_transform(image)
+            else:
+                image = transforms.ToTensor()(image)
+
+            if self.label_transform is not None:
+                mask = self.label_transform(mask)
+            else:
+                mask = transforms.ToTensor()(mask)
+        if (mask > 1).any():
+            mask = mask / 255.0
+        mask = mask.long()
+
+        return image, mask  # [3, H, W](float), [H, W](long)
+
+
+class CarvanaDataset(BinarySegmentationDataset):
     color_map = torch.tensor([[0, 0, 0], [255, 255, 255]])
     classes = ['background', 'car']
 
@@ -108,7 +183,6 @@ class CarvanaDataset(Dataset):
             label_transform=None,
             transform=None):
         """
-
         Args:
             image_dir_name: 存放图像的目录名，无需完整路径
             mask_dir_name: 存放标签的目录名，无需完整路径
@@ -116,19 +190,14 @@ class CarvanaDataset(Dataset):
             label_transform: 标签预处理器
             transform: 通用预处理器
         """
-        root = os.path.join(get_root_path(), 'datas', 'Carvana', 'train')
-        root = os.path.relpath(root)
-        self.image_dir = os.path.join(root, image_dir_name)
-        self.mask_dir = os.path.join(root, mask_dir_name)
-
-        self.images = os.listdir(self.image_dir)
-
-        self.image_transform = image_transform
-        self.label_transform = label_transform
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.images)
+        super(CarvanaDataset, self).__init__(
+            dir_name='Carvana',
+            image_dir_name=image_dir_name,
+            mask_dir_name=mask_dir_name,
+            mode='train',
+            image_transform=image_transform,
+            label_transform=label_transform,
+            transform=transform)
 
     def __getitem__(self, index):
         """
@@ -137,8 +206,8 @@ class CarvanaDataset(Dataset):
         Returns:
             image: [3, H, W](float), label: [H, W](long)
         """
-        img_path = os.path.join(self.image_dir, self.images[index])
-        mask_path = os.path.join(self.mask_dir, self.images[index].replace('.jpg', '_mask.gif'))
+        img_path = os.path.join(self.image_dir, self.image_file_names[index])
+        mask_path = os.path.join(self.mask_dir, self.image_file_names[index].replace('.jpg', '_mask.gif'))
 
         image = Image.open(img_path).convert("RGB")
         mask = Image.open(mask_path).convert("L")

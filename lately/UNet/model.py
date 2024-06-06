@@ -1,4 +1,4 @@
-from parts import *
+from lately.UNet.parts import *
 
 from utils.logger import *
 

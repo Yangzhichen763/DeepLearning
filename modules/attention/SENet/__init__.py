@@ -8,15 +8,19 @@ from utils.logger import log_model_params
 
 """
 SENet: Squeeze-and-Excitation Networks
+SENet 是一种通道注意力机制 CAM(Channel Attention Module)
 论文链接 2017-2019：https://arxiv.org/abs/1709.01507
 """
 
 
 class SEBlock(nn.Module):
+    """
+    更泛的通道注意力机制见 CBAM(Convolutional Block Attention Module)
+    """
     def __init__(self, in_channels):
         super(SEBlock, self).__init__()
-        self.net = nn.Sequential(
-            nn.AdaptiveAvgPool2d((1, 1)),
+        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Sequential(
             nn.Conv2d(in_channels, in_channels // 16, kernel_size=1, bias=False),
             nn.ReLU(inplace=True),
             nn.Conv2d(in_channels // 16, in_channels, kernel_size=1, bias=False),
@@ -24,7 +28,9 @@ class SEBlock(nn.Module):
         )
 
     def forward(self, x):
-        return x * self.net(x)
+        y = self.avg_pool(x)
+        y = self.fc(y)
+        return x * y
 
 
 class BasicBlock(nn.Module):
@@ -97,33 +103,37 @@ class Bottleneck(nn.Module):
         return out
 
 
-class SE_ResNet(ResNet):
+class SEResNet(ResNet):
     def __init__(self, in_channels=3, block=None, num_blocks=None, num_classes=10):
-        super(SE_ResNet, self).__init__(in_channels, block, num_blocks, num_classes)
+        super(SEResNet, self).__init__(
+            in_channels=in_channels,
+            block=block,
+            num_blocks=num_blocks,
+            num_classes=num_classes)
 
 
-def SE_ResNet18(**kwargs):
-    return SE_ResNet(block=BasicBlock, num_blocks=[2, 2, 2, 2], **kwargs)
+def SEResNet18(**kwargs):
+    return SEResNet(block=BasicBlock, num_blocks=[2, 2, 2, 2], **kwargs)
 
 
-def SE_ResNet34(**kwargs):
-    return SE_ResNet(block=BasicBlock, num_blocks=[3, 4, 6, 3], **kwargs)
+def SEResNet34(**kwargs):
+    return SEResNet(block=BasicBlock, num_blocks=[3, 4, 6, 3], **kwargs)
 
 
-def SE_ResNet50(**kwargs):
-    return SE_ResNet(block=Bottleneck, num_blocks=[3, 4, 6, 3], **kwargs)
+def SEResNet50(**kwargs):
+    return SEResNet(block=Bottleneck, num_blocks=[3, 4, 6, 3], **kwargs)
 
 
-def SE_ResNet101(**kwargs):
-    return SE_ResNet(block=Bottleneck, num_blocks=[3, 4, 23, 3], **kwargs)
+def SEResNet101(**kwargs):
+    return SEResNet(block=Bottleneck, num_blocks=[3, 4, 23, 3], **kwargs)
 
 
-def SE_ResNet152(**kwargs):
-    return SE_ResNet(block=Bottleneck, num_blocks=[3, 8, 36, 3], **kwargs)
+def SEResNet152(**kwargs):
+    return SEResNet(block=Bottleneck, num_blocks=[3, 8, 36, 3], **kwargs)
 
 
 if __name__ == '__main__':
     x_input = torch.randn(1, 3, 224, 224)
-    model = ResNet(BasicBlock, [2, 2, 2, 2], num_classes=1000)
+    model = SEResNet18()
 
     log_model_params(model, x_input.shape)

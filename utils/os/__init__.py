@@ -1,7 +1,7 @@
 import os
 
 
-def get_root_path():
+def get_root_path() -> str:
     """
     寻找项目的根目录路径
     """
@@ -11,6 +11,14 @@ def get_root_path():
     path = os.path.dirname(path)
 
     return path
+
+
+def get_datas_path() -> str:
+    return os.path.join(get_root_path(), "datas")
+
+
+def insert(string, index, substring) -> str:
+    return string[:index] + substring + string[index:]
 
 
 def get_unique_file_name(directory, file_name, suffix, unique=True):
@@ -25,8 +33,7 @@ def get_unique_file_name(directory, file_name, suffix, unique=True):
     Returns:
 
     """
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    os.makedirs(directory, exist_ok=True)
 
     if not unique:
         return os.path.join(directory, f"{file_name}.{suffix}")
@@ -52,8 +59,7 @@ def get_unique_full_path(full_path, unique=True):
     Returns:
 
     """
-    if not os.path.exists(os.path.dirname(full_path)):
-        os.makedirs(os.path.dirname(full_path))
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
     if not unique:
         return full_path
@@ -61,11 +67,9 @@ def get_unique_full_path(full_path, unique=True):
     directory, file_name = os.path.split(full_path)
     file_name, suffix = os.path.splitext(file_name)
     k = 0
-    while True:
+    while os.path.exists(full_path):
         save_file_name = f"{file_name}_{k}{suffix}"
-        image_path = os.path.join(directory, save_file_name)
-        if not os.path.exists(image_path):
-            break
+        full_path = os.path.join(directory, save_file_name)
         k += 1
 
-    return image_path
+    return full_path

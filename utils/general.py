@@ -2,17 +2,42 @@ import math
 
 from torch.cuda.amp import GradScaler
 from tqdm import tqdm
+from time import time, sleep
 import torch
+import logging
 
-from utils.pytorch.dataset import buffer_dataloader
 from utils.tensorboard import get_writer
 
 
+# 参数中 level 代表 INFO 即以上级别的日志信息才能被输出
+logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
+
+
+def buffer_dataloader(enumerate_obj):
+    tqdm.write("Loading Data...", end="")
+    start_time = time()
+    datas = enumerate(enumerate_obj) if enumerate_obj is not None else None
+    end_time = time()
+    if end_time - start_time <= 0.01:
+        sleep(0.5)
+        tqdm.write("\r", end="")
+    else:
+        tqdm.write(f"\rTime to load data: {end_time - start_time:.2f}s")
+
+    return datas
+
+
 def is_value(value):
+    """
+    判断 value 是否为 torch.Tensor 或者标量
+    """
     return isinstance(value, (int, float, torch.Tensor))
 
 
 def get_value(value):
+    """
+    获取 torch.Tensor 或者标量的值
+    """
     if isinstance(value, torch.Tensor) and (value.dim() == 0 or value.dim() == 1):
         return value.item()
     elif isinstance(value, (int, float)):
@@ -43,7 +68,7 @@ class Trainer:
 
         self.epoch = epoch
 
-        tqdm.write(f"\nEpoch {epoch}: ")
+        logging.info(f"\nEpoch {epoch}: ")
         if kwargs.get('scheduler', None) is not None:
             tqdm.write(f" - learning rate: {self.optimizer.param_groups[0]['lr']}")
         datas = buffer_dataloader(self.train_loader)

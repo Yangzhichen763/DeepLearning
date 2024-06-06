@@ -1,9 +1,12 @@
 import os
+
+import torchvision
+import PIL.Image as Image
+
 from utils.os import get_unique_full_path
 from tqdm import tqdm
 
 import numpy as np
-from torchvision import transforms
 
 import torch
 
@@ -24,8 +27,7 @@ def as_pt(model, save_path=None, file_name=None):
 
     tqdm.write(f"Saving model to: {save_path}")
     directory = os.path.dirname(save_path)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    os.makedirs(directory, exist_ok=True)
 
     torch.save(model.state_dict(), save_path)
 
@@ -48,8 +50,7 @@ def as_onnx(model, dummy_input, save_path=None, file_name=None, input_names=None
             save_path = f"./models/{file_name}.pt"
 
     directory = os.path.dirname(save_path)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    os.makedirs(directory, exist_ok=True)
 
     torch.onnx.export(model,
                       dummy_input,
@@ -58,29 +59,31 @@ def as_onnx(model, dummy_input, save_path=None, file_name=None, input_names=None
                       output_names=output_names)
 
 
-def tensor_to_image(tensor, save_path=None, file_name=None, batch=None):
+def tensor_to_image(tensor, save_path=None, make_grid=False, **kwargs):
     """
     将 PyTorch 张量保存为图像.
-
+    如果传入 file_name，则文件保存路径为以 save_path 为父目录文件名为 file_name.png.
     Args:
         tensor (torch.Tensor): 要保存的 PyTorch 张量. 形状为 [N, C, H, W] 或 [C, H, W].
         save_path (str): 图像保存路径，包含文件名和后缀名 .png.
-        file_name (str): 图像保存文件名，不包含后缀名 .png. 只有在 save_path 为 None 时，该参数才生效.
-        batch (int): batch 数，可选参数，默认为 None.
+        make_grid (bool): 是否将 tensor 按照 batch 组合成网格保存为图像.
     """
     if save_path is None:
-        if file_name is None:
-            save_path = "./logs/datas/untitled.png"
-        else:
+        if kwargs.get("file_name"):
+            file_name: str = kwargs["file_name"]
             save_path = f"./logs/datas/{file_name}.png"
+        else:
+            save_path = "./logs/datas/untitled.png"
+    else:
+        if kwargs.get("file_name"):
+            file_name: str = kwargs["file_name"]
+            save_path = os.path.join(os.path.dirname(save_path), f"{file_name}.png")
 
     # 寻炸或创建图像保存目录
     directory = os.path.dirname(save_path)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    os.makedirs(directory, exist_ok=True)
 
     # 将图像转成 PIL 格式
-    tensor = tensor.detach()
     if tensor.dim() not in [2, 3, 4]:
         raise ValueError("The tensor should be 2, 3 or 4 dimensions. "
                          f"instead of shape={tensor.shape}.")
@@ -89,22 +92,43 @@ def tensor_to_image(tensor, save_path=None, file_name=None, batch=None):
     if tensor.dim() != 4:
         tensor = tensor.unsqueeze(0)        # [C, H, W] -> [1, C, H, W]
     batch_size = tensor.shape[0]
-    tensor = (tensor
-              .permute(0, 2, 3, 1))         # [N, C, H, W] -> [N, H, W, C]
-    to_pil = transforms.ToPILImage()
+    # tensor = (tensor.permute(0, 2, 3, 1))   # [N, C, H, W] -> [N, H, W, C]
+    if tensor.dtype == torch.float32 and not (tensor > 1).any():
+        tensor = (255 * tensor)             # [0, 1] -> [0, 255]
+    if tensor.dtype != torch.uint8:
+        tensor = tensor.to(torch.uint8)     # -> uint8
 
-    for i in range(tensor.shape[0]):
-        if (tensor[i] > 1).any():
-            tensor[i] /= 255
-        image = to_pil(tensor[i].cpu().numpy().astype(np.float32))     # [H, W, C]
-        if batch is not None:
-            image_save_path = save_path.replace(".png", f"_{batch * batch_size + i}.png")
+    to_pil = torchvision.transforms.ToPILImage()
+    if make_grid:
+        # 将 tensor 按照 batch 组合成网格保存为图像
+        grid = torchvision.utils.make_grid(tensor, **kwargs)
+        image = to_pil(grid)
+        if kwargs.get("batch"):
+            batch: int = kwargs["batch"]
+            image_save_path = save_path.replace(".png", f"_{batch}.png")
         else:
             image_save_path = get_unique_full_path(save_path)
         image.save(image_save_path)
+    else:
+        # 将 tensor 按照 batch 分批保存为图像
+        for (i, tensor_i) in enumerate(tensor):
+            image = to_pil(tensor_i)
+            if kwargs.get("batch"):
+                batch: int = kwargs["batch"]
+                image_save_path = save_path.replace(".png", f"_{batch * batch_size + i}.png")
+            else:
+                image_save_path = get_unique_full_path(save_path)
+            image.save(image_save_path)
+
+
+def to_image(data, save_path=None, make_grid=False, **kwargs):
+    if isinstance(data, torch.Tensor):
+        tensor_to_image(data, save_path=save_path, make_grid=make_grid, **kwargs)
+    elif isinstance(data, np.ndarray):
+        tensor_to_image(torch.from_numpy(data), save_path=save_path, make_grid=make_grid, **kwargs)
 
 
 if __name__ == '__main__':
-    tensor = torch.randn(2, 3, 256, 256).clamp(0, 1).round()
-    print(tensor.unique())
-    tensor_to_image(tensor, save_path="E:/Developments/PythonLearning/DeepLearning/lately/UNet/logs/datas2/test.png")
+    _tensor = torch.randn(2, 3, 256, 256).clamp(0, 1).round()
+    print(_tensor.type(), _tensor.unique())
+    tensor_to_image(_tensor, save_path="E:/Developments/PythonLearning/DeepLearning/test/logs/datas/test.png")
