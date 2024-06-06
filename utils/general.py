@@ -8,9 +8,8 @@ import logging
 
 from utils.tensorboard import get_writer
 
-
 # 参数中 level 代表 INFO 即以上级别的日志信息才能被输出
-logging.basicConfig(format="%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
+logging.basicConfig(format="\n%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
 
 
 def buffer_dataloader(enumerate_obj):
@@ -68,7 +67,7 @@ class Trainer:
 
         self.epoch = epoch
 
-        logging.info(f"\nEpoch {epoch}: ")
+        tqdm.write(f"\nEpoch {epoch}: ")
         if kwargs.get('scheduler', None) is not None:
             tqdm.write(f" - learning rate: {self.optimizer.param_groups[0]['lr']}")
         datas = buffer_dataloader(self.train_loader)

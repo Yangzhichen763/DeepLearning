@@ -4,9 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 学习并编写 CBAM 视觉混合注意力模块；&#10;2. 添加钢筋分割网络模型，基于 UNet 实现。">
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 学习并编写 ECA 模块，相对于 SENet 参数量少了非常多，去除了不必要的全局通道捕获，避免了维度缩减。">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/attention/CBAM/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/attention/CBAM/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/custom/RebarSegmentation/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/custom/RebarSegmentation/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/attention/ECANet/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/attention/ECANet/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/coco.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/coco.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/general.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/general.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/pytorch/segment/datasets.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/pytorch/segment/datasets.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,7 +79,7 @@
     "Python.ResNeXt.executor": "Run",
     "Python.ResNet.executor": "Run",
     "Python.Transformer.executor": "Run",
-    "Python.__init__.executor": "Run",
+    "Python.__init__.executor": "Debug",
     "Python.coco.executor": "Run",
     "Python.datapicker.executor": "Run",
     "Python.datasets.executor": "Run",
@@ -168,7 +173,7 @@
       <workItem from="1717430454901" duration="913000" />
       <workItem from="1717466353057" duration="16379000" />
       <workItem from="1717507489684" duration="9795000" />
-      <workItem from="1717518613968" duration="47120000" />
+      <workItem from="1717518613968" duration="52461000" />
     </task>
     <task id="LOCAL-00001" summary="添加 MLPMixer 的网络结构代码">
       <option name="closed" value="true" />
@@ -378,7 +383,15 @@
       <option name="project" value="LOCAL" />
       <updated>1717676781133</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="1. 学习并编写 ECA 模块，相对于 SENet 参数量少了非常多，去除了不必要的全局通道捕获，避免了维度缩减。">
+      <option name="closed" value="true" />
+      <created>1717680102072</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1717680102072</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -443,7 +456,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="1. 修改了 AlexNet、ResNet、VGGNet 的训练代码&#10;2. 删除了 UNet、ViT 的训练代码，因为之前是使用图像分类的训练代码占着&#10;3. 增加 logger，方便输出调试信息" />
     <MESSAGE value="1. 添加了 UNet 自定义特征层模型&#10;2. 在 ViT 网络结构代码中添加注释&#10;3. 添加模型参数可视化调试工具，使用 torchsummary 库中的 summary 函数实现的&#10;4. 修改了 MLPMixer 的输入参数（input_shape）自动计算 num_patches 和 in_channels" />
     <MESSAGE value="添加一些需要被 gitignore 的文件" />
     <MESSAGE value="删除大文件，添加一些需要被 gitignore 的文件" />
@@ -468,7 +480,8 @@
     <MESSAGE value="1. 添加 Res2Net 模块。" />
     <MESSAGE value="1. 添加 SENet 即插即用模块；&#10;2. UNet 训练准确率达到 98.51%。" />
     <MESSAGE value="1. 学习并编写 CBAM 视觉混合注意力模块；&#10;2. 添加钢筋分割网络模型，基于 UNet 实现。" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 学习并编写 CBAM 视觉混合注意力模块；&#10;2. 添加钢筋分割网络模型，基于 UNet 实现。" />
+    <MESSAGE value="1. 学习并编写 ECA 模块，相对于 SENet 参数量少了非常多，去除了不必要的全局通道捕获，避免了维度缩减。" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 学习并编写 ECA 模块，相对于 SENet 参数量少了非常多，去除了不必要的全局通道捕获，避免了维度缩减。" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="XDebuggerManager">
@@ -488,14 +501,14 @@
     <SUITE FILE_PATH="coverage/DeepLearning$datasets.coverage" NAME="datasets Coverage Results" MODIFIED="1717566181770" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch/segment" />
     <SUITE FILE_PATH="coverage/DeepLearning$ResNeXt.coverage" NAME="ResNeXt Coverage Results" MODIFIED="1716909700686" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$OBB.coverage" NAME="OBB Coverage Results" MODIFIED="1717165364906" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lossFunc/BBLoss" />
-    <SUITE FILE_PATH="coverage/DeepLearning$test.coverage" NAME="test Coverage Results" MODIFIED="1717669877477" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
+    <SUITE FILE_PATH="coverage/DeepLearning$test.coverage" NAME="test Coverage Results" MODIFIED="1717682522916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/DeepLearning$loss.coverage" NAME="loss Coverage Results" MODIFIED="1717258924935" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork" />
-    <SUITE FILE_PATH="coverage/DeepLearning$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1717679953074" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/attention/ECANet" />
+    <SUITE FILE_PATH="coverage/DeepLearning$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1717688611994" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/attention/ECANet" />
     <SUITE FILE_PATH="coverage/DeepLearning$FPN.coverage" NAME="FPN Coverage Results" MODIFIED="1716731835081" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules" />
     <SUITE FILE_PATH="coverage/DeepLearning$modules.coverage" NAME="modules Coverage Results" MODIFIED="1717307204820" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lately/MOE" />
-    <SUITE FILE_PATH="coverage/DeepLearning$coco.coverage" NAME="coco Coverage Results" MODIFIED="1717671555440" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
+    <SUITE FILE_PATH="coverage/DeepLearning$coco.coverage" NAME="coco Coverage Results" MODIFIED="1717683703655" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/DeepLearning$learning.coverage" NAME="learning Coverage Results" MODIFIED="1715751498928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch/segment" />
-    <SUITE FILE_PATH="coverage/DeepLearning$train.coverage" NAME="train Coverage Results" MODIFIED="1717675463022" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/custom/RebarSegmentation" />
+    <SUITE FILE_PATH="coverage/DeepLearning$train.coverage" NAME="train Coverage Results" MODIFIED="1717687035369" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/custom/RebarSegmentation" />
     <SUITE FILE_PATH="coverage/DeepLearning$part.coverage" NAME="part Coverage Results" MODIFIED="1715424131810" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/legacy/DenseNet" />
     <SUITE FILE_PATH="coverage/DeepLearning$Res2Net.coverage" NAME="Res2Net Coverage Results" MODIFIED="1717518061114" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$Models.coverage" NAME="Models Coverage Results" MODIFIED="1715155425885" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/MLPMixer" />

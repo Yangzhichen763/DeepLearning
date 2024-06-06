@@ -151,6 +151,7 @@ class BinarySegmentationDataset(Dataset):
 
         if self.transform is not None:
             if isinstance(self.transform, A.Compose):
+                print(image.size, mask.size)
                 augmentation = self.transform(image=np.array(image), mask=np.array(mask))
                 image = augmentation['image']
                 mask = augmentation['mask']
@@ -167,6 +168,7 @@ class BinarySegmentationDataset(Dataset):
         if (mask > 1).any():
             mask = mask / 255.0
         mask = mask.long()
+        print(image.shape, mask.shape, mask.unique())
 
         return image, mask  # [3, H, W](float), [H, W](long)
 

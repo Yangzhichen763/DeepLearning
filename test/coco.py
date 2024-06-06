@@ -10,6 +10,12 @@ from utils import save, general
 import time
 
 
+"""
+由于 RoboFlow 中导出的数据集标签是几何图形，因此无法直接用于训练，需要将其转化为 mask 图像。
+这里使用 pycocotools 库将 coco 格式的 json 文件转化为 mask 图像。
+"""
+
+
 def save_image(image, save_path):
     image.save(save_path)
 

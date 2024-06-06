@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
@@ -11,12 +11,13 @@ from utils.general import Trainer, Validator
 from utils.pytorch.segment.datasets import BinarySegmentationDataset
 
 
-def rebarsegmentation(test_model=False):
+def rebar_segmentation(test_model=False):
     def train_epoch():
         datas = trainer.start(epoch, scheduler=scheduler)
 
         model.train()
         for (i, (images, labels)) in datas:
+            print(images.shape, labels.shape)
             images, labels = images.to(device), labels.unsqueeze(1).float().to(device)
 
             predict, loss = trainer.predict(model, images, labels, criterion)   # 预测和计算损失
@@ -144,4 +145,4 @@ def rebarsegmentation(test_model=False):
 
 
 if __name__ == '__main__':
-    rebarsegmentation()
+    rebar_segmentation()
