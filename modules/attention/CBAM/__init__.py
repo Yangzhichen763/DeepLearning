@@ -96,7 +96,6 @@ class BasicBlock(nn.Module):
 
 
 if __name__ == '__main__':
-    # 测试 CBAM 模块
     model = BasicBlock(3, 64, 2)
     x = torch.randn(2, 3, 224, 224)
 
