@@ -3,9 +3,9 @@ from torchvision.transforms import ToPILImage
 import numpy as np
 import logging
 
-# 参数中 level 代表 INFO 即以上级别的日志信息才能被输出
-logging.basicConfig(format="\n%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
+a = torch.rand(5, 3, 16, 16)
+b = a.flatten(start_dim=-2)
+print(b.shape)
 
-image_file_name = "image.png"
-b = image_file_name[:image_file_name.rindex('.')] + "a" + image_file_name[image_file_name.rindex('.'):]
-logging.info(b)
+c = [1, 2, 3]
+print(tuple(c))

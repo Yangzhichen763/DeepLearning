@@ -321,4 +321,4 @@ if __name__ == '__main__':
     x_input = torch.rand(1, 3, 224, 224)
     _model = res2net101_26w_4s()
 
-    log_model_params(_model, x_input.shape)
+    log_model_params(_model, input_size=x_input.shape)

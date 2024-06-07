@@ -58,7 +58,7 @@ def carvana(test_model=False):
                                / (2 * (predict * labels).sum()
                                + ((predict * labels) < 1).sum()))
                 # if test_model:
-                save.tensor_to_image(predict.detach(), file_name="pred", batch=i)
+                save.to_image(predict.detach(), file_name="pred", batch=i)
 
                 validator.step(i, loss, num_correct / num_pixels)
 
@@ -186,7 +186,7 @@ def voc_segmentation(test_model=False):
                                / (2 * (predict * labels).sum()
                                + ((predict * labels) < 1).sum()))
                 # if test_model:
-                save.tensor_to_image(predict.detach(), file_name="pred", batch=i)
+                save.to_image(predict.detach(), file_name="pred", batch=i)
 
                 validator.step(i, loss, num_correct / num_pixels)
 

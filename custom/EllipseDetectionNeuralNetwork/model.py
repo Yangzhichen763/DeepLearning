@@ -286,14 +286,14 @@ if __name__ == '__main__':
         num_blocks=[3, 4, 6, 3],
         dim_hidden=[16, 32, 64, 128])
 
-    model = EllipseDetectionNetwork_ResNet_v1(
+    _model = EllipseDetectionNetwork_ResNet_v1(
         center_encoder=_center_encoder,
         size_encoder=_size_encoder,
         dim_classifiers=_dim_classifiers,
         device='cuda'
     )
 
-    log_model_params(model, _input_shape)
+    log_model_params(_model, input_size=_input_shape)
     exit()
 
     # ============= ResNet v2.0
@@ -302,16 +302,16 @@ if __name__ == '__main__':
         _in_channels,
         num_blocks=[3, 4, 6, 3],
         dim_hidden=[32, 64, 128, 256])
-    model = EllipseDetectionNetwork_ResNet_v2(
+    _model = EllipseDetectionNetwork_ResNet_v2(
         encoder=_encoder,
         dim_classifiers=_dim_classifiers,
         device='cuda'
     )
 
-    log_model_params(model, _input_shape)
+    log_model_params(_model, input_size=_input_shape)
 
     # ============= AlexNet
-    model = EllipseDetectionNetwork_AlexNet(
+    _model = EllipseDetectionNetwork_AlexNet(
         input_shape=_input_shape,
         dim_features=[16, 32, 64, 128, 256],
         num_layers_in_features=[2, 2, 3, 3, 2],
@@ -319,6 +319,6 @@ if __name__ == '__main__':
         device='cuda'
     )
 
-    log_model_params(model, _input_shape)
+    log_model_params(_model, input_size=_input_shape)
 
 

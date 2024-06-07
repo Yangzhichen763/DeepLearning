@@ -2,7 +2,8 @@ import torch
 from torch import nn
 import numpy as np
 from math import ceil, floor
-from torchsummary import summary
+# from torchsummary import summary    # 旧的 summary 加入 LSTM 之类的模型会报错，需要用新的 summary
+from torchinfo import summary
 
 from utils import logger
 from utils.pytorch.deploy import assert_on_cuda
@@ -82,31 +83,31 @@ def get_shape_log(shape):
 
 # ------------------------------ log_model_params() ---------------------------------
 
-def log_model_params(model, input_shape):
+def log_model_params(model, **kwargs):
     """
-    输出模型参数信息
+    输出模型参数信息，kwargs 可选参数如下：
+    \ninput_shape (torch.Size | tuple): 输入形状，比如 (1, 3, 224, 224)
+    \ninput_data (torch.tensor): 输入张量
+    \n以及其他参数，参考 torchinfo.summary()
     Args:
         model: 要输出信息的模型
-        input_shape (torch.Size | tuple): 输入形状，比如 (1, 3, 224, 224)
-        consider_batch_size (bool): 是否考虑输入数据的 batch_size
     """
-    if input_shape is None:
-        logger.warning("input cannot be None.")
-        exit()
-    elif isinstance(input_shape, torch.Size):
-        input_shape = tuple(input_shape)
-    elif not isinstance(input_shape, tuple):
-        logger.warning(f"input (type: {type(input_shape)}) cannot be not a tensor or a tensor shape.")
-        exit()
+    if kwargs.get('input_size'):
+        input_size: tuple[int] = kwargs.get('input_size')
+    elif kwargs.get('input_data'):
+        input_data: torch.Tensor = kwargs.get('input_data')
+        input_size = input_data.shape
+    else:
+        raise ValueError("input_size or input_data should be provided.")
 
     device = assert_on_cuda()
     model = model.to(device)
     summary(model=model,
-            input_size=input_shape[1:],  # tuple(input_shape) 是 (1, 3, 224, 224)
-            # batch_size=input_shape[0],
-            device=device.__str__())
+            batch_dim=0,
+            device=device.__str__(),
+            **kwargs)
 
-    x_input = torch.Tensor(*input_shape)        # *input_shape 是 1 3 224 224
+    x_input = torch.Tensor(*input_size)        # *input_shape 是 1 3 224 224
     x_input = x_input.to(device)
     print("Input shape: ", x_input.shape)
     y_output = model(x_input)

@@ -246,4 +246,4 @@ if __name__ == '__main__':
     _model = ResNet34()
     x_input = torch.randn(2, 3, 32 * 7, 32 * 7)
 
-    log_model_params(_model, x_input.shape)
+    log_model_params(_model, input_size=x_input.shape)

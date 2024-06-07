@@ -214,4 +214,4 @@ if __name__ == '__main__':
     _model = ResNeXt50_32x4d(in_channels=3, num_classes=10, pretrained=False)
     x_input = torch.randn(2, 3, 256, 256)
 
-    log_model_params(_model, x_input.shape)
+    log_model_params(_model, input_size=x_input.shape)

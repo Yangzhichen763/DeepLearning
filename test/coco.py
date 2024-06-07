@@ -1,5 +1,7 @@
 import concurrent
 import os
+
+import torchvision.transforms
 from tqdm import tqdm
 
 import numpy as np
@@ -47,7 +49,7 @@ def json_to_mask(json_path, save_dir):
             mask = torch.zeros(shape, device="cuda").to(torch.uint8)
             for ann in anns:
                 _mask = coco.annToMask(ann)                                                 # 解码
-                mask.bitwise_or_(torch.from_numpy(_mask).to(torch.uint8).to(mask.device))   # 合并
+                mask.bitwise_or_(torch.from_numpy(_mask).to(mask.device).to(torch.uint8))   # 合并
             mask[mask == 1] = 255  # 调整灰度值便于显示
 
             os.makedirs(save_dir, exist_ok=True)
@@ -61,6 +63,10 @@ def json_to_mask(json_path, save_dir):
             os.makedirs(os.path.dirname(image_save_path), exist_ok=True)
             image.save(image_save_path)
 
+            # 如果图像和 mask 长宽相反，则进行调整
+            image = torchvision.transforms.ToTensor()(image)
+            if image.shape[-2:] != mask.shape:
+                mask = mask.transpose(-1, -2)
             # 保存 mask 图像
             i_dot = image_file_name.rindex('.')
             mask_file_name = image_file_name[:i_dot] + "_mask" + image_file_name[i_dot:]
@@ -74,3 +80,4 @@ if __name__ == '__main__':
         json_to_mask(
             json_path=f"E:/Developments/PythonLearning/_datasets/RebarSegmentation.v1i.coco-segmentation/{_dir}/_annotations.coco.json",
             save_dir=f"../datas/RebarSegmentation/{_dir}")
+

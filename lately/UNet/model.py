@@ -157,9 +157,9 @@ def UNet_custom_light(num_classes=21, bilinear=True):
 
 
 if __name__ == '__main__':
-    model = UNet_custom_light()
+    _model = UNet_custom_light()
     x_input = torch.randn(1, 3, 256, 256)
-    x_output = model(x_input)
+    x_output = _model(x_input)
     print(x_output.shape)
 
-    log_model_params(model, x_input.shape)
+    log_model_params(_model, input_size=x_input.shape)

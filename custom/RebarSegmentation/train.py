@@ -1,3 +1,4 @@
+import cv2
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -6,7 +7,8 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
 from lately.UNet.model import UNet_custom_light
-from utils.pytorch import assert_on_cuda, save
+from optim import CosineAnnealingWarmupRestarts
+from utils.pytorch import assert_on_cuda, save, load
 from utils.general import Trainer, Validator
 from utils.pytorch.segment.datasets import BinarySegmentationDataset
 
@@ -17,7 +19,6 @@ def rebar_segmentation(test_model=False):
 
         model.train()
         for (i, (images, labels)) in datas:
-            print(images.shape, labels.shape)
             images, labels = images.to(device), labels.unsqueeze(1).float().to(device)
 
             predict, loss = trainer.predict(model, images, labels, criterion)   # 预测和计算损失
@@ -53,7 +54,7 @@ def rebar_segmentation(test_model=False):
                                / (2 * (predict * labels).sum()
                                + ((predict * labels) < 1).sum()))
                 # if test_model:
-                save.tensor_to_image(predict.detach(), file_name="pred", batch=i)
+                save.to_image(predict.detach(), file_name="pred", batch=i)
 
                 validator.step(i, loss, num_correct / num_pixels)
 
@@ -65,13 +66,13 @@ def rebar_segmentation(test_model=False):
     # 超参数设置
     batch_size = 32
     num_workers = 2
-    num_epochs = 50
-    learning_rate = 3e-4
+    num_epochs = 500
+    learning_rate = 1e-2
     weight_decay = 0.0001
     momentum = 0.9
-    scheduler_step_size = 5
+    scheduler_step_size = 10
     scheduler_gamma = 0.71
-    image_size = (160, 240)
+    image_size = (160, 160)
 
     # 部署 GPU 设备
     device = assert_on_cuda()
@@ -79,7 +80,9 @@ def rebar_segmentation(test_model=False):
     torch.backends.cudnn.benchmark = False
 
     train_transform = A.Compose([
-        A.Resize(*image_size),
+        A.SmallestMaxSize(max_size=max(*image_size), p=1.0),
+        A.RandomScale(scale_limit=(0.0, 1.0), p=1.0),
+        A.RandomCrop(*image_size, p=1.0),
         A.Rotate(limit=35, p=1.0),
         A.HorizontalFlip(p=0.5),
         A.VerticalFlip(p=0.1),
@@ -91,7 +94,8 @@ def rebar_segmentation(test_model=False):
         ToTensorV2(),
     ],)
     val_transform = A.Compose([
-        A.Resize(*image_size),
+        A.LongestMaxSize(max_size=max(*image_size), p=1.0),
+        A.PadIfNeeded(*image_size, border_mode=cv2.BORDER_CONSTANT, value=0, mask_value=0, p=1.0),
         A.Normalize(
             mean=[0.0, 0.0, 0.0],
             std=[1.0, 1.0, 1.0],
@@ -122,22 +126,34 @@ def rebar_segmentation(test_model=False):
     criterion = nn.BCEWithLogitsLoss()
     if not test_model:
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-        scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=scheduler_step_size, gamma=scheduler_gamma)
+        scheduler = CosineAnnealingWarmupRestarts(
+            optimizer,
+            first_cycle_steps=int(num_epochs / 40),
+            max_lr=learning_rate,
+            min_lr=1e-8,
+            warmup_steps=scheduler_step_size,
+            gamma=scheduler_gamma)
+        # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=scheduler_step_size, gamma=scheduler_gamma)
 
         # 训练模型
         trainer = Trainer(train_loader, optimizer, writer_enabled=False)
         validator = Validator(val_loader)
+        best_accuracy, last_accuracy = 0.0, 0.0
         for epoch in range(1, num_epochs + 1):
             train_loss = train_epoch()
             val_loss, val_accuracy, val_dice = validate_epoch()
             scheduler.step()
             print(f"Epoch: {epoch}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 
-        # 保存模型
-        torch.save(model.state_dict(), f"models/{model.__class__.__name__}.pt")
+            # 保存模型
+            last_accuracy = val_accuracy
+            if last_accuracy > best_accuracy:
+                best_accuracy = last_accuracy
+                save.as_pt(model, file_name="best")
+            save.as_pt(model, file_name="last")
     else:
         # 加载模型
-        model.load_state_dict(torch.load(f"models/{model.__class__.__name__}.pt"))
+        load.from_model(model, device, file_name="best")
 
         # 测试模型
         val_accuracy, val_loss = validate_epoch()

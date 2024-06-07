@@ -21,6 +21,15 @@ def insert(string, index, substring) -> str:
     return string[:index] + substring + string[index:]
 
 
+def insert_before_dot(string: str, substring) -> str:
+    """
+    在 '.' 之前插入字符串
+    \n比如：insert_before_dot("image.png", "_mask") -> "image_mask.png"
+    """
+    index = string.rindex('.')
+    return insert(string, index, substring)
+
+
 def get_unique_file_name(directory, file_name, suffix, unique=True):
     """
     获取一个唯一的文件名

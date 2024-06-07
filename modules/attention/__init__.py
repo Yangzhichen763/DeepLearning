@@ -5,6 +5,12 @@ import torch.nn.functional as F
 from utils.logger.modellogger import *
 
 
+"""
+Attention is All You Need
+论文链接 2017-2023：https://arxiv.org/abs/1706.03762
+"""
+
+
 class ScaledDotProductAttention(nn.Module):
     """
     Scaled Dot-Product attention
@@ -24,14 +30,14 @@ class ScaledDotProductAttention(nn.Module):
         """
         # q @ k.transpose(2, 3) 得到的矩阵可以用来表示 attention 强度
         # / self.temperature 是为了防止内积过大导致偏导数趋近于 0（可以让注意力的分布更加均匀）
-        attention = (q / self.temperature) @ k.transpose(2, 3)
+        attention = torch.bmm((q / self.temperature), k.transpose(2, 3))
 
         if mask is not None:
             attention = attention.masked_fill(mask == 0, float("-inf"))
 
         # dim=-1 表示在最后一个维度上应用 softmax 函数，前面几个维度保持不变
         attention = self.dropout(F.softmax(attention, dim=-1))
-        output = attention @ v
+        output = torch.bmm(attention, v)    # torch.bmm 在处理批量矩阵乘法的性能比 torch.matmul（或者 @ 运算符）要好
         return output, attention
 
 

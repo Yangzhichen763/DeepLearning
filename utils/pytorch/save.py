@@ -3,7 +3,7 @@ import os
 import torchvision
 import PIL.Image as Image
 
-from utils.os import get_unique_full_path
+from utils.os import get_unique_full_path, insert_before_dot
 from tqdm import tqdm
 
 import numpy as np
@@ -69,13 +69,13 @@ def tensor_to_image(tensor, save_path=None, make_grid=False, **kwargs):
         make_grid (bool): 是否将 tensor 按照 batch 组合成网格保存为图像.
     """
     if save_path is None:
-        if kwargs.get("file_name"):
+        if kwargs.get("file_name") is not None:
             file_name: str = kwargs["file_name"]
             save_path = f"./logs/datas/{file_name}.png"
         else:
             save_path = "./logs/datas/untitled.png"
     else:
-        if kwargs.get("file_name"):
+        if kwargs.get("file_name") is not None:
             file_name: str = kwargs["file_name"]
             save_path = os.path.join(os.path.dirname(save_path), f"{file_name}.png")
 
@@ -103,9 +103,9 @@ def tensor_to_image(tensor, save_path=None, make_grid=False, **kwargs):
         # 将 tensor 按照 batch 组合成网格保存为图像
         grid = torchvision.utils.make_grid(tensor, **kwargs)
         image = to_pil(grid)
-        if kwargs.get("batch"):
+        if kwargs.get("batch") is not None:
             batch: int = kwargs["batch"]
-            image_save_path = save_path.replace(".png", f"_{batch}.png")
+            image_save_path = insert_before_dot(save_path, f"_{batch}")
         else:
             image_save_path = get_unique_full_path(save_path)
         image.save(image_save_path)
@@ -113,9 +113,9 @@ def tensor_to_image(tensor, save_path=None, make_grid=False, **kwargs):
         # 将 tensor 按照 batch 分批保存为图像
         for (i, tensor_i) in enumerate(tensor):
             image = to_pil(tensor_i)
-            if kwargs.get("batch"):
+            if kwargs.get("batch") is not None:
                 batch: int = kwargs["batch"]
-                image_save_path = save_path.replace(".png", f"_{batch * batch_size + i}.png")
+                image_save_path = insert_before_dot(save_path, f"_{batch * batch_size + i}")
             else:
                 image_save_path = get_unique_full_path(save_path)
             image.save(image_save_path)

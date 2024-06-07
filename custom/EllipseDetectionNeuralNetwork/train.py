@@ -84,12 +84,12 @@ def save_image(pred, target, target_images, batches, ioubs=None):
 def train():
     datas = trainer.start(epoch, scheduler=scheduler_epoch)
 
-    model.train()  # 设置模型为训练模式
+    _model.train()  # 设置模型为训练模式
     for (i, (images, target)) in datas:
         images, target = images.to(device), target.to(device)
 
         with torch.cuda.amp.autocast():
-            output = model(images)                          # 前向传播，获得输出
+            output = _model(images)                          # 前向传播，获得输出
             loss, iou, pred = criterion(output, target)     # 计算损失
 
         trainer.backward(loss, scheduler=scheduler_batch)
@@ -102,15 +102,16 @@ def train():
 
     trainer.end(scheduler=scheduler_epoch)
 
+
 def validate():
     datas = validator.start(epoch, optimizer)
 
-    model.eval()
+    _model.eval()
     with torch.no_grad():
         for (i, (data, target)) in datas:
             data, target = data.to(device), target.to(device)
 
-            output = model(data)                                # 获得输出
+            output = _model(data)                                # 获得输出
             loss, iou, _ = criterion(output, target)            # 计算损失
             correct = iou.mean(dim=-1).mean(-1).sum()           # 计算正确率
 
