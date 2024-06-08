@@ -13,17 +13,17 @@ SENet 是一种通道注意力机制 CAM(Channel Attention Module)
 """
 
 
-class SEBlock(nn.Module):
+class SEModule(nn.Module):
     """
     更泛的通道注意力机制见 CBAM(Convolutional Block Attention Module)
     """
-    def __init__(self, in_channels):
-        super(SEBlock, self).__init__()
+    def __init__(self, in_channels, reduction=16):
+        super(SEModule, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Sequential(
-            nn.Conv2d(in_channels, in_channels // 16, kernel_size=1, bias=False),
+            nn.Conv2d(in_channels, in_channels // reduction, kernel_size=1, bias=False),
             nn.ReLU(inplace=True),
-            nn.Conv2d(in_channels // 16, in_channels, kernel_size=1, bias=False),
+            nn.Conv2d(in_channels // reduction, in_channels, kernel_size=1, bias=False),
             nn.Sigmoid()
         )
 
@@ -46,7 +46,7 @@ class BasicBlock(nn.Module):
             nn.BatchNorm2d(out_channels)
         )
 
-        self.se_layer = SEBlock(out_channels)   # 相对于普通的 ResNet，添加这行代码(SE 模块)
+        self.se_layer = SEModule(out_channels)   # 相对于普通的 ResNet，添加这行代码(SE 模块)
 
         self.shortcut = nn.Sequential()
         if stride != 1 or in_channels != self.expansion * out_channels:
@@ -84,7 +84,7 @@ class Bottleneck(nn.Module):
             nn.BatchNorm2d(out_channels * self.expansion)
         )
 
-        self.se_layer = SEBlock(out_channels)   # 相对于普通的 ResNet，添加这行代码(SE 模块)
+        self.se_layer = SEModule(out_channels)   # 相对于普通的 ResNet，添加这行代码(SE 模块)
 
         self.shortcut = nn.Sequential()
         if stride != 1 or in_channels != self.expansion * out_channels:

@@ -58,7 +58,7 @@ class LogLoss(Functional01Loss):
         super(LogLoss, self).__init__()
 
     def _loss(self, pred):
-        return F.cross_entropy(pred, torch.zeros_like(pred).long())
+        return -torch.log(1 - pred) - torch.log(1 + pred)
 
 
 class CoshLoss(Functional01Loss):

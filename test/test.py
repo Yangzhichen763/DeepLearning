@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 from torchvision.transforms import ToPILImage
 import numpy as np
 import logging
@@ -9,3 +10,5 @@ print(b.shape)
 
 c = [1, 2, 3]
 print(tuple(c))
+
+

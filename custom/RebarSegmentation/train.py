@@ -9,7 +9,7 @@ from albumentations.pytorch import ToTensorV2
 from lately.UNet.model import UNet_custom_light
 from optim import CosineAnnealingWarmupRestarts
 from utils.pytorch import assert_on_cuda, save, load
-from utils.general import Trainer, Validator
+from utils.general import Trainer, Validator, Manager
 from utils.pytorch.segment.datasets import BinarySegmentationDataset
 
 
@@ -138,26 +138,24 @@ def rebar_segmentation(test_model=False):
         # 训练模型
         trainer = Trainer(train_loader, optimizer, writer_enabled=False)
         validator = Validator(val_loader)
-        best_accuracy, last_accuracy = 0.0, 0.0
+        manager = Manager(model)
         for epoch in range(1, num_epochs + 1):
             train_loss = train_epoch()
             val_loss, val_accuracy, val_dice = validate_epoch()
             scheduler.step()
             print(f"Epoch: {epoch}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 
-            # 保存模型
-            last_accuracy = val_accuracy
-            if last_accuracy > best_accuracy:
-                best_accuracy = last_accuracy
-                save.as_pt(model, file_name="best")
-            save.as_pt(model, file_name="last")
+            manager.update_accuracy(val_accuracy)
+
+        manager.summary(TotalEpochs=num_epochs, BatchSize=batch_size,
+                        FinalLearningRate=optimizer.param_groups[0]['lr'])
     else:
         # 加载模型
         load.from_model(model, device, file_name="best")
 
         # 测试模型
         val_accuracy, val_loss = validate_epoch()
-        print(f"Val Loss: {val_loss:.4f}, Val Accuracy: {val_accuracy:.4f}")
+        print(f"Val Loss: {val_loss:.2f}, Val Accuracy: {val_accuracy:.2f}")
 
 
 if __name__ == '__main__':

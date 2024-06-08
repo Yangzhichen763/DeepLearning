@@ -9,8 +9,8 @@ warnings.filterwarnings("ignore")   # 忽略警告
 
 
 def get_writer(filename_suffix=""):
-    start_time = time.strftime("%Y-%m-%d-%H-%M-%S")
-    log_dir = f"./logs/tensorboard/{start_time}"
+    current_time = time.strftime("%Y-%m-%d-%H-%M-%S")
+    log_dir = f"./logs/tensorboard/{current_time}"
     print(f"Tensorboard logs will be saved to {log_dir}")
     return SummaryWriter(log_dir=log_dir, filename_suffix=filename_suffix, flush_secs=5)
 

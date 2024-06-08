@@ -36,12 +36,14 @@ num_blocks_dict = {
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, in_channels, out_channels, stride=1):
+    def __init__(self, in_channels, out_channels, stride=1, **kwargs):
         super(BasicBlock, self).__init__()
+        activation = kwargs["activation"] if kwargs.get("activation") is not None else nn.ReLU(inplace=True)
+
         self.feature_layer = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
+            activation,
             nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(out_channels)
         )
@@ -53,29 +55,31 @@ class BasicBlock(nn.Module):
                 nn.BatchNorm2d(self.expansion * out_channels)
             )
 
-        self.relu = nn.ReLU()
+        self.activation = activation
 
     def forward(self, x):
         out = self.feature_layer(x)
         out += self.shortcut(x)
-        out = self.relu(out)
+        out = self.activation(out)
         return out
 
 
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_channels, out_channels, stride=1):
+    def __init__(self, in_channels, out_channels, stride=1, **kwargs):
         super(Bottleneck, self).__init__()
+        activation = kwargs["activation"] if kwargs.get("activation") is not None else nn.ReLU(inplace=True)
+
         self.feature_layer = nn.Sequential(
             # conv1x1
             nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),    # 后面接 BN，所以 bias=False
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
+            activation,
             # conv3x3
             nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
+            activation,
             # conv1x1
             nn.Conv2d(out_channels, out_channels * self.expansion, kernel_size=1, bias=False),
             nn.BatchNorm2d(out_channels * self.expansion)
@@ -88,12 +92,12 @@ class Bottleneck(nn.Module):
                 nn.BatchNorm2d(self.expansion * out_channels)
             )
 
-        self.relu = nn.ReLU(inplace=True)
+        self.activation = activation
 
     def forward(self, x):
         out = self.feature_layer(x)
         out += self.shortcut(x)
-        out = self.relu(out)
+        out = self.activation(out)
         return out
 
 
@@ -110,7 +114,7 @@ class ResNetEncoder(nn.Module):
     其中 l = 2 ** (len(num_blocks) + 1)，n = dim_hidden[-1] * block.expansion，
     如果 len(num_blocks)=4，则 l = 32，shape=[B, n, H / 32, W / 32]。
     """
-    def __init__(self, in_channels=3, block=None, num_blocks=None, dim_hidden=None):
+    def __init__(self, in_channels=3, block=None, num_blocks=None, dim_hidden=None, **kwargs):
         """
         默认为 ResNet18 的配置，可以根据需要进行修改。
         Args:
@@ -119,6 +123,8 @@ class ResNetEncoder(nn.Module):
             dim_hidden: 隐藏层的维度，默认值为 [64, 128, 256, 512]
         """
         super(ResNetEncoder, self).__init__()
+        activation = kwargs["activation"] if kwargs.get("activation") is not None else nn.ReLU(inplace=True)
+
         if block is None:
             block = BasicBlock
         if num_blocks is None:
@@ -132,11 +138,11 @@ class ResNetEncoder(nn.Module):
         self.layer0 = nn.Sequential(
             nn.Conv2d(in_channels, dim_hidden[0], kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(dim_hidden[0]),
-            nn.ReLU(inplace=True),
+            activation,
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
         self.layers = nn.ModuleList([
-            self._make_layer(block, dim_hidden[i], num_blocks[i], strides[i])
+            self._make_layer(block, dim_hidden[i], num_blocks[i], strides[i], **kwargs)
             for i in range(len(num_blocks))
         ])
         """ 更直观的写法如下：
@@ -154,11 +160,11 @@ class ResNetEncoder(nn.Module):
                 nn.init.constant_(module.weight, 1)
                 nn.init.constant_(module.bias, 0)
 
-    def _make_layer(self, block, out_channels, num_blocks, stride):
+    def _make_layer(self, block, out_channels, num_blocks, stride, **kwargs):
         strides = [stride] + [1] * (num_blocks - 1)   # 除了第一个 block 其他的都设置 stride=1
         layers = []
         for stride in strides:
-            layers.append(block(self.in_channels, out_channels, stride))
+            layers.append(block(self.in_channels, out_channels, stride, **kwargs))
             self.in_channels = out_channels * block.expansion
         return nn.Sequential(*layers)
 

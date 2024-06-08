@@ -1,4 +1,5 @@
 import torch
+import torchvision.datasets.voc
 from torch import nn
 import torch.nn.functional as F
 

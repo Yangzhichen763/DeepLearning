@@ -11,13 +11,14 @@ import numpy as np
 import torch
 
 
-def as_pt(model, save_path=None, file_name=None):
+def as_pt(model, save_path=None, file_name=None, path_unique=False):
     """
     保存模型为 PyTorch 格式.
     Args:
         model (torch.nn.Module): 要保存的 PyTorch 模型.
         save_path (str): 模型保存路径，包含文件名和后缀名 .pt.
         file_name (str): 模型保存文件名，不包含后缀名 .pt. 只有在 save_path 为 None 时，该参数才生效.
+        path_unique (bool): 是否为保存路径生成唯一路径.
     """
     if save_path is None:
         if file_name is None:
@@ -25,6 +26,8 @@ def as_pt(model, save_path=None, file_name=None):
         else:
             save_path = f"./models/{file_name}.pt"
 
+    if path_unique:
+        save_path = get_unique_full_path(save_path)
     tqdm.write(f"Saving model to: {save_path}")
     directory = os.path.dirname(save_path)
     os.makedirs(directory, exist_ok=True)
@@ -32,7 +35,8 @@ def as_pt(model, save_path=None, file_name=None):
     torch.save(model.state_dict(), save_path)
 
 
-def as_onnx(model, dummy_input, save_path=None, file_name=None, input_names=None, output_names=None):
+def as_onnx(model, dummy_input, save_path=None, file_name=None,
+            input_names=None, output_names=None, path_unique=False):
     """
     保存模型为 ONNX 格式.
     Args:
@@ -42,6 +46,7 @@ def as_onnx(model, dummy_input, save_path=None, file_name=None, input_names=None
         file_name (str): 模型保存文件名，不包含后缀名 .onnx. 只有在 save_path 为 None 时，该参数才生效.
         input_names (list): 模型输入的名称.
         output_names (list): 模型输出的名称.
+        path_unique (bool): 是否为保存路径生成唯一路径.
     """
     if save_path is None:
         if file_name is None:
@@ -52,6 +57,8 @@ def as_onnx(model, dummy_input, save_path=None, file_name=None, input_names=None
     directory = os.path.dirname(save_path)
     os.makedirs(directory, exist_ok=True)
 
+    if path_unique:
+        save_path = get_unique_full_path(save_path)
     torch.onnx.export(model,
                       dummy_input,
                       save_path,

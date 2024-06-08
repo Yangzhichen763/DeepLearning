@@ -28,8 +28,8 @@ class BasicBlock(ResNetBasicBlock):
     ResNeXt 的 BasicBlock 与 ResNet 的 BasicBlock 一样。
     """
     def __init__(self, in_channels, out_channels, stride=1,
-                 groups=1, width_per_group=64):
-        super(BasicBlock, self).__init__(in_channels, out_channels, stride)
+                 groups=1, width_per_group=64, **kwargs):
+        super(BasicBlock, self).__init__(in_channels, out_channels, stride, **kwargs)
 
 
 class Bottleneck(nn.Module):
@@ -39,19 +39,20 @@ class Bottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, in_channels, out_channels, stride=1,
-                 groups=1, width_per_group=64):
+                 groups=1, width_per_group=64, **kwargs):
         super(Bottleneck, self).__init__()
         width = int(out_channels * (width_per_group / 64)) * groups
+        activation = kwargs["activation"] if kwargs.get("activation") is not None else nn.ReLU(inplace=True)
 
         self.feature_layer = nn.Sequential(
             # conv1x1
             nn.Conv2d(in_channels, width, kernel_size=1, stride=1, bias=False),
             nn.BatchNorm2d(width),
-            nn.ReLU(inplace=True),
+            activation,
             # conv3x3
             nn.Conv2d(width, width, kernel_size=3, stride=stride, padding=1, bias=False, groups=groups),
             nn.BatchNorm2d(width),
-            nn.ReLU(inplace=True),
+            activation,
             # conv1x1
             nn.Conv2d(width, out_channels * self.expansion, kernel_size=1, bias=False),
             nn.BatchNorm2d(out_channels * self.expansion)
@@ -64,12 +65,12 @@ class Bottleneck(nn.Module):
                 nn.BatchNorm2d(self.expansion * out_channels)
             )
 
-        self.relu = nn.ReLU(inplace=True)
+        self.activation = activation
 
     def forward(self, x):
         out = self.feature_layer(x)
         out += self.shortcut(x)
-        out = self.relu(out)
+        out = self.activation(out)
         return out
 
 
@@ -87,7 +88,7 @@ class ResNeXtEncoder(nn.Module):
     如果 len(num_blocks)=4，则 l = 32，shape=[B, n, H / 32, W / 32]。
     """
     def __init__(self, in_channels=3, block=None, num_blocks=None, dim_hidden=None,
-                 groups=1, width_per_group=64):
+                 groups=1, width_per_group=64, **kwargs):
         """
         默认为 ResNet18 的配置，可以根据需要进行修改。
         Args:
@@ -96,6 +97,8 @@ class ResNeXtEncoder(nn.Module):
             dim_hidden: 隐藏层的维度，默认值为 [64, 128, 256, 512]
         """
         super(ResNeXtEncoder, self).__init__()
+        activation = kwargs["activation"] if kwargs.get("activation") is not None else nn.ReLU(inplace=True)
+
         if block is None:
             block = BasicBlock
         if num_blocks is None:
@@ -111,11 +114,11 @@ class ResNeXtEncoder(nn.Module):
         self.layer0 = nn.Sequential(
             nn.Conv2d(in_channels, dim_hidden[0], kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(dim_hidden[0]),
-            nn.ReLU(inplace=True),
+            activation,
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
         self.layers = nn.ModuleList([
-            self._make_layer(block, dim_hidden[i], num_blocks[i], strides[i], groups, width_per_group)
+            self._make_layer(block, dim_hidden[i], num_blocks[i], strides[i], groups, width_per_group, **kwargs)
             for i in range(len(num_blocks))
         ])
         """ 更直观的写法如下：
@@ -134,11 +137,11 @@ class ResNeXtEncoder(nn.Module):
                 nn.init.constant_(module.bias, 0)
 
     def _make_layer(self, block, out_channels, num_blocks, stride,
-                    groups=1, width_per_group=64):
+                    groups=1, width_per_group=64, **kwargs):
         strides = [stride] + [1] * (num_blocks - 1)   # 除了第一个 block 其他的都设置 stride=1
         layers = []
         for stride in strides:
-            layers.append(block(self.in_channels, out_channels, stride, groups, width_per_group))
+            layers.append(block(self.in_channels, out_channels, stride, groups, width_per_group, **kwargs))
             self.in_channels = out_channels * block.expansion
         return nn.Sequential(*layers)
 

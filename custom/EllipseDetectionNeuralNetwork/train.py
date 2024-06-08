@@ -10,7 +10,7 @@ from custom.EllipseDetectionNeuralNetwork.datasets import EllipseDetectionDatase
 from modules.residual import ResNetEncoder, ResNeXtEncoder
 from modules.residual.ResNet import BasicBlock, Bottleneck
 from optim import CosineAnnealingWarmupRestarts
-from utils.general import Trainer, Validator
+from utils.general import Trainer, Validator, Manager
 from utils.tensorboard import *
 from utils.pytorch import *
 from utils.pytorch.dataset import *
@@ -84,13 +84,13 @@ def save_image(pred, target, target_images, batches, ioubs=None):
 def train():
     datas = trainer.start(epoch, scheduler=scheduler_epoch)
 
-    _model.train()  # 设置模型为训练模式
+    model.train()  # 设置模型为训练模式
     for (i, (images, target)) in datas:
         images, target = images.to(device), target.to(device)
 
         with torch.cuda.amp.autocast():
-            output = _model(images)                          # 前向传播，获得输出
-            loss, iou, pred = criterion(output, target)     # 计算损失
+            output = model(images)                          # 前向传播，获得输出
+            loss, loss_rotation, iou, pred = criterion(output, target)     # 计算损失
 
         trainer.backward(loss, scheduler=scheduler_batch)
 
@@ -98,6 +98,7 @@ def train():
             save_image(pred, target, images, i, iou)
 
         trainer.step(i, loss, scheduler=scheduler_batch,
+                     loss_rotation=loss_rotation,
                      iou=iou.mean(dim=-1).mean(-1).sum())
 
     trainer.end(scheduler=scheduler_epoch)
@@ -106,16 +107,16 @@ def train():
 def validate():
     datas = validator.start(epoch, optimizer)
 
-    _model.eval()
+    model.eval()
     with torch.no_grad():
         for (i, (data, target)) in datas:
             data, target = data.to(device), target.to(device)
 
-            output = _model(data)                                # 获得输出
-            loss, iou, _ = criterion(output, target)            # 计算损失
+            output = model(data)                                # 获得输出
+            loss, loss_rotation, iou, _ = criterion(output, target)            # 计算损失
             correct = iou.mean(dim=-1).mean(-1).sum()           # 计算正确率
 
-            validator.step(i, loss, correct)
+            validator.step(i, loss, correct, loss_rotation=loss_rotation)
 
     return validator.end()
 
@@ -184,6 +185,31 @@ def get_model(input_shape, config):
             device=device
         )
         return _model
+    elif config == "ResNeXt v3.0":
+        _in_channels = image_shape[0]
+        _dim_classifiers = [64, 16]
+        _center_encoder = ResNeXtEncoder(
+            _in_channels,
+            BasicBlock,
+            num_blocks=[2, 2, 3, 3, 2],
+            dim_hidden=[16, 32, 64, 128, 256],
+            activation=nn.LeakyReLU(inplace=True)
+        )
+        _size_encoder = ResNeXtEncoder(
+            _in_channels,
+            Bottleneck,
+            num_blocks=[3, 4, 6, 3],
+            dim_hidden=[16, 32, 64, 128],
+            activation=nn.LeakyReLU(inplace=True)
+        )
+
+        _model = EllipseDetectionNetwork_ResNet_v1(
+            center_encoder=_center_encoder,
+            size_encoder=_size_encoder,
+            dim_classifiers=_dim_classifiers,
+            device=device
+        )
+        return _model
     elif config == "AlexNet":
         _model = EllipseDetectionNetwork_AlexNet(
             input_shape=input_shape,
@@ -228,7 +254,7 @@ def get_scheduler(config):
 if __name__ == '__main__':
     # 超参数设置
     batch_size = 32
-    num_epochs = 1000
+    num_epochs = 500
     num_workers = 4  # os.cpu_count()
     learning_rate = 0.001
     weight_decay = 0.0001
@@ -278,7 +304,7 @@ if __name__ == '__main__':
 
     # 定义模型
     image_shape = (1, 256, 256)
-    model_config = "ResNeXt v1.0"
+    model_config = "ResNeXt v3.0"
     model = get_model(image_shape, model_config)
     model.to(device)
 
@@ -295,22 +321,15 @@ if __name__ == '__main__':
     # tensorboard --logdir=./custom/EllipseDetectionNeuralNetwork/logs/tensorboard
     trainer = Trainer(train_loader, optimizer, writer=writer)
     validator = Validator(test_loader)
-    best_accuracy, last_accuracy = 0.0, 0.0
+    manager = Manager(model)
     for epoch in range(1, num_epochs + 1):
         train()
         _, last_accuracy = validate()
-        if last_accuracy > best_accuracy:
-            best_accuracy = last_accuracy
-            save.as_pt(model, "models/best.pt")
-        save.as_pt(model, "models/last.pt")
+        manager.update_accuracy(last_accuracy)
 
     # 打印训练结果
-    final_learning_rate = optimizer.param_groups[0]['lr']
-    print(f"\nSummary: "
-          f"\n - [Model Config]: {model_config}  [scheduler_config]: {scheduler_config} "
-          f"\n - [Total Epochs]: {num_epochs} "
-          f"\n - [Batch Size]: {batch_size} "
-          f"\n - [Final Learning Rate]: {final_learning_rate} "
-          f"\n - [Best Accuracy]: {best_accuracy:.2f}%  [Last Accuracy]: {last_accuracy:.2f}%")
+    manager.summary(ModelConfig=model_config, scheduler_config=scheduler_config,
+                    TotalEpochs=num_epochs, BatchSize=batch_size,
+                    FinalLearningRate=optimizer.param_groups[0]['lr'])
 
     close_writer(writer)

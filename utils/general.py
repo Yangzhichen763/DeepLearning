@@ -2,10 +2,12 @@ import math
 
 from torch.cuda.amp import GradScaler
 from tqdm import tqdm
+import time as t
 from time import time, sleep
 import torch
 import logging
 
+from utils.pytorch import save, load
 from utils.tensorboard import get_writer
 
 # 参数中 level 代表 INFO 即以上级别的日志信息才能被输出
@@ -60,7 +62,7 @@ class Trainer:
     def __call__(self, epoch, **kwargs):
         self.min_loss = float('inf')
         self.max_loss = float('-inf')
-        self.total_loss = 0
+        self.total_loss = 0.
         self.dataset_size = len(self.train_loader.dataset)
         self.dataset_batches = len(self.train_loader)
         self.batch_size = math.ceil(self.dataset_size / self.dataset_batches)
@@ -105,10 +107,7 @@ class Trainer:
         Args:
             i: 批次序号，也就是当前 batch 的索引
             loss: 损失值
-            **kwargs: 包括 scheduler
-
-        Returns:
-
+            **kwargs: 包括 scheduler，输入其他的 kwarg 可以按照 key, value 的形式记录到 TensorBoard 中，并打印出来
         """
         # 记录损失最小值和最大值以及总损失
         loss = get_value(loss)
@@ -133,7 +132,7 @@ class Trainer:
         """
         训练收尾，打印训练信息，更新学习率
         Args:
-            **kwargs: 包括 scheduler
+            **kwargs: 包括 scheduler，输入其他的 kwarg 可以按照 key, value 的形式记录到 TensorBoard 中，并打印出来
         """
         self.process_bar.set_postfix()                                          # 清空进度条备注
         self.process_bar.update(self.process_bar.total - self.process_bar.n)    # 防止进度条超过 100%
@@ -182,7 +181,7 @@ class Validator:
             self.writer = get_writer() if kwargs.get('writer', None) is None else kwargs['writer']
 
     def __call__(self, epoch, optimizer, **kwargs):
-        self.total_loss = 0
+        self.total_loss = 0.
         self.correct = 0.
         self.dataset_size = len(self.test_loader.dataset)
         self.dataset_batches = len(self.test_loader)
@@ -219,7 +218,7 @@ class Validator:
             i: 批次序号，也就是当前 batch 的索引
             loss: 损失值
             correct: 准确率
-            **kwargs:
+            **kwargs: 输入其他的 kwarg 可以按照 key, value 的形式记录到 TensorBoard 中，并打印出来
         """
         loss = get_value(loss)
         self.total_loss += loss
@@ -230,6 +229,10 @@ class Validator:
         self.process_bar.update(self.batch_size)
 
     def end(self, **kwargs):
+        """
+        Args:
+            **kwargs: 输入其他的 kwarg 可以按照 key, value 的形式记录到 TensorBoard 中，并打印出来
+        """
         self.process_bar.set_postfix()                                          # 清空进度条备注
         self.process_bar.update(self.process_bar.total - self.process_bar.n)    # 防止进度条超过 100%
         self.process_bar.close()
@@ -258,3 +261,35 @@ class Validator:
                     self.writer.add_scalar(f"test_{key}", get_value(value), self.epoch)
 
         return average_loss, accuracy, *output_list
+
+
+class Manager:
+    def __init__(self, model):
+        self.best_accuracy = 0.
+        self.last_accuracy = 0.
+        self.model = model
+
+    def update_accuracy(self, accuracy):
+        # 更新准确率以及保存模型
+        self.last_accuracy = get_value(accuracy)
+        if self.last_accuracy > self.best_accuracy:
+            self.best_accuracy = self.last_accuracy
+            save.as_pt(self.model, save_path="./models/best.pt")
+        save.as_pt(self.model, save_path="./models/last.pt")
+
+    def summary(self, **kwargs):
+        """
+        Args:
+            **kwargs: 输入其他的 kwarg 可以按照 key, value 的形式记录到 TensorBoard 中，并打印出来
+        """
+        # 保存最新和最好的模型
+        current_time = t.strftime("%Y-%m-%d-%H-%M-%S")
+        save.as_pt(self.model, save_path=f"./models/last_{current_time}.pt")
+        load.from_model(self.model, device=self.model.device, load_path=f"./models/best.pt")
+        save.as_pt(self.model, save_path=f"./models/best_{current_time}.pt")
+
+        # 打印总结信息
+        tqdm.write(f"\nSummary: ")
+        tqdm.write(f" - [Best Accuracy]: {self.best_accuracy:.2f}%  [Last Accuracy]: {self.last_accuracy:.2f}%")
+        for key, value in kwargs.items():
+            tqdm.write(f" - [{key}]: {get_value(value)}")

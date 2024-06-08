@@ -4,6 +4,15 @@ import torch.nn.functional as F
 import torchvision
 
 
+"""
+Inception 模块
+论文链接：
+    Inception-v1 2014：https://arxiv.org/abs/1409.4842
+    Inception-v2/Inception-v3 2015：https://arxiv.org/abs/1512.00567
+    Inception-v4/Inception-ResNet 2016：https://arxiv.org/abs/1602.07261
+"""
+
+
 __all__ = ['Inception_v1',
            'Inception_v2_A', 'Inception_v2_B', 'Inception_v2_C',
            'Inception_v4']
