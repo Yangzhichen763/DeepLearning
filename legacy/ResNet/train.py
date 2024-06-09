@@ -2,7 +2,7 @@ from utils.tensorboard import *
 
 from model import (ResNet18, ResNet34, ResNet50, ResNet101, ResNet152)
 from legacy.classify_utils import get_transform, train_and_validate
-from utils.pytorch import *
+from utils.torch import *
 
 
 if __name__ == '__main__':

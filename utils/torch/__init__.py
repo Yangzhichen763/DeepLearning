@@ -1,6 +1,6 @@
-from utils.pytorch.deploy import *
-from utils.pytorch.classify import *
-from utils.pytorch.dataset.datapicker import *
+from utils.torch.deploy import *
+from utils.torch.classify import *
+from utils.torch.dataset.datapicker import *
 
 __all__ = ["pick_sequential", "pick_random",
            "assert_on_cuda",

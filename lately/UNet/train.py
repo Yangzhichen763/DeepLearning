@@ -13,8 +13,8 @@ from utils.tensorboard import *
 from model import (UNet, UNetCustom)
 from model import (UNet_custom_light)
 from lately.segment_utils import get_transform, train_and_validate
-from utils.pytorch import *
-from utils.pytorch.segment.datasets import CarvanaDataset, VOCSegmentationDataset
+from utils.torch import *
+from utils.torch.segment.datasets import CarvanaDataset, VOCSegmentationDataset
 
 
 def carvana(test_model=False):

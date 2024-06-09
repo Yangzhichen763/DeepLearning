@@ -12,8 +12,8 @@ from modules.residual.ResNet import BasicBlock, Bottleneck
 from optim import CosineAnnealingWarmupRestarts
 from utils.general import Trainer, Validator, Manager
 from utils.tensorboard import *
-from utils.pytorch import *
-from utils.pytorch.dataset import *
+from utils.torch import *
+from utils.torch.dataset import *
 from utils.os import *
 from utils import general
 
@@ -321,7 +321,7 @@ if __name__ == '__main__':
     # tensorboard --logdir=./custom/EllipseDetectionNeuralNetwork/logs/tensorboard
     trainer = Trainer(train_loader, optimizer, writer=writer)
     validator = Validator(test_loader)
-    manager = Manager(model)
+    manager = Manager(model, device)
     for epoch in range(1, num_epochs + 1):
         train()
         _, last_accuracy = validate()

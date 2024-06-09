@@ -3,11 +3,11 @@ import numpy as np
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 
-from utils.pytorch import *
-from utils.pytorch.segment import *
+from utils.torch import *
+from utils.torch.segment import *
 
-from utils.pytorch.segment.datasets import *
-from utils.pytorch.segment.learning import train_model_in_single_epoch, validate_model
+from utils.torch.segment.datasets import *
+from utils.torch.segment.learning import train_model_in_single_epoch, validate_model
 
 
 def custom_collate(batch):

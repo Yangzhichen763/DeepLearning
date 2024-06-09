@@ -8,9 +8,9 @@ from albumentations.pytorch import ToTensorV2
 
 from lately.UNet.model import UNet_custom_light
 from optim import CosineAnnealingWarmupRestarts
-from utils.pytorch import assert_on_cuda, save, load
+from utils.torch import assert_on_cuda, save, load
 from utils.general import Trainer, Validator, Manager
-from utils.pytorch.segment.datasets import BinarySegmentationDataset
+from utils.torch.segment.datasets import BinarySegmentationDataset
 
 
 def rebar_segmentation(test_model=False):

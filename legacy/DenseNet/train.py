@@ -3,7 +3,7 @@ from utils.tensorboard import *
 
 from model import DenseNet121
 from legacy.classify_utils import get_transform, train_and_validate
-from utils.pytorch import *
+from utils.torch import *
 
 
 if __name__ == '__main__':

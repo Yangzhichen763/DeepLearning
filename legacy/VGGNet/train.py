@@ -3,7 +3,7 @@ import torchvision.transforms as transforms
 
 from model import (VGG11, VGG13, VGG16, VGG19)
 from legacy.classify_utils import train_and_validate
-from utils.pytorch import *
+from utils.torch import *
 
 
 def get_transform():

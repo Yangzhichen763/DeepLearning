@@ -4,11 +4,8 @@ from torchvision.transforms import ToPILImage
 import numpy as np
 import logging
 
-a = torch.rand(5, 3, 16, 16)
-b = a.flatten(start_dim=-2)
-print(b.shape)
-
-c = [1, 2, 3]
-print(tuple(c))
+a: torch.Tensor = torch.rand(3 * 5, 32, 16)
+c = a.unflatten(dim=0, sizes=(-1, 5))
+print(c.shape)
 
 

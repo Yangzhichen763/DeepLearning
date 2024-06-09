@@ -1,5 +1,5 @@
 import os
-from utils.pytorch import *
+from utils.torch import *
 
 import numpy as np
 import torch

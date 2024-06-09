@@ -3,8 +3,8 @@ from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
 
-from utils.pytorch import *
-from utils.pytorch.classify import *
+from utils.torch import *
+from utils.torch.classify import *
 
 import os
 

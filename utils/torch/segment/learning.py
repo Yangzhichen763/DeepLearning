@@ -4,8 +4,8 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 
-from utils.pytorch.segment import save_label_as_png
-from utils.pytorch.segment.datasets import VOCSegmentationDataset
+from utils.torch.segment import save_label_as_png
+from utils.torch.segment.datasets import VOCSegmentationDataset
 
 
 def train_model_in_single_epoch(model, training_loader, optimizer, criterion, device, writer=None, epoch=None):

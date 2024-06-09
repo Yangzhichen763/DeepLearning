@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+from utils.torch.nn import flatten_     # flatten_ 相当于 view，但是更加灵活
 
 from utils.logger import log_model_params
 
@@ -23,13 +23,14 @@ class ChannelAttention(nn.Module):
         self.gamma = nn.Parameter(torch.zeros(1))
         self.softmax = nn.Softmax(dim=1)
 
+    # noinspection PyTestUnpassedFixture
     def forward(self, x: torch.Tensor):
-        q = x.flatten(start_dim=-2)
-        k = x.flatten(start_dim=-2).transpose(-1, -2)
+        q = x.flatten_(start_dim=-2)
+        k = x.flatten_(start_dim=-2).transpose(-1, -2)
         attn = torch.bmm(q, k)     # torch.bmm 在处理批量矩阵乘法的性能比 torch.matmul（或者 @ 运算符）要好
         attn = torch.max(attn, dim=-1, keepdim=True)[0].expand_as(attn) - attn
         attn = self.softmax(attn)
-        v = x.flatten(start_dim=-2)
+        v = x.flatten_(start_dim=-2)
 
         y = torch.bmm(attn, v)
         y = y.view_as(x)
@@ -53,12 +54,13 @@ class PositionAttention(nn.Module):
         self.gamma = nn.Parameter(torch.zeros(1))
         self.softmax = nn.Softmax(dim=-1)
 
+    # noinspection PyTestUnpassedFixture
     def forward(self, x: torch.Tensor):
-        q = self.q_conv(x).flatten(start_dim=-2).transpose(-1, -2)
-        k = self.k_conv(x).flatten(start_dim=-2)
+        q = self.q_conv(x).flatten_(start_dim=-2).transpose(-1, -2)
+        k = self.k_conv(x).flatten_(start_dim=-2)
         attn = torch.bmm(q, k)
         attn = self.softmax(attn)
-        v = self.v_conv(x).flatten(start_dim=-2)
+        v = self.v_conv(x).flatten_(start_dim=-2)
 
         y = torch.bmm(v, attn.transpose(-1, -2))
         y = y.view_as(x)
@@ -68,10 +70,11 @@ class PositionAttention(nn.Module):
 
 
 class DANetHead(nn.Module):
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels, dropout=0.1):
         super(DANetHead, self).__init__()
         self.in_channels = in_channels // 4
         self.out_channels = out_channels
+        self.dropout = dropout
 
         self.conv_layer_c = nn.Sequential(
             self.make_conv_layer(in_channels, in_channels),
@@ -96,9 +99,10 @@ class DANetHead(nn.Module):
             nn.ReLU()
         )
 
+#
     def make_dropout_conv_layer(self, in_channels, out_channels):
         return nn.Sequential(
-            nn.Dropout2d(0.1, inplace=False),
+            nn.Dropout2d(self.dropout, inplace=False),
             nn.Conv2d(in_channels, out_channels, kernel_size=1)
         )
 

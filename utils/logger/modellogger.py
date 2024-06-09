@@ -6,7 +6,7 @@ from math import ceil, floor
 from torchinfo import summary
 
 from utils import logger
-from utils.pytorch.deploy import assert_on_cuda
+from utils.torch.deploy import assert_on_cuda
 
 indent = 0
 
@@ -86,15 +86,15 @@ def get_shape_log(shape):
 def log_model_params(model, **kwargs):
     """
     输出模型参数信息，kwargs 可选参数如下：
-    \ninput_shape (torch.Size | tuple): 输入形状，比如 (1, 3, 224, 224)
+    \ninput_size (torch.Size | tuple): 输入形状，比如 (1, 3, 224, 224)
     \ninput_data (torch.tensor): 输入张量
     \n以及其他参数，参考 torchinfo.summary()
     Args:
         model: 要输出信息的模型
     """
-    if kwargs.get('input_size'):
+    if kwargs.get('input_size') is not None:
         input_size: tuple[int] = kwargs.get('input_size')
-    elif kwargs.get('input_data'):
+    elif kwargs.get('input_data') is not None:
         input_data: torch.Tensor = kwargs.get('input_data')
         input_size = input_data.shape
     else:

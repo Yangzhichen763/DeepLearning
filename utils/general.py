@@ -7,7 +7,7 @@ from time import time, sleep
 import torch
 import logging
 
-from utils.pytorch import save, load
+from utils.torch import save, load
 from utils.tensorboard import get_writer
 
 # 参数中 level 代表 INFO 即以上级别的日志信息才能被输出
@@ -264,10 +264,11 @@ class Validator:
 
 
 class Manager:
-    def __init__(self, model):
+    def __init__(self, model, device):
         self.best_accuracy = 0.
         self.last_accuracy = 0.
         self.model = model
+        self.device = device
 
     def update_accuracy(self, accuracy):
         # 更新准确率以及保存模型
@@ -282,14 +283,15 @@ class Manager:
         Args:
             **kwargs: 输入其他的 kwarg 可以按照 key, value 的形式记录到 TensorBoard 中，并打印出来
         """
-        # 保存最新和最好的模型
-        current_time = t.strftime("%Y-%m-%d-%H-%M-%S")
-        save.as_pt(self.model, save_path=f"./models/last_{current_time}.pt")
-        load.from_model(self.model, device=self.model.device, load_path=f"./models/best.pt")
-        save.as_pt(self.model, save_path=f"./models/best_{current_time}.pt")
-
         # 打印总结信息
         tqdm.write(f"\nSummary: ")
         tqdm.write(f" - [Best Accuracy]: {self.best_accuracy:.2f}%  [Last Accuracy]: {self.last_accuracy:.2f}%")
         for key, value in kwargs.items():
             tqdm.write(f" - [{key}]: {get_value(value)}")
+
+        # 保存最新和最好的模型
+        current_time = t.strftime("%Y-%m-%d-%H-%M-%S")
+        save.as_pt(self.model, save_path=f"./models/last_{current_time}.pt")
+        load.from_model(self.model, device=self.device, load_path=f"./models/best.pt")
+        save.as_pt(self.model, save_path=f"./models/best_{current_time}.pt")
+

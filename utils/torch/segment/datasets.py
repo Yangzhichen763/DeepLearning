@@ -10,7 +10,7 @@ import albumentations as A
 from utils.os import *
 import os.path
 
-from utils.pytorch.segment import save_label_as_png
+from utils.torch.segment import save_label_as_png
 
 
 def read_images(image_path, resize_and_crop_transformer=None):
