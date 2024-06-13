@@ -1,4 +1,5 @@
 import math
+import os
 
 from torch.cuda.amp import GradScaler
 from tqdm import tqdm
@@ -44,7 +45,7 @@ def get_value(value):
     elif isinstance(value, (int, float)):
         return value
     else:
-        raise ValueError(f"Unsupported value type: {type(value)}")
+        return value
 
 
 class Trainer:
@@ -264,11 +265,13 @@ class Validator:
 
 
 class Manager:
-    def __init__(self, model, device):
+    def __init__(self, model, device, **kwargs):
         self.best_accuracy = 0.
         self.last_accuracy = 0.
         self.model = model
         self.device = device
+
+        self.writer = kwargs.get('writer') if kwargs.get("writer", None) is not None else None
 
     def update_accuracy(self, accuracy):
         # 更新准确率以及保存模型
@@ -290,7 +293,9 @@ class Manager:
             tqdm.write(f" - [{key}]: {get_value(value)}")
 
         # 保存最新和最好的模型
-        current_time = t.strftime("%Y-%m-%d-%H-%M-%S")
+        current_time = os.path.basename(self.writer.log_dir) \
+            if self.writer is not None \
+            else t.strftime("%Y-%m-%d-%H-%M-%S")
         save.as_pt(self.model, save_path=f"./models/last_{current_time}.pt")
         load.from_model(self.model, device=self.device, load_path=f"./models/best.pt")
         save.as_pt(self.model, save_path=f"./models/best_{current_time}.pt")

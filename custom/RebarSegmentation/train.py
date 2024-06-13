@@ -138,7 +138,7 @@ def rebar_segmentation(test_model=False):
         # 训练模型
         trainer = Trainer(train_loader, optimizer, writer_enabled=False)
         validator = Validator(val_loader)
-        manager = Manager(model)
+        manager = Manager(model, device)
         for epoch in range(1, num_epochs + 1):
             train_loss = train_epoch()
             val_loss, val_accuracy, val_dice = validate_epoch()

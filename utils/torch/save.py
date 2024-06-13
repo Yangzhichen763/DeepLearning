@@ -24,7 +24,10 @@ def as_pt(model, save_path=None, file_name=None, path_unique=False):
         if file_name is None:
             save_path = "./models/untitled.pt"
         else:
-            save_path = f"./models/{file_name}.pt"
+            if file_name[-3:] == ".pt":
+                save_path = f"./models/{file_name}"
+            else:
+                save_path = f"./models/{file_name}.pt"
 
     if path_unique:
         save_path = get_unique_full_path(save_path)
@@ -52,7 +55,10 @@ def as_onnx(model, dummy_input, save_path=None, file_name=None,
         if file_name is None:
             save_path = "./models/untitled.pt"
         else:
-            save_path = f"./models/{file_name}.pt"
+            if file_name[-5:] == ".onnx":
+                save_path = f"./models/{file_name}"
+            else:
+                save_path = f"./models/{file_name}.onnx"
 
     directory = os.path.dirname(save_path)
     os.makedirs(directory, exist_ok=True)

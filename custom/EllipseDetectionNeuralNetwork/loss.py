@@ -245,9 +245,8 @@ class EllipseLoss(OBBLoss):
 
         l_scores_iou *= 1
         l_scores_size *= 2
-        l_scores_rotation = (
-            lossFunc.FunctionalLoss.SquareArctanLoss()(l_scores_rotation)
-            + lossFunc.FunctionalLoss.LogLoss()(l_scores_rotation)) * 2
+        l_scores_rotation = lossFunc.FunctionalLoss.LogLoss()(l_scores_rotation) * 12
+        print(l_scores_iou, l_scores_size, l_scores_rotation)
         loss = l_scores_iou + l_scores_size + l_scores_rotation  # + l_scores_corner
 
         return loss, l_scores_rotation, pred_ious, pred  # 标量, 标量, [B, k, 1], [B, k, 5] 其中 k = x
@@ -328,10 +327,11 @@ class EllipseLoss(OBBLoss):
 
 
 if __name__ == '__main__':
-    _pred = torch.tensor([[3, 13, 28.3614, 58.2907, 1.084917]]).view(1, -1, 5)
-    _target = torch.tensor([2.2, 13, 31.6460047497, 33.5405781611, 1.060262]).view(1, -1, 5)
-    loss, iou, _ = EllipseLoss((256, 256))(_pred, _target, regress_pred=False)
-    print(loss)
+    _batch_size = 8
+    _pred = torch.tensor([[3, 13, 28.3614, 58.2907, 1.084917]]).view(1, -1, 5).repeat(_batch_size, 1, 1)
+    _target = torch.tensor([2.2, 13, 31.6460047497, 33.5405781611, 1.060262]).view(1, -1, 5).repeat(_batch_size, 1, 1)
+    loss, loss_rotation, iou, _ = EllipseLoss((256, 256))(_pred, _target, regress_pred=False)
+    print(loss, loss_rotation)
     exit()
 
     batch_size = 8

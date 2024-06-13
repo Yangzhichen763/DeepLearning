@@ -237,6 +237,15 @@ def get_scheduler(config):
             warmup_steps=5,
             gamma=0.71)
         _scheduler_batch = None
+    elif config == "CosineAnnealingWarmRestarts cyclic":
+        _scheduler_epoch = CosineAnnealingWarmupRestarts(
+            optimizer,
+            first_cycle_steps=int(num_epochs / 40),
+            max_lr=learning_rate,
+            min_lr=1e-8,
+            warmup_steps=5,
+            gamma=0.9)
+        _scheduler_batch = None
     elif config == "CyclicLR":
         _scheduler_epoch = None
         _scheduler_batch = optim.lr_scheduler.CyclicLR(
@@ -254,9 +263,9 @@ def get_scheduler(config):
 if __name__ == '__main__':
     # 超参数设置
     batch_size = 32
-    num_epochs = 500
-    num_workers = 4  # os.cpu_count()
-    learning_rate = 0.001
+    num_epochs = 1000
+    num_workers = 3  # os.cpu_count()
+    learning_rate = 0.0003
     weight_decay = 0.0001
     momentum = 0.9
     scheduler_step_size = 5
@@ -313,7 +322,7 @@ if __name__ == '__main__':
     optimizer = optim.AdamW(
         model.parameters(),
         lr=learning_rate)
-    scheduler_config = "CosineAnnealingWarmRestarts"
+    scheduler_config = "CosineAnnealingWarmRestarts cyclic"
     scheduler_epoch, scheduler_batch = get_scheduler(scheduler_config)
 
     # 训练模型
@@ -321,7 +330,7 @@ if __name__ == '__main__':
     # tensorboard --logdir=./custom/EllipseDetectionNeuralNetwork/logs/tensorboard
     trainer = Trainer(train_loader, optimizer, writer=writer)
     validator = Validator(test_loader)
-    manager = Manager(model, device)
+    manager = Manager(model, device, writer=writer)
     for epoch in range(1, num_epochs + 1):
         train()
         _, last_accuracy = validate()

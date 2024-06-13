@@ -1,7 +1,7 @@
 import os
 
 
-def get_root_path() -> str:
+def get_root_path(sub_path: str = None) -> str:
     """
     寻找项目的根目录路径
     """
@@ -10,11 +10,13 @@ def get_root_path() -> str:
     path = os.path.dirname(path)
     path = os.path.dirname(path)
 
-    return path
+    return path if sub_path is None else os.path.join(path, sub_path)
 
 
-def get_datas_path() -> str:
-    return os.path.join(get_root_path(), "datas")
+def get_datas_path(sub_path: str = None) -> str:
+    return os.path.join(get_root_path(), "datas") \
+        if sub_path is None \
+        else os.path.join(get_root_path(), "datas", sub_path)
 
 
 def insert(string, index, substring) -> str:

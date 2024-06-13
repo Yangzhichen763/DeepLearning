@@ -35,7 +35,7 @@ class L1Loss(Functional01Loss):
         super(L1Loss, self).__init__()
 
     def _loss(self, pred):
-        return F.l1_loss(pred, torch.zeros_like(pred))
+        return F.l1_loss(pred, torch.zeros_like(pred))  # 或者 torch.abs(pred)
 
 
 class SmoothL1Loss(Functional01Loss):

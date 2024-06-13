@@ -153,12 +153,7 @@ class ResNetEncoder(nn.Module):
         """
 
         # 初始化权重
-        for module in self.modules():
-            if isinstance(module, nn.Conv2d):
-                nn.init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
-            elif isinstance(module, (nn.BatchNorm2d, nn.GroupNorm)):
-                nn.init.constant_(module.weight, 1)
-                nn.init.constant_(module.bias, 0)
+        self.init_weights()
 
     def _make_layer(self, block, out_channels, num_blocks, stride, **kwargs):
         strides = [stride] + [1] * (num_blocks - 1)   # 除了第一个 block 其他的都设置 stride=1
@@ -167,6 +162,19 @@ class ResNetEncoder(nn.Module):
             layers.append(block(self.in_channels, out_channels, stride, **kwargs))
             self.in_channels = out_channels * block.expansion
         return nn.Sequential(*layers)
+
+    def init_weights(self, pretrained=None):
+        if isinstance(pretrained, str):
+            self.load_state_dict(torch.load(pretrained))
+        elif pretrained is None:
+            for m in self.modules():
+                if isinstance(m, nn.Conv2d):
+                    nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
+                    nn.init.constant_(m.weight, 1)
+                    nn.init.constant_(m.bias, 0)
+        else:
+            raise TypeError('pretrained must be a str or None')
 
     def forward(self, x):
         x = self.layer0(x)
