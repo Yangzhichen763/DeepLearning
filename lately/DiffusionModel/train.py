@@ -12,7 +12,7 @@ from torchvision.utils import save_image
 
 from lately.DiffusionModel.interpret import linear_interpret
 from lossFunc.WeightedLoss import WeightedL2Loss
-from model import GaussianDiffusionSampler, GaussianDiffusionTrainer
+from model import DDPMSampler, GaussianDiffusionTrainer, DDIMSampler
 from modules import UNet
 from optim import GradualWarmupScheduler
 
@@ -30,6 +30,7 @@ def train(modelConfig: Dict):
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         ]))
+    dataset = Subset(dataset, range(0, 200))
     dataloader = DataLoader(
         dataset, batch_size=modelConfig["batch_size"], shuffle=True, num_workers=4, drop_last=True, pin_memory=True)
 
@@ -52,17 +53,19 @@ def train(modelConfig: Dict):
         loss_func=WeightedL2Loss()).to(device)
 
     # start training
+    net_model.train()
     for e in range(modelConfig["epoch"]):
         with tqdm(dataloader, dynamic_ncols=True) as tqdmDataLoader:
             for images, labels in tqdmDataLoader:
-                # train
-                optimizer.zero_grad()
                 x_0 = images.to(device)
                 loss = trainer(x_0).sum() / 1000.
+
+                optimizer.zero_grad()
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(
                     net_model.parameters(), modelConfig["grad_clip"])
                 optimizer.step()
+
                 tqdmDataLoader.set_postfix(ordered_dict={
                     "epoch": e,
                     "loss: ": loss.item(),
@@ -74,21 +77,43 @@ def train(modelConfig: Dict):
 
 
 def eval(modelConfig: Dict):
+    device = torch.device(modelConfig["device"])
+    model = UNet(t=modelConfig["T"], ch=modelConfig["channel"], ch_mult=modelConfig["channel_mult"], attn=modelConfig["attn"],
+                 num_res_blocks=modelConfig["num_res_blocks"], dropout=0.)
+    load.from_model(model,
+                    device=device,
+                    load_path=os.path.join(modelConfig["save_weight_dir"], modelConfig["test_load_weight"]))
+    print("model load weight done.")
+    sampler_implicit_1 = DDIMSampler(
+        t=modelConfig["T"],
+        model=model,
+        betas=linear_interpret(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]),
+        miu=0).to(device)
+
+    sampler_probabilistic_1 = DDIMSampler(
+        t=modelConfig["T"],
+        model=model,
+        betas=linear_interpret(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]),
+        miu=1).to(device)
+
+    sampler_implicit_2 = DDIMSampler(
+        t=modelConfig["T"],
+        model=model,
+        betas=linear_interpret(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]),
+        miu=0,
+        method=False).to(device)
+
+    sampler_probabilistic_2 = DDIMSampler(
+        t=modelConfig["T"],
+        model=model,
+        betas=linear_interpret(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]),
+        miu=1,
+        method=False).to(device)
+
     # load model and evaluate
+    model.eval()
     with torch.no_grad():
-        device = torch.device(modelConfig["device"])
-        model = UNet(t=modelConfig["T"], ch=modelConfig["channel"], ch_mult=modelConfig["channel_mult"], attn=modelConfig["attn"],
-                     num_res_blocks=modelConfig["num_res_blocks"], dropout=0.)
-        load.from_model(model,
-                        device=device,
-                        load_path=os.path.join(modelConfig["save_weight_dir"], modelConfig["test_load_weight"]))
-        print("model load weight done.")
-        model.eval()
-        sampler = GaussianDiffusionSampler(
-            t=modelConfig["T"],
-            model=model,
-            betas=linear_interpret(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"])).to(device)
-        # Sampled from standard normal distribution
+        # 标准分布采样随机噪声
         noisyImage = torch.randn(
             size=[modelConfig["batch_size"], 3, 32, 32], device=device)
         saveNoisy = torch.clamp(noisyImage * 0.5 + 0.5, 0, 1)
@@ -97,7 +122,32 @@ def eval(modelConfig: Dict):
             save_path=os.path.join(modelConfig["sampled_dir"], modelConfig["sampledNoisyImgName"]),
             make_grid=True,
             nrow=modelConfig["nrow"])
-        sampledImgs = sampler(noisyImage)
+
+        sampledImgs = sampler_implicit_1(noisyImage)
+        sampledImgs = sampledImgs * 0.5 + 0.5  # [0 ~ 1]
+        save.tensor_to_image(
+            sampledImgs,
+            save_path=os.path.join(modelConfig["sampled_dir"],  modelConfig["sampledImgName"]),
+            make_grid=True,
+            nrow=modelConfig["nrow"])
+
+        sampledImgs = sampler_probabilistic_1(noisyImage)
+        sampledImgs = sampledImgs * 0.5 + 0.5  # [0 ~ 1]
+        save.tensor_to_image(
+            sampledImgs,
+            save_path=os.path.join(modelConfig["sampled_dir"],  modelConfig["sampledImgName"]),
+            make_grid=True,
+            nrow=modelConfig["nrow"])
+
+        sampledImgs = sampler_implicit_2(noisyImage)
+        sampledImgs = sampledImgs * 0.5 + 0.5  # [0 ~ 1]
+        save.tensor_to_image(
+            sampledImgs,
+            save_path=os.path.join(modelConfig["sampled_dir"],  modelConfig["sampledImgName"]),
+            make_grid=True,
+            nrow=modelConfig["nrow"])
+
+        sampledImgs = sampler_probabilistic_2(noisyImage)
         sampledImgs = sampledImgs * 0.5 + 0.5  # [0 ~ 1]
         save.tensor_to_image(
             sampledImgs,
@@ -111,7 +161,7 @@ if __name__ == '__main__':
         "state": "eval",  # or eval
         "epoch": 200,
         "batch_size": 4,
-        "T": 1000,
+        "T": 200,
         "channel": 128,
         "channel_mult": [1, 2, 3, 4],
         "attn": [2],
@@ -126,7 +176,7 @@ if __name__ == '__main__':
         "device": "cuda:0",  ### MAKE SURE YOU HAVE A GPU !!!
         "training_load_weight": None,
         "save_weight_dir": "./checkpoint/",
-        "test_load_weight": "ckpt_0.pt",
+        "test_load_weight": "ckpt_58_sample200.pt",
         "sampled_dir": "./sampled_images/",
         "sampledNoisyImgName": "NoisyNoGuidenceImgs.png",
         "sampledImgName": "SampledNoGuidenceImgs.png",
