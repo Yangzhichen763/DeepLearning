@@ -11,7 +11,18 @@ import numpy as np
 import torch
 
 
-def as_pt(model, save_path=None, file_name=None, path_unique=False):
+def check_path(path: str, path_unique=False):
+    """
+    检查路径是否存在，如果不存在则创建路径上的文件夹
+    """
+    if path_unique:
+        path = get_unique_full_path(path)
+    tqdm.write(f"Saving model to: {path}")
+    directory = os.path.dirname(path)
+    os.makedirs(directory, exist_ok=True)
+
+
+def model_as_pt(model, save_path=None, file_name=None, path_unique=False):
     """
     保存模型为 PyTorch 格式.
     Args:
@@ -29,13 +40,30 @@ def as_pt(model, save_path=None, file_name=None, path_unique=False):
             else:
                 save_path = f"./models/{file_name}.pt"
 
-    if path_unique:
-        save_path = get_unique_full_path(save_path)
-    tqdm.write(f"Saving model to: {save_path}")
-    directory = os.path.dirname(save_path)
-    os.makedirs(directory, exist_ok=True)
-
+    check_path(save_path, path_unique=path_unique)
     torch.save(model.state_dict(), save_path)
+
+
+def model_states_as_pt(model_states, save_path=None, file_name=None, path_unique=False):
+    """
+    保存模型为 PyTorch 格式.
+    Args:
+        model_states: 要保存的数据.
+        save_path (str): 模型保存路径，包含文件名和后缀名 .pt.
+        file_name (str): 模型保存文件名，不包含后缀名 .pt. 只有在 save_path 为 None 时，该参数才生效.
+        path_unique (bool): 是否为保存路径生成唯一路径.
+    """
+    if save_path is None:
+        if file_name is None:
+            save_path = "./models/untitled.pt"
+        else:
+            if file_name[-3:] == ".pt":
+                save_path = f"./models/{file_name}"
+            else:
+                save_path = f"./models/{file_name}.pt"
+
+    check_path(save_path, path_unique=path_unique)
+    torch.save(model_states, save_path)
 
 
 def as_onnx(model, dummy_input, save_path=None, file_name=None,

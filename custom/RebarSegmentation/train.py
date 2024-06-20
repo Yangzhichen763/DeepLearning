@@ -145,10 +145,11 @@ def rebar_segmentation(test_model=False):
             scheduler.step()
             print(f"Epoch: {epoch}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 
-            manager.update_accuracy(val_accuracy)
+            manager.update_checkpoint(val_accuracy, optimizer=optimizer, epoch=epoch)
 
         manager.summary(TotalEpochs=num_epochs, BatchSize=batch_size,
                         FinalLearningRate=optimizer.param_groups[0]['lr'])
+        manager.save_checkpoint(optimizer=optimizer)
     else:
         # 加载模型
         load.from_model(model, device, file_name="best")

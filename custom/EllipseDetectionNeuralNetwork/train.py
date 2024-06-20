@@ -334,11 +334,12 @@ if __name__ == '__main__':
     for epoch in range(1, num_epochs + 1):
         train()
         _, last_accuracy = validate()
-        manager.update_accuracy(last_accuracy)
+        manager.update_checkpoint(last_accuracy, optimizer=optimizer, epoch=epoch)
 
     # 打印训练结果
     manager.summary(ModelConfig=model_config, scheduler_config=scheduler_config,
                     TotalEpochs=num_epochs, BatchSize=batch_size,
                     FinalLearningRate=optimizer.param_groups[0]['lr'])
+    manager.save_checkpoint(optimizer=optimizer)
 
     close_writer(writer)

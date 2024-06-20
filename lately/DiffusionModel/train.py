@@ -10,7 +10,7 @@ from torchvision import transforms
 from torchvision.datasets import CIFAR10
 from torchvision.utils import save_image
 
-from lately.DiffusionModel.interpret import linear_interpret
+from lately.DiffusionModel.interpret import linear
 from lossFunc.WeightedLoss import WeightedL2Loss
 from model import DDPMSampler, GaussianDiffusionTrainer, DDIMSampler
 from modules import UNet
@@ -30,9 +30,11 @@ def train(modelConfig: Dict):
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         ]))
-    dataset = Subset(dataset, range(0, 200))
+    dataset = Subset(dataset, range(0, 400))
     dataloader = DataLoader(
-        dataset, batch_size=modelConfig["batch_size"], shuffle=True, num_workers=4, drop_last=True, pin_memory=True)
+        dataset, batch_size=modelConfig["batch_size"], shuffle=True,
+        num_workers=4, persistent_workers=True,
+        drop_last=True, pin_memory=True)
 
     # model setup
     net_model = UNet(t=modelConfig["T"], ch=modelConfig["channel"], ch_mult=modelConfig["channel_mult"], attn=modelConfig["attn"],
@@ -49,7 +51,7 @@ def train(modelConfig: Dict):
     trainer = GaussianDiffusionTrainer(
         t=modelConfig["T"],
         model=net_model,
-        betas=linear_interpret(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]),
+        betas=linear(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]).to(device),
         loss_func=WeightedL2Loss()).to(device)
 
     # start training
@@ -58,7 +60,7 @@ def train(modelConfig: Dict):
         with tqdm(dataloader, dynamic_ncols=True) as tqdmDataLoader:
             for images, labels in tqdmDataLoader:
                 x_0 = images.to(device)
-                loss = trainer(x_0).sum() / 1000.
+                loss = trainer(x_0, sampling_type='antithetic').sum() / 1000.
 
                 optimizer.zero_grad()
                 loss.backward()
@@ -73,7 +75,7 @@ def train(modelConfig: Dict):
                     "LR": optimizer.state_dict()['param_groups'][0]["lr"]
                 })
         warmUpScheduler.step()
-        save.as_pt(net_model, save_path=os.path.join(modelConfig["save_weight_dir"], 'ckpt_' + str(e) + '.pt'))
+        save.model_as_pt(net_model, save_path=os.path.join(modelConfig["save_weight_dir"], 'ckpt_' + str(e) + '.pt'))
 
 
 def eval(modelConfig: Dict):
@@ -87,28 +89,20 @@ def eval(modelConfig: Dict):
     sampler_implicit_1 = DDIMSampler(
         t=modelConfig["T"],
         model=model,
-        betas=linear_interpret(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]),
-        miu=0).to(device)
+        betas=linear(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]).to(device),
+        eta=0).to(device)
 
     sampler_probabilistic_1 = DDIMSampler(
         t=modelConfig["T"],
         model=model,
-        betas=linear_interpret(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]),
-        miu=1).to(device)
+        betas=linear(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]).to(device),
+        eta=1).to(device)
 
-    sampler_implicit_2 = DDIMSampler(
+    sampler_probabilistic_4 = DDPMSampler(
         t=modelConfig["T"],
         model=model,
-        betas=linear_interpret(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]),
-        miu=0,
-        method=False).to(device)
-
-    sampler_probabilistic_2 = DDIMSampler(
-        t=modelConfig["T"],
-        model=model,
-        betas=linear_interpret(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]),
-        miu=1,
-        method=False).to(device)
+        betas=linear(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]).to(device),
+        accelerate=False).to(device)
 
     # load model and evaluate
     model.eval()
@@ -139,15 +133,7 @@ def eval(modelConfig: Dict):
             make_grid=True,
             nrow=modelConfig["nrow"])
 
-        sampledImgs = sampler_implicit_2(noisyImage)
-        sampledImgs = sampledImgs * 0.5 + 0.5  # [0 ~ 1]
-        save.tensor_to_image(
-            sampledImgs,
-            save_path=os.path.join(modelConfig["sampled_dir"],  modelConfig["sampledImgName"]),
-            make_grid=True,
-            nrow=modelConfig["nrow"])
-
-        sampledImgs = sampler_probabilistic_2(noisyImage)
+        sampledImgs = sampler_probabilistic_4(noisyImage)
         sampledImgs = sampledImgs * 0.5 + 0.5  # [0 ~ 1]
         save.tensor_to_image(
             sampledImgs,
@@ -159,9 +145,9 @@ def eval(modelConfig: Dict):
 if __name__ == '__main__':
     model_config = {
         "state": "eval",  # or eval
-        "epoch": 200,
+        "epoch": 1000,
         "batch_size": 4,
-        "T": 200,
+        "T": 1000,
         "channel": 128,
         "channel_mult": [1, 2, 3, 4],
         "attn": [2],
@@ -176,7 +162,7 @@ if __name__ == '__main__':
         "device": "cuda:0",  ### MAKE SURE YOU HAVE A GPU !!!
         "training_load_weight": None,
         "save_weight_dir": "./checkpoint/",
-        "test_load_weight": "ckpt_58_sample200.pt",
+        "test_load_weight": "ckpt_164.pt",
         "sampled_dir": "./sampled_images/",
         "sampledNoisyImgName": "NoisyNoGuidenceImgs.png",
         "sampledImgName": "SampledNoGuidenceImgs.png",

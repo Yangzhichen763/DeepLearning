@@ -14,6 +14,65 @@ from utils.tensorboard import get_writer
 # 参数中 level 代表 INFO 即以上级别的日志信息才能被输出
 logging.basicConfig(format="\n%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
 
+checkpoint_relative_path = "./checkpoint"
+
+
+__all__ = ["Trainer", "Validator", "Manager"]
+
+
+def get_checkpoint_path(file_name: str):
+    """
+    通过文件名获取 checkpoint 完整路径
+    """
+    return os.path.join(checkpoint_relative_path, f"{file_name}.pt")
+
+
+def save_states(model, file_name, path_unique=False, **kwargs):
+    """
+    Args:
+        model (nn.Modules):
+        file_name: 保存的文件名
+        path_unique: 如果为 True，则路径如果重复，会使用序号改变文件名，使得文件名唯一
+    """
+    states = {
+        'model': model.state_dict(),
+        **kwargs
+    }
+    if kwargs.__contains__('optimizer'):
+        states['optimizer'] = kwargs['optimizer'].state_dict()
+    save_path = get_checkpoint_path(file_name)
+
+    save.check_path(save_path, path_unique=path_unique)
+    torch.save(states,  save_path)
+
+
+def load_states(model, device, file_name, return_except=False, **kwargs):
+    """
+    加载模型、优化器等参数
+    Args:
+        model (nn.Module): 模型
+        device: 设备
+        file_name: 保存的文件名
+        return_except: 如果为 True，则返回包括模型、优化器在内的所有参数，否则返回除了模型、优化器以外的其他参数
+    Returns:
+        加载的所有参数，通过形如 states['epoch'] 的方式访问
+    """
+    load_path = get_checkpoint_path(file_name)
+
+    tqdm.write(f"Loading model from {load_path}...", end="")
+    # 加载模型、优化器等参数
+    states: dict = torch.load(load_path, map_location=device)
+    model.load_state_dict(states['model'])
+    if kwargs.__contains__('optimizer'):
+        kwargs['optimizer'].load_state_dict(states['optimizer'])
+    tqdm.write(f"\rModel {load_path} loaded.")
+
+    if return_except:
+        states.pop('model')
+        for key in kwargs.keys():
+            states.pop(key)
+    return states
+
 
 def buffer_dataloader(enumerate_obj):
     tqdm.write("Loading Data...", end="")
@@ -269,17 +328,44 @@ class Manager:
         self.best_accuracy = 0.
         self.last_accuracy = 0.
         self.model = model
+        if kwargs.__contains__('optimizer'):
+            self.optimizer = kwargs['optimizer']
         self.device = device
 
         self.writer = kwargs.get('writer') if kwargs.get("writer", None) is not None else None
+        self.url = os.path.basename(self.writer.log_dir) \
+            if self.writer is not None \
+            else t.strftime("%Y-%m-%d-%H-%M-%S")
 
-    def update_accuracy(self, accuracy):
+    def resume_checkpoint(self, file_name=None, **kwargs):
+        """
+        加载上一次的模型训练数据
+        Args:
+            file_name: 要加载的 checkpoint 文件名，如果为 None，则加载最新的 checkpoint，文件名为 last
+            **kwargs: 更新模型的参数数据，可以包括 optimizer 等
+        Returns:
+            加载的数据，通过形如 states['epoch'] 的方式访问
+        """
+        if file_name is None:
+            file_name = "last"
+
+        states = load_states(self.model, self.device, file_name, **kwargs)
+        return states
+
+    def update_checkpoint(self, accuracy, **kwargs):
+        """
+        更新准确率以及保存模型
+        Args:
+            accuracy: 用于判断是否更新最佳模型，以及保存模型的准确率
+            **kwargs: 更新模型的参数数据，可以包括 optimizer 等
+        """
         # 更新准确率以及保存模型
         self.last_accuracy = get_value(accuracy)
         if self.last_accuracy > self.best_accuracy:
             self.best_accuracy = self.last_accuracy
-            save.as_pt(self.model, save_path="./models/best.pt")
-        save.as_pt(self.model, save_path="./models/last.pt")
+            save_states(self.model, "best", **kwargs)
+        save_states(self.model, f"ckpt_{self.url}", path_unique=True, **kwargs)
+        save_states(self.model, "last", **kwargs)
 
     def summary(self, **kwargs):
         """
@@ -292,11 +378,13 @@ class Manager:
         for key, value in kwargs.items():
             tqdm.write(f" - [{key}]: {get_value(value)}")
 
-        # 保存最新和最好的模型
-        current_time = os.path.basename(self.writer.log_dir) \
-            if self.writer is not None \
-            else t.strftime("%Y-%m-%d-%H-%M-%S")
-        save.as_pt(self.model, save_path=f"./models/last_{current_time}.pt")
-        load.from_model(self.model, device=self.device, load_path=f"./models/best.pt")
-        save.as_pt(self.model, save_path=f"./models/best_{current_time}.pt")
+    def save_checkpoint(self, **kwargs):
+        """
+        保存最新和最好的模型
+        Args:
+            **kwargs: 更新模型的参数数据，可以包括 optimizer 等
+        """
+        save_states(self.model, f"last_{self.url}", **kwargs)
+        load_states(self.model, self.device, "best", **kwargs)
+        save_states(self.model, f"best_{self.url}", **kwargs)
 

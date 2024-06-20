@@ -94,9 +94,9 @@ def train_model(model, optimizer, criterion, scheduler, loaders, device='cuda', 
         _, accuracy = validate_model(model, test_loader, criterion, device, writer, epoch)
         if accuracy > best_accuracy:
             best_accuracy = accuracy
-            save.as_pt(model, "./models/best.pt")
+            save.model_as_pt(model, "./models/best.pt")
         else:
-            save.as_pt(model, f"./models/epoch_{epoch}.pt")
+            save.model_as_pt(model, f"./models/epoch_{epoch}.pt")
         scheduler.step()  # 更新学习率
 
 
@@ -199,7 +199,7 @@ def train_and_validate(
         writer=writer)
 
     # 保存模型
-    save.as_pt(
+    save.model_as_pt(
         model=model,
         save_path=f"./models/{model_creator.__name__}.pt")
 

@@ -31,7 +31,7 @@ class ScaledDotProductAttention(nn.Module):
         """
         # q @ k.transpose(2, 3) 得到的矩阵可以用来表示 attention 强度
         # / self.temperature 是为了防止内积过大导致偏导数趋近于 0（可以让注意力的分布更加均匀）
-        attention = torch.bmm((q / self.temperature), k.transpose(2, 3))
+        attention = torch.bmm((q / self.temperature), k.transpose(-2, -1))
 
         if mask is not None:
             attention = attention.masked_fill(mask == 0, float("-inf"))
@@ -52,14 +52,35 @@ class SelfAttention(nn.Module):
 
     def forward(self, x, mask=None):
         """
-        :param x: 输入向量
-        :param mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(time, time, dtype=torch.bool))
-        :return:
+        Args:
+            x: 输入向量
+            mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(time, time, dtype=torch.bool))
+        Returns:
         """
         batch_size, time, dimension = x.shape
         x = x.view(batch_size, time, 1, dimension)
         x, attention = self.attention(x, x, x, mask=mask)
         x = x.view(batch_size, time, dimension)
+        return x, attention
+
+
+class CrossAttention(nn.Module):
+    """
+    Cross Attention
+    """
+    def __init__(self, d_model, dropout=0.1):
+        super(CrossAttention, self).__init__()
+        self.attention = ScaledDotProductAttention(temperature=d_model ** 0.5, dropout=dropout)
+
+    def forward(self, query, context, mask=None):
+        """
+        Args:
+            query: 输入向量
+            context: 上下文向量
+            mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(time, time, dtype=torch.bool))
+        Returns:
+        """
+        x, attention = self.attention(query, context, context, mask=mask)
         return x, attention
 
 
@@ -104,4 +125,13 @@ class MultiheadAttention(nn.Module):
         q = q.permute(0, 2, 1, 3).contiguous().view(batch_size, time, dimension)
         q = self.dropout(self.weight_combine(q))
         return q, attention
+
+
+if __name__ == '__main__':
+    _model = CrossAttention(d_model=512)
+    _query = torch.rand(10, 20, 512)
+    _context = torch.rand(10, 30, 512)
+    _output, _attention = _model(_query, _context)
+    print(_output.shape)
+    print(_attention.shape)
 
