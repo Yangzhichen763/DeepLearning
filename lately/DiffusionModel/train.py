@@ -19,6 +19,8 @@ from optim import GradualWarmupScheduler
 from utils.os import get_datas_path
 from utils.torch import save, load
 
+import test
+
 
 def train(modelConfig: Dict):
     device = torch.device(modelConfig["device"])
@@ -88,15 +90,19 @@ def eval(modelConfig: Dict):
     print("model load weight done.")
     sampler_implicit_1 = DDIMSampler(
         t=modelConfig["T"],
+        timesteps=DDIMSampler.space_timesteps(modelConfig["T"], [50]),
         model=model,
         betas=linear(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]).to(device),
-        eta=0).to(device)
+        eta=0,
+        accelerate=False).to(device)
 
-    sampler_probabilistic_1 = DDIMSampler(
+    sampler_implicit_2 = DDIMSampler(
         t=modelConfig["T"],
+        timesteps=DDIMSampler.space_timesteps(modelConfig["T"], [50]),
         model=model,
         betas=linear(modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]).to(device),
-        eta=1).to(device)
+        eta=1,
+        accelerate=False).to(device)
 
     sampler_probabilistic_4 = DDPMSampler(
         t=modelConfig["T"],
@@ -118,28 +124,25 @@ def eval(modelConfig: Dict):
             nrow=modelConfig["nrow"])
 
         sampledImgs = sampler_implicit_1(noisyImage)
-        sampledImgs = sampledImgs * 0.5 + 0.5  # [0 ~ 1]
         save.tensor_to_image(
             sampledImgs,
             save_path=os.path.join(modelConfig["sampled_dir"],  modelConfig["sampledImgName"]),
             make_grid=True,
             nrow=modelConfig["nrow"])
 
-        sampledImgs = sampler_probabilistic_1(noisyImage)
-        sampledImgs = sampledImgs * 0.5 + 0.5  # [0 ~ 1]
+        sampledImgs = sampler_implicit_2(noisyImage)
         save.tensor_to_image(
             sampledImgs,
             save_path=os.path.join(modelConfig["sampled_dir"],  modelConfig["sampledImgName"]),
             make_grid=True,
             nrow=modelConfig["nrow"])
 
-        sampledImgs = sampler_probabilistic_4(noisyImage)
-        sampledImgs = sampledImgs * 0.5 + 0.5  # [0 ~ 1]
-        save.tensor_to_image(
-            sampledImgs,
-            save_path=os.path.join(modelConfig["sampled_dir"],  modelConfig["sampledImgName"]),
-            make_grid=True,
-            nrow=modelConfig["nrow"])
+        # sampledImgs = sampler_probabilistic_4(noisyImage)
+        # save.tensor_to_image(
+        #     sampledImgs,
+        #     save_path=os.path.join(modelConfig["sampled_dir"],  modelConfig["sampledImgName"]),
+        #     make_grid=True,
+        #     nrow=modelConfig["nrow"])
 
 
 if __name__ == '__main__':
