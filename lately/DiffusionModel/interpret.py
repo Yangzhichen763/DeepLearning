@@ -1,3 +1,5 @@
+import math
+
 import torch
 
 
@@ -8,6 +10,21 @@ def linear(start, end, steps, **kwargs):
         steps=steps,
         dtype=torch.float32,
         **kwargs)
+
+
+def cosine(start, end, steps, **kwargs):
+    """
+    原式 â 计算公式为：â(t) = f(t) / f(0)
+    原式 f(t) 计算公式为：f(t) = cos(((t / (T + s)) / (1 + s)) · (π / 2))²
+    """
+    def alpha_hat(t):
+        return torch.cos((t + start) / (1 + start) * math.pi / 2) ** 2
+
+    betas = torch.linspace(start=start, end=end, steps=steps + 1, dtype=torch.float32, **kwargs)
+    t_curr = betas[:-1]
+    t_next = betas[1:]
+    betas = torch.min(1 - alpha_hat(t_next) / alpha_hat(t_curr), end)
+    return betas
 
 
 def quad(start, end, steps, **kwargs):

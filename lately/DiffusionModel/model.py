@@ -156,6 +156,10 @@ class GaussianDiffusionTrainer(GaussianDiffusionBase):
 
 
 class DDPMSampler(GaussianDiffusionBase):
+    """
+    扩散模型 DDPM 的采样器
+    论文链接：https://arxiv.org/abs/2006.11239
+    """
     def __init__(self, t, model, betas, accelerate=True):
         super(DDPMSampler, self).__init__(t, model, betas)
         # 反向传播 q(x_{t-1} | x_t, x_0) 过程参数
@@ -190,7 +194,7 @@ class DDPMSampler(GaussianDiffusionBase):
             x_t = self.p_sample(x_t, t, i, clip_denoised)           # 反向采样
 
         x_0 = x_t
-        return x_0.clip(-1, 1)  # * 0.5 + 0.5  # [0 ~ 1]
+        return x_0.clip(-1, 1) * 0.5 + 0.5  # [0 ~ 1]
 
     def p_sample(self, x_t, t, time_step, clip_denoised=True):
         # 已知 x_t 和 pred_noise 预测 x_t-1 的均值
@@ -255,6 +259,8 @@ class DDPMSampler(GaussianDiffusionBase):
 
 class DDIMSampler(GaussianDiffusionBase):
     """
+    扩散模型 DDIM 的采样器
+    论文链接：https://arxiv.org/abs/2010.02502
     相比于 DDPM，DDIM 的采用有 eta 介入，eta == 0 时，方差 == 0
     \n并且 DDIM 的扩散过程不依赖马尔可夫链，可以跳步
     """
@@ -297,7 +303,7 @@ class DDIMSampler(GaussianDiffusionBase):
             x_t = self.p_sample(x_t, t, i, clip_denoised)    # 反向采样
 
         x_0 = x_t
-        return x_0.clip(-1, 1)  # * 0.5 + 0.5  # [0 ~ 1]
+        return x_0.clip(-1, 1) * 0.5 + 0.5  # [0 ~ 1]
 
     def p_sample(self, x_t, t, time_step, clip_denoised=True):
         # 已知 x_t 和 pred_noise 预测 x_t-1 的均值
@@ -351,7 +357,7 @@ class DDIMSampler(GaussianDiffusionBase):
 
         get_mean_std = p_mean_std_accelerate if self.accelerate else p_mean_std
         # t != 0 时，添加噪声；当 t == 0 时，不添加噪声
-        noise = torch.randn_like(x_t) if time_step > 0 and self.eta != 0 else 0.
+        noise = torch.randn_like(x_t) if time_step > 0 and self.eta != 0 else torch.zeros_like(x_t)
         mean, std = get_mean_std()
         xt_prev = mean + std * noise
 
