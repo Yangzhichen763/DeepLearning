@@ -12,9 +12,53 @@ Attention is All You Need
 """
 
 
+class AdditiveAttention(nn.Module):
+    """
+    Additive attention
+    一般来说，当 query 和 key 维度不同时，可以使用 additive attention。
+    论文链接 2014-2016：https://arxiv.org/abs/1409.0473
+    """
+    def __init__(self, dim_hidden, q_dim, k_dim, dropout=0.1):
+        super(AdditiveAttention, self).__init__()
+        self.q_weight = nn.Linear(q_dim, dim_hidden, bias=False)
+        self.k_weight = nn.Linear(k_dim, dim_hidden, bias=False)
+        self.v_weight = nn.Linear(dim_hidden, 1, bias=False)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, q, k, v, mask=None):
+        """
+        :param q: query （要查询的信息）[batch_size, q_n, q_dim]
+        :param k: key   （被查询的向量）[batch_size, kv_n, k_dim]
+        :param v: value （查询得到的值）[batch_size, kv_n, v_dim]
+        :param mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(time, time, dtype=torch.bool))
+        :return:
+        """
+        q = self.q_weight(q)     # [batch_size, q_n, q_dim] -> [batch_size, q_n, dim_hidden]
+        k = self.k_weight(k)     # [batch_size, kv_n, k_dim] -> [batch_size, kv_n, dim_hidden]
+
+        # 加性融合
+        # q: [batch_size, q_n, dim_hidden] -> [batch_size, q_n, 1, dim_hidden]
+        # k: [batch_size, kv_n, dim_hidden] -> [batch_size, 1, kv_n, dim_hidden]
+        # energy: [batch_size, q_n, kv_n, dim_hidden]
+        energy = torch.tanh(q.unsqueeze(-2) + k.unsqueeze(-3))
+
+        if mask is not None:
+            energy = energy.masked_fill(mask == 0, float("-inf"))
+
+        # v_weight 只有一个输出，所以要移除左后一个维度
+        scores = self.v_weight(energy).squeeze(-1)  # [batch_size, q_n, kv_n, 1] -> [batch_size, q_n, kv_n]
+        attention = F.softmax(scores, dim=-1)       # [batch_size, q_n, kv_n]
+        attention = self.dropout(attention)
+
+        # [batch_size, q_n, kv_n] @ [batch_size, kv_n, v_dim] -> [batch_size, q_n, v_dim]
+        output = torch.bmm(attention, v)
+        return output, attention
+
+
 class ScaledDotProductAttention(nn.Module):
     """
     Scaled Dot-Product attention
+    使用点积可以得到计算效率更高的评分函数，但是点积操作要求 query 和 key 具有相同的维度 d
     """
     def __init__(self, temperature, dropout=0.1):
         super(ScaledDotProductAttention, self).__init__()
@@ -23,14 +67,15 @@ class ScaledDotProductAttention(nn.Module):
 
     def forward(self, q, k, v, mask=None):
         """
-        :param q: query （要查询的信息）
-        :param k: key   （被查询的向量）
-        :param v: value （查询得到的值）
-        :param mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(time, time, dtype=torch.bool))
+        :param q: query （要查询的信息）[batch_size, q_n, dim]
+        :param k: key   （被查询的向量）[batch_size, kv_n, dim]
+        :param v: value （查询得到的值）[batch_size, kv_n, dim]
+        :param mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(q_n, kv_n, dtype=torch.bool))
         :return:
         """
-        # q @ k.transpose(2, 3) 得到的矩阵可以用来表示 attention 强度
+        # q @ k.transpose(-2, -1) 得到的矩阵可以用来表示 attention 强度
         # / self.temperature 是为了防止内积过大导致偏导数趋近于 0（可以让注意力的分布更加均匀）
+        # [batch_size, q_n, dim] @ [batch_size, dim, kv_n] -> [batch_size, q_n, kv_n]
         attention = torch.bmm((q / self.temperature), k.transpose(-2, -1))
 
         if mask is not None:
@@ -38,7 +83,9 @@ class ScaledDotProductAttention(nn.Module):
 
         # dim=-1 表示在最后一个维度上应用 softmax 函数，前面几个维度保持不变
         attention = self.dropout(F.softmax(attention, dim=-1))
-        output = torch.bmm(attention, v)    # torch.bmm 在处理批量矩阵乘法的性能比 torch.matmul（或者 @ 运算符）要好
+        # torch.bmm 在处理批量矩阵乘法的性能比 torch.matmul（或者 @ 运算符）要好
+        # [batch_size, q_n, kv_n] @ [batch_size, kv_n, dim] -> [batch_size, q_n, dim]
+        output = torch.bmm(attention, v)
         return output, attention
 
 
@@ -104,25 +151,25 @@ class MultiheadAttention(nn.Module):
 
     def forward(self, q, k, v, mask=None):
         """
-        :param q: query （要查询的信息）
-        :param k: key   （被查询的向量）
-        :param v: value （查询得到的值）
-        :param mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(time, time, dtype=torch.bool))
+        :param q: query （要查询的信息）[batch_size, q_n, dim]
+        :param k: key   （被查询的向量）[batch_size, kv_n, dim]
+        :param v: value （查询得到的值）[batch_size, kv_n, dim]
+        :param mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(q_n, kv_n, dtype=torch.bool))
         :return:
         """
-        batch_size, time, dimension = q.shape
+        batch_size, _, dimension = q.shape
         n_dim = self.d_model // self.num_heads
 
         # 获得 Q, K, V 矩阵
-        q = self.weight_Q(q).view(batch_size, time, self.num_heads, n_dim).permute(0, 2, 1, 3)
-        k = self.weight_K(k).view(batch_size, time, self.num_heads, n_dim).permute(0, 2, 1, 3)
-        v = self.weight_V(v).view(batch_size, time, self.num_heads, n_dim).permute(0, 2, 1, 3)
+        q = self.weight_Q(q).view(batch_size, -1, self.num_heads, n_dim).permute(0, 2, 1, 3)
+        k = self.weight_K(k).view(batch_size, -1, self.num_heads, n_dim).permute(0, 2, 1, 3)
+        v = self.weight_V(v).view(batch_size, -1, self.num_heads, n_dim).permute(0, 2, 1, 3)
 
         # 计算注意力权重
         q, attention = self.attention(q, k, v, mask=mask)
 
         # 合并输出
-        q = q.permute(0, 2, 1, 3).contiguous().view(batch_size, time, dimension)
+        q = q.permute(0, 2, 1, 3).contiguous().view(batch_size, -1, dimension)
         q = self.dropout(self.weight_combine(q))
         return q, attention
 

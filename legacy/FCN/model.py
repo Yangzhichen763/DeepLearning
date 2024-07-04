@@ -56,6 +56,6 @@ if __name__ == '__main__':
     y_pred = model(x_input)
     print(y_pred.shape)
 
-    log_model_params(model, x_input.shape)
+    log_model_params(model, input_data=x_input)
 
 

@@ -9,12 +9,13 @@ import torch
 import logging
 
 from utils.torch import save, load
-from utils.tensorboard import get_writer
+from utils.tensorboard import get_writer_by_name
 
 # 参数中 level 代表 INFO 即以上级别的日志信息才能被输出
 logging.basicConfig(format="\n%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
 
 checkpoint_relative_path = "./checkpoint"
+current_time = t.strftime("%Y-%m-%d-%H-%M-%S")
 
 
 __all__ = ["Trainer", "Validator", "Manager"]
@@ -116,7 +117,7 @@ class Trainer:
 
         self.writer_enabled = kwargs.get('writer_enabled', True)
         if self.writer_enabled:
-            self.writer = get_writer() if kwargs.get('writer', None) is None else kwargs['writer']
+            self.writer = get_writer_by_name(current_time, "train") if kwargs.get('writer', None) is None else kwargs['writer']
         self.scaler = GradScaler() if kwargs.get('scaler', None) is None else kwargs['scaler']
 
     def __call__(self, epoch, **kwargs):
@@ -129,11 +130,11 @@ class Trainer:
 
         self.epoch = epoch
 
+        # tqdm
         tqdm.write(f"\nEpoch {epoch}: ")
         if kwargs.get('scheduler', None) is not None:
             tqdm.write(f" - learning rate: {self.optimizer.param_groups[0]['lr']}")
         datas = buffer_dataloader(self.train_loader)
-
         self.process_bar = tqdm(   # 将 tqdm 放在加载 dataloader 之后，是因为防止进度条显示不正确
             total=self.dataset_size,
             desc=f"Training Epoch {self.epoch}",
@@ -238,7 +239,7 @@ class Validator:
 
         self.writer_enabled = kwargs.get('writer_enabled', True)
         if self.writer_enabled:
-            self.writer = get_writer() if kwargs.get('writer', None) is None else kwargs['writer']
+            self.writer = get_writer_by_name(current_time, "test") if kwargs.get('writer', None) is None else kwargs['writer']
 
     def __call__(self, epoch, optimizer, **kwargs):
         self.total_loss = 0.
@@ -335,7 +336,7 @@ class Manager:
         self.writer = kwargs.get('writer') if kwargs.get("writer", None) is not None else None
         self.url = os.path.basename(self.writer.log_dir) \
             if self.writer is not None \
-            else t.strftime("%Y-%m-%d-%H-%M-%S")
+            else current_time
 
     def resume_checkpoint(self, file_name=None, **kwargs):
         """
