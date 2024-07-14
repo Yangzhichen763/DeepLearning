@@ -4,9 +4,106 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 GlobalFilter，傅里叶变换模块">
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 AFNO 傅里叶变换模块，性能优于之前的傅里叶变换模块">
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/interpret.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/modules.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/train.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/MLPMixer/MLPMixer.ipynb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/MLPMixer/models.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/MOE/modules.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Attention Is All You Need.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Embedding.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Layers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Models.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Modules.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Norm.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Transformer.ipynb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/UNet/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/UNet/parts.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/UNet/train.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/Transformers for Image Recegnition at Scale.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/VisionTransformer.ipynb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/dataset.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/models.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/train.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/segment_utils/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/AlexNet/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/AlexNet/train.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/DenseNet/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/DenseNet/parts.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/DenseNet/train.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/EasyDNN.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/FCN/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/GoogleNet/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/KNN.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/Loss.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/MaskRCNN/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/NiN/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/NiN/train.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/RNN/LSTM.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/ResNet/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/ResNet/train.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/TwoLayerNet.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/VGGNet/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/VGGNet/train.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/legacy/classify_utils/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/ttf/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fft/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/DiffusionModel/interpret.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/DiffusionModel/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/DiffusionModel/modules.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/DiffusionModel/train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/MLPMixer/MLPMixer.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/MLPMixer/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/MOE/modules.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/Transformer/Attention Is All You Need.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/Transformer/Embedding.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/Transformer/Layers.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/Transformer/Models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/Transformer/Modules.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/Transformer/Norm.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/Transformer/Transformer.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/UNet/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/UNet/models/UNet_custom_light.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/UNet/models/best.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/UNet/parts.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/UNet/train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/ViT(VisionTransformer)/Transformers for Image Recegnition at Scale.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/ViT(VisionTransformer)/VisionTransformer.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/ViT(VisionTransformer)/dataset.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/ViT(VisionTransformer)/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/ViT(VisionTransformer)/train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lately/segment_utils/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/AlexNet/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/AlexNet/models/AlexNet.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/AlexNet/models/best.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/AlexNet/train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/DenseNet/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/DenseNet/models/DenseNet121.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/DenseNet/models/best.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/DenseNet/parts.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/DenseNet/train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/EasyDNN.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/FCN/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/GoogleNet/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/KNN.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/Loss.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/MaskRCNN/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/NiN/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/NiN/train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/RNN/LSTM.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/ResNet/logs_tensorboard/events.out.tfevents.1715260316.DESKTOP-TN0Q3C5.42108.0" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/ResNet/logs_tensorboard/events.out.tfevents.1715260435.DESKTOP-TN0Q3C5.1404.0" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/ResNet/logs_tensorboard/events.out.tfevents.1715260808.DESKTOP-TN0Q3C5.30564.0" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/ResNet/logs_tensorboard/events.out.tfevents.1715262230.DESKTOP-TN0Q3C5.13240.0" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/ResNet/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/ResNet/models/ResNet18.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/ResNet/models/best.pt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/ResNet/train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/TwoLayerNet.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/VGGNet/model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/VGGNet/train.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/classify_utils/__init__.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,62 +159,62 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.FPN.executor": "Run",
-    "Python.Image.executor": "Run",
-    "Python.Inception.executor": "Run",
-    "Python.LSTM.executor": "Run",
-    "Python.Models.executor": "Run",
-    "Python.Modules.executor": "Run",
-    "Python.OBB.executor": "Run",
-    "Python.Res2Net.executor": "Run",
-    "Python.ResNeXt.executor": "Run",
-    "Python.ResNet.executor": "Run",
-    "Python.Transformer.executor": "Run",
-    "Python.__init__.executor": "Debug",
-    "Python.coco.executor": "Run",
-    "Python.datapicker.executor": "Run",
-    "Python.datasets.executor": "Run",
-    "Python.general.executor": "Run",
-    "Python.interpret.executor": "Run",
-    "Python.learning.executor": "Run",
-    "Python.loss.executor": "Run",
-    "Python.model (1).executor": "Run",
-    "Python.model.executor": "Run",
-    "Python.modellogger.executor": "Run",
-    "Python.models.executor": "Run",
-    "Python.modules.executor": "Run",
-    "Python.nn.executor": "Run",
-    "Python.part.executor": "Run",
-    "Python.save.executor": "Run",
-    "Python.test.executor": "Run",
-    "Python.train.executor": "Run",
-    "Python.viewer3d.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "E:/Developments/PythonLearning/DeepLearning",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.FPN.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Image.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Inception.executor&quot;: &quot;Run&quot;,
+    &quot;Python.LSTM.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Models.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Modules.executor&quot;: &quot;Run&quot;,
+    &quot;Python.OBB.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Res2Net.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ResNeXt.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ResNet.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Transformer.executor&quot;: &quot;Run&quot;,
+    &quot;Python.__init__.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.coco.executor&quot;: &quot;Run&quot;,
+    &quot;Python.datapicker.executor&quot;: &quot;Run&quot;,
+    &quot;Python.datasets.executor&quot;: &quot;Run&quot;,
+    &quot;Python.general.executor&quot;: &quot;Run&quot;,
+    &quot;Python.interpret.executor&quot;: &quot;Run&quot;,
+    &quot;Python.learning.executor&quot;: &quot;Run&quot;,
+    &quot;Python.loss.executor&quot;: &quot;Run&quot;,
+    &quot;Python.model (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.modellogger.executor&quot;: &quot;Run&quot;,
+    &quot;Python.models.executor&quot;: &quot;Run&quot;,
+    &quot;Python.modules.executor&quot;: &quot;Run&quot;,
+    &quot;Python.nn.executor&quot;: &quot;Run&quot;,
+    &quot;Python.part.executor&quot;: &quot;Run&quot;,
+    &quot;Python.save.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.viewer3d.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/Developments/PythonLearning/_legacy/Mask_RCNN-master&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\Developments\PythonLearning\DeepLearning\lately\DiffusionModel\figures" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\plugandplay\SENet\figures" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Developments\PythonLearning\DeepLearning\reproduction" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\fft\AFNO" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\fft\GFNet" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\test\3d" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\test" />
-      <recent name="E:\Developments\PythonLearning\DeepLearning\lossFunc" />
     </key>
   </component>
   <component name="RunManager">
@@ -355,7 +452,11 @@
       <workItem from="1719481359248" duration="125000" />
       <workItem from="1719492948001" duration="1674000" />
       <workItem from="1719631451260" duration="15785000" />
-      <workItem from="1720081838330" duration="12481000" />
+      <workItem from="1720081838330" duration="13129000" />
+      <workItem from="1720170893626" duration="3519000" />
+      <workItem from="1720269754138" duration="593000" />
+      <workItem from="1720337801598" duration="3648000" />
+      <workItem from="1720841099841" duration="5212000" />
     </task>
     <task id="LOCAL-00001" summary="添加 MLPMixer 的网络结构代码">
       <option name="closed" value="true" />
@@ -629,7 +730,15 @@
       <option name="project" value="LOCAL" />
       <updated>1720090856971</updated>
     </task>
-    <option name="localTasksCounter" value="35" />
+    <task id="LOCAL-00035" summary="1. 添加 AFNO 傅里叶变换模块，性能优于之前的傅里叶变换模块">
+      <option name="closed" value="true" />
+      <created>1720104865201</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1720104865201</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -694,7 +803,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="1. 学习 plt 图像绘制代码。" />
     <MESSAGE value="1. 完成 UNet 训练部分代码，图像分割训练时，掩码需要先转换成label值组成的图像，具体见./lately/segment_utils/datasets&#10;2. 修改文件夹名" />
     <MESSAGE value="1. 训练过程和验证过程使用 tqdm 库进行进度条显示。&#10;2. 学习了怎么获取到项目的路径，numpy 和 tensor 之间的转换。&#10;3. 改进 UNet 训练代码。" />
     <MESSAGE value="1. 训练部分代码除了 VOC 数据集外，还添加了 Carvana 数据集；成功将 label 转换成 mask，mask 转换成 label。&#10;2. UNet 中添加了 bilinear 上采样。" />
@@ -719,7 +827,8 @@
     <MESSAGE value="1. 终于把最基础的 DDPM(Denoising Diffusion Probabilistic Models) 做出来了。代码的运行速度很慢，需要再学习其他的论文对模型进行优化（速度，生成图像质量，目前 Train 一次需要 2 小时，生成的还是噪声）。" />
     <MESSAGE value="1. 添加 DDIM，并训练和测试模型，得出来的结果和论文中描述的相反，后面会继续修改代码。" />
     <MESSAGE value="1. 添加 GlobalFilter，傅里叶变换模块" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 GlobalFilter，傅里叶变换模块" />
+    <MESSAGE value="1. 添加 AFNO 傅里叶变换模块，性能优于之前的傅里叶变换模块" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 AFNO 傅里叶变换模块，性能优于之前的傅里叶变换模块" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="XDebuggerManager">
