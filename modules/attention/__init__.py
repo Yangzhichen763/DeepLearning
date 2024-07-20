@@ -114,6 +114,10 @@ class SelfAttention(nn.Module):
 class CrossAttention(nn.Module):
     """
     Cross Attention
+    与 Scale Dot-Product Attention 、Self Attention 的区别：
+    1. Cross Attention -> query, (key, value)
+    2. Self Attention -> (query, key, value)
+    3. Scaled Dot-Product Attention -> query, key, value
     """
     def __init__(self, d_model, dropout=0.1):
         super(CrossAttention, self).__init__()

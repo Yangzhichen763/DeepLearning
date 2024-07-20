@@ -4,106 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 AFNO 傅里叶变换模块，性能优于之前的傅里叶变换模块">
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/interpret.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/modules.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/train.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/MLPMixer/MLPMixer.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/MLPMixer/models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/MOE/modules.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Attention Is All You Need.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Embedding.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Layers.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Modules.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Norm.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/Transformer/Transformer.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/UNet/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/UNet/parts.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/UNet/train.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/Transformers for Image Recegnition at Scale.pdf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/VisionTransformer.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/dataset.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/train.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/lately/segment_utils/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/AlexNet/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/AlexNet/train.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/DenseNet/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/DenseNet/parts.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/DenseNet/train.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/EasyDNN.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/FCN/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/GoogleNet/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/KNN.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/Loss.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/MaskRCNN/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/NiN/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/NiN/train.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/RNN/LSTM.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/ResNet/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/ResNet/train.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/TwoLayerNet.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/VGGNet/model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/VGGNet/train.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/reproduction/legacy/classify_utils/__init__.py" afterDir="false" />
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 Lora 模块">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/DiffusionModel/interpret.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/DiffusionModel/model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/DiffusionModel/modules.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/DiffusionModel/train.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/MLPMixer/MLPMixer.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/MLPMixer/models.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/MOE/modules.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/Transformer/Attention Is All You Need.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/Transformer/Embedding.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/Transformer/Layers.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/Transformer/Models.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/Transformer/Modules.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/Transformer/Norm.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/Transformer/Transformer.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/UNet/model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/UNet/models/UNet_custom_light.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/UNet/models/best.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/UNet/parts.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/UNet/train.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/ViT(VisionTransformer)/Transformers for Image Recegnition at Scale.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/ViT(VisionTransformer)/VisionTransformer.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/ViT(VisionTransformer)/dataset.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/ViT(VisionTransformer)/models.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/ViT(VisionTransformer)/train.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lately/segment_utils/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/AlexNet/model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/AlexNet/models/AlexNet.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/AlexNet/models/best.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/AlexNet/train.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/DenseNet/model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/DenseNet/models/DenseNet121.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/DenseNet/models/best.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/DenseNet/parts.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/DenseNet/train.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/EasyDNN.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/FCN/model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/GoogleNet/model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/KNN.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/Loss.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/MaskRCNN/model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/NiN/model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/NiN/train.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/RNN/LSTM.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/ResNet/logs_tensorboard/events.out.tfevents.1715260316.DESKTOP-TN0Q3C5.42108.0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/ResNet/logs_tensorboard/events.out.tfevents.1715260435.DESKTOP-TN0Q3C5.1404.0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/ResNet/logs_tensorboard/events.out.tfevents.1715260808.DESKTOP-TN0Q3C5.30564.0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/ResNet/logs_tensorboard/events.out.tfevents.1715262230.DESKTOP-TN0Q3C5.13240.0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/ResNet/model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/ResNet/models/ResNet18.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/ResNet/models/best.pt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/ResNet/train.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/TwoLayerNet.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/VGGNet/model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/VGGNet/train.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/classify_utils/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/attention/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/attention/__init__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -159,65 +64,220 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.FPN.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Image.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Inception.executor&quot;: &quot;Run&quot;,
-    &quot;Python.LSTM.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Models.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Modules.executor&quot;: &quot;Run&quot;,
-    &quot;Python.OBB.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Res2Net.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ResNeXt.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ResNet.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Transformer.executor&quot;: &quot;Run&quot;,
-    &quot;Python.__init__.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.coco.executor&quot;: &quot;Run&quot;,
-    &quot;Python.datapicker.executor&quot;: &quot;Run&quot;,
-    &quot;Python.datasets.executor&quot;: &quot;Run&quot;,
-    &quot;Python.general.executor&quot;: &quot;Run&quot;,
-    &quot;Python.interpret.executor&quot;: &quot;Run&quot;,
-    &quot;Python.learning.executor&quot;: &quot;Run&quot;,
-    &quot;Python.loss.executor&quot;: &quot;Run&quot;,
-    &quot;Python.model (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.model.executor&quot;: &quot;Run&quot;,
-    &quot;Python.modellogger.executor&quot;: &quot;Run&quot;,
-    &quot;Python.models.executor&quot;: &quot;Run&quot;,
-    &quot;Python.modules.executor&quot;: &quot;Run&quot;,
-    &quot;Python.nn.executor&quot;: &quot;Run&quot;,
-    &quot;Python.part.executor&quot;: &quot;Run&quot;,
-    &quot;Python.save.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.train.executor&quot;: &quot;Run&quot;,
-    &quot;Python.viewer3d.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;E:/Developments/PythonLearning/_legacy/Mask_RCNN-master&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.FPN.executor": "Run",
+    "Python.Image.executor": "Run",
+    "Python.Inception.executor": "Run",
+    "Python.LSTM.executor": "Run",
+    "Python.Models.executor": "Run",
+    "Python.Modules.executor": "Run",
+    "Python.OBB.executor": "Run",
+    "Python.Res2Net.executor": "Run",
+    "Python.ResNeXt.executor": "Run",
+    "Python.ResNet.executor": "Run",
+    "Python.Transformer.executor": "Run",
+    "Python.__init__.executor": "Run",
+    "Python.coco.executor": "Run",
+    "Python.datapicker.executor": "Run",
+    "Python.datasets.executor": "Run",
+    "Python.general.executor": "Run",
+    "Python.interpret.executor": "Run",
+    "Python.learning.executor": "Run",
+    "Python.loss.executor": "Run",
+    "Python.model (1).executor": "Run",
+    "Python.model.executor": "Run",
+    "Python.modellogger.executor": "Run",
+    "Python.models.executor": "Run",
+    "Python.modules.executor": "Run",
+    "Python.nn.executor": "Run",
+    "Python.part.executor": "Run",
+    "Python.save.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.train.executor": "Run",
+    "Python.viewer3d.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "E:/Developments/PythonLearning/DeepLearning",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\Developments\PythonLearning\DeepLearning\lately\DiffusionModel\figures" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\plugandplay\SENet\figures" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Developments\PythonLearning\DeepLearning\modules\multimodal\CLIP\pictures" />
+      <recent name="E:\Developments\PythonLearning\DeepLearning\modules\multimodal\CLIP" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\reproduction" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\fft\AFNO" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\fft\GFNet" />
-      <recent name="E:\Developments\PythonLearning\DeepLearning\test\3d" />
-      <recent name="E:\Developments\PythonLearning\DeepLearning\test" />
     </key>
   </component>
   <component name="RunManager">
+    <configuration default="true" type="DjangoTestsConfigurationType">
+      <module name="pythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="TARGET" value="" />
+      <option name="SETTINGS_FILE" value="" />
+      <option name="CUSTOM_SETTINGS" value="false" />
+      <option name="USE_OPTIONS" value="false" />
+      <option name="OPTIONS" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="PyBehaveRunConfigurationType" factoryName="Behave">
+      <module name="pythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="ADDITIONAL_ARGS" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="pythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="Python.FlaskServer">
+      <module name="pythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="Tox" factoryName="Tox">
+      <module name="pythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="docs" factoryName="Docutils task">
+      <module name="pythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="docutils_input_file" value="" />
+      <option name="docutils_output_file" value="" />
+      <option name="docutils_params" value="" />
+      <option name="docutils_task" value="" />
+      <option name="docutils_open_in_browser" value="false" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="docs" factoryName="Sphinx task">
+      <module name="pythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="docutils_input_file" value="" />
+      <option name="docutils_output_file" value="" />
+      <option name="docutils_params" value="" />
+      <option name="docutils_task" value="" />
+      <option name="docutils_open_in_browser" value="false" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="tests" factoryName="Autodetect">
+      <module name="pythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="tests" factoryName="Doctests">
+      <module name="pythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_SCRIPT" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="DjangoTestsConfigurationType">
       <module name="pythonProject" />
       <option name="ENV_FILES" value="" />
@@ -377,8 +437,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-1d06a55b98c1-91d5c284f522-JavaScript-PY-241.15989.155" />
-        <option value="bundled-python-sdk-babbdf50b680-7c6932dee5e4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.15989.155" />
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-PY-241.18034.82" />
+        <option value="bundled-python-sdk-975db3bf15a3-2767605e8bc2-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.18034.82" />
       </set>
     </attachedChunks>
   </component>
@@ -456,7 +516,23 @@
       <workItem from="1720170893626" duration="3519000" />
       <workItem from="1720269754138" duration="593000" />
       <workItem from="1720337801598" duration="3648000" />
-      <workItem from="1720841099841" duration="5212000" />
+      <workItem from="1720841099841" duration="6589000" />
+      <workItem from="1720938354044" duration="256000" />
+      <workItem from="1720939500608" duration="174000" />
+      <workItem from="1720941718768" duration="292000" />
+      <workItem from="1720942046093" duration="76000" />
+      <workItem from="1720942307272" duration="817000" />
+      <workItem from="1720943158431" duration="263000" />
+      <workItem from="1720943447297" duration="417000" />
+      <workItem from="1720943889445" duration="111000" />
+      <workItem from="1720946267012" duration="995000" />
+      <workItem from="1721013972634" duration="1688000" />
+      <workItem from="1721120476526" duration="4562000" />
+      <workItem from="1721136128503" duration="3727000" />
+      <workItem from="1721372707782" duration="2874000" />
+      <workItem from="1721377504516" duration="282000" />
+      <workItem from="1721377913760" duration="363000" />
+      <workItem from="1721444701648" duration="6390000" />
     </task>
     <task id="LOCAL-00001" summary="添加 MLPMixer 的网络结构代码">
       <option name="closed" value="true" />
@@ -738,7 +814,23 @@
       <option name="project" value="LOCAL" />
       <updated>1720104865201</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="1. 添加 FCANet 傅里叶变换频域通道注意力机制模块&#10;2. 整理文件架构">
+      <option name="closed" value="true" />
+      <created>1720924254863</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1720924254863</updated>
+    </task>
+    <task id="LOCAL-00037" summary="1. 添加 Lora 模块">
+      <option name="closed" value="true" />
+      <created>1720924285581</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1720924285581</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -803,8 +895,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="1. 完成 UNet 训练部分代码，图像分割训练时，掩码需要先转换成label值组成的图像，具体见./lately/segment_utils/datasets&#10;2. 修改文件夹名" />
-    <MESSAGE value="1. 训练过程和验证过程使用 tqdm 库进行进度条显示。&#10;2. 学习了怎么获取到项目的路径，numpy 和 tensor 之间的转换。&#10;3. 改进 UNet 训练代码。" />
     <MESSAGE value="1. 训练部分代码除了 VOC 数据集外，还添加了 Carvana 数据集；成功将 label 转换成 mask，mask 转换成 label。&#10;2. UNet 中添加了 bilinear 上采样。" />
     <MESSAGE value="1. 尝试写一个椭圆识别网络模型" />
     <MESSAGE value="1. 尝试训练一个椭圆识别网络模型，目前存在的问题是①不会收敛；②梯度爆炸；③网络模型需要优化，椭圆识别的问题可以转化目标检测&#10;2. 解决 tqdm 和 print 输出冲突的问题，用 tqdm.write 替代 print 输出" />
@@ -828,7 +918,9 @@
     <MESSAGE value="1. 添加 DDIM，并训练和测试模型，得出来的结果和论文中描述的相反，后面会继续修改代码。" />
     <MESSAGE value="1. 添加 GlobalFilter，傅里叶变换模块" />
     <MESSAGE value="1. 添加 AFNO 傅里叶变换模块，性能优于之前的傅里叶变换模块" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 AFNO 傅里叶变换模块，性能优于之前的傅里叶变换模块" />
+    <MESSAGE value="1. 添加 FCANet 傅里叶变换频域通道注意力机制模块&#10;2. 整理文件架构" />
+    <MESSAGE value="1. 添加 Lora 模块" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 Lora 模块" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="XDebuggerManager">
@@ -860,7 +952,7 @@
     <SUITE FILE_PATH="coverage/DeepLearning$loss.coverage" NAME="loss Coverage Results" MODIFIED="1717857075022" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork" />
     <SUITE FILE_PATH="coverage/DeepLearning$test.coverage" NAME="test Coverage Results" MODIFIED="1719642017769" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/DeepLearning$datasets.coverage" NAME="datasets Coverage Results" MODIFIED="1717566181770" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch/segment" />
-    <SUITE FILE_PATH="coverage/DeepLearning$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1720103951036" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/fft/AFNO" />
+    <SUITE FILE_PATH="coverage/DeepLearning$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1721448460668" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/multimodal/CLIP" />
     <SUITE FILE_PATH="coverage/DeepLearning$Res2Net.coverage" NAME="Res2Net Coverage Results" MODIFIED="1717518061114" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$Models.coverage" NAME="Models Coverage Results" MODIFIED="1715155425885" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/MLPMixer" />
     <SUITE FILE_PATH="coverage/DeepLearning$modellogger.coverage" NAME="modellogger Coverage Results" MODIFIED="1717740874234" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/logger" />
