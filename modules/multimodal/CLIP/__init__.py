@@ -1,10 +1,10 @@
 from typing import List
 
-import os
 import torch
 import torch.nn as nn
 import transformers
 from transformers import CLIPModel, CLIPProcessor, CLIPTokenizer, CLIPTextModel
+from utils.transformers import load_model
 
 import PIL.Image
 
@@ -18,29 +18,6 @@ import PIL.Image
 CLIP: Contrastive Language-Image Pre-training
 论文链接 2021：https://arxiv.org/abs/2103.00020
 """
-
-
-model_path = "./models/"
-
-
-def load_model(model_base, version: str = "openai/clip-vit-base-patch32"):
-    """
-    从本地加载模型，如果本地没有模型，则从 huggingface 下载模型并保存到本地
-    """
-    os.makedirs(model_path, exist_ok=True)
-    model = None
-    try:
-        # 尝试从本地加载模型
-        model = model_base.from_pretrained(model_path)
-        print(f"Model loaded from {model_path}")
-    finally:
-        # 如果本地没有模型，则从 huggingface 下载模型并保存到本地
-        if model is None:
-            model = model_base.from_pretrained(version)
-            model.save_pretrained(model_path)
-            print(f"Model loaded from hugggingface: {version}")
-
-    return model
 
 
 class CLIP(nn.Module):

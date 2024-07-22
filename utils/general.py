@@ -109,7 +109,51 @@ def get_value(value):
 
 
 class Trainer:
+    """
+    范例代码：
+    从原本的：
+    dataset_size = len(train_loader.dataset)
+    dataset_batches = len(train_loader)
+    batch_size = math.ceil(dataset_size / dataset_batches)
+    for epoch in range(1, num_epochs + 1):
+        total_loss = 0.
+        num_items = 0
+        for (i, (x, y)) in enumerate(data_loader):
+            x = x.to(device)
+
+            loss = criterion(x, y)
+            optimizer.zero_grad()
+            loss.backward()
+
+            optimizer.step()
+            total_loss += loss.item()
+            num_items += batch_size
+
+        print(f"Average Loss: {total_loss / dataset_batches:5f}")
+        torch.save(score_model.state_dict(), "ckpt.pth")
+
+    改为：
+    trainer = Trainer(data_loader, optimizer)
+    manager = Manager(score_model, device)
+    for epoch in range(1, num_epochs + 1):
+        datas = trainer.start(epoch)
+        sde_model.train()
+        for (i, (x, y)) in datas:
+            x = x.to(device)
+
+            predict, loss = trainer.predict(sde_model, x, y, sde_model.loss_func)  # 预测和计算损失
+            trainer.backward(loss)  # 反向传播
+            trainer.step(i, loss)   # 更新参数
+
+        trainer.end()
+    """
     def __init__(self, train_loader, optimizer, **kwargs):
+        """
+        Args:
+            train_loader: 训练数据集
+            optimizer: 优化器
+            **kwargs: 包括 writer_enabled, writer, scaler，不设置 writer 时，默认使用当前时间作为 writer 名称
+        """
         self.min_loss = None
         self.max_loss = None
         self.train_loader = train_loader
@@ -121,6 +165,12 @@ class Trainer:
         self.scaler = GradScaler() if kwargs.get('scaler', None) is None else kwargs['scaler']
 
     def __call__(self, epoch, **kwargs):
+        """
+        初始化训练过程，包括记录训练信息，初始化进度条等
+        Args:
+            epoch: 训练轮数
+            **kwargs: 包括 scheduler
+        """
         self.min_loss = float('inf')
         self.max_loss = float('-inf')
         self.total_loss = 0.
@@ -143,6 +193,11 @@ class Trainer:
         return datas
 
     def start(self, epoch, **kwargs):
+        """
+        Args:
+            epoch: 训练轮数
+            **kwargs: 包括 scheduler
+        """
         return self.__call__(epoch, **kwargs)
 
     def backward(self, loss, **kwargs):
@@ -235,6 +290,11 @@ class Trainer:
 
 class Validator:
     def __init__(self, test_loader, **kwargs):
+        """
+        Args:
+            test_loader: 测试数据集
+            **kwargs: 包括 writer_enabled, writer，不设置 writer 时，默认使用当前时间作为 writer 名称
+        """
         self.test_loader = test_loader
 
         self.writer_enabled = kwargs.get('writer_enabled', True)
@@ -326,6 +386,12 @@ class Validator:
 
 class Manager:
     def __init__(self, model, device, **kwargs):
+        """
+        Args:
+            model: 模型
+            device: 设备
+            **kwargs: 包括 optimizer, writer，不设置 writer 时，默认使用当前时间作为 writer 名称
+        """
         self.best_accuracy = 0.
         self.last_accuracy = 0.
         self.model = model

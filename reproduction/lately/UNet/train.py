@@ -12,7 +12,7 @@ from utils.tensorboard import *
 
 from model import (UNet, UNetCustom)
 from model import (UNet_custom_light)
-from lately.segment_utils import get_transform, train_and_validate
+from ..segment_utils import get_transform, train_and_validate
 from utils.torch import *
 from utils.torch.segment.datasets import CarvanaDataset, VOCSegmentationDataset
 

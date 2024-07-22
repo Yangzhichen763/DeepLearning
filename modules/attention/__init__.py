@@ -2,6 +2,7 @@ import torch
 import torchvision.datasets.voc
 from torch import nn
 import torch.nn.functional as F
+from torch.nn import init
 
 from utils.logger.modellogger import *
 
@@ -176,6 +177,42 @@ class MultiheadAttention(nn.Module):
         q = q.permute(0, 2, 1, 3).contiguous().view(batch_size, -1, dimension)
         q = self.dropout(self.weight_combine(q))
         return q, attention
+
+
+class VisionAttention(nn.Module):
+    def __init__(self, d_model: int):
+        super().__init__()
+        self.weight_Q = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
+        self.weight_K = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
+        self.weight_V = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
+        self.weight_Output = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
+        self.initialize()
+
+        self.attention = ScaledDotProductAttention(temperature=d_model ** 0.5, dropout=0)
+
+    def initialize(self):
+        for module in [self.weight_Q, self.weight_K, self.weight_V, self.weight_Output]:
+            init.xavier_uniform_(module.weight)
+            init.zeros_(module.bias)
+        init.xavier_uniform_(self.weight_Output.weight, gain=1e-5)
+
+    # noinspection PyPep8Naming
+    def forward(self, x):
+        B, C, H, W = x.shape
+        # [B, C, H, W] -> [B, H, W, C] -> [B, H*W, C]
+        # 先 permute 或者 transpose 再 view 需要注意是否会影响 view ，否则要在中间添加 contiguous
+        q = self.weight_Q(x).permute(0, 2, 3, 1).view(B, H * W, C)
+        k = self.weight_K(x).permute(0, 2, 3, 1).view(B, H * W, C)
+        v = self.weight_V(x).permute(0, 2, 3, 1).view(B, H * W, C)
+
+        # 计算注意力权重
+        output, attention = self.attention(q, k, v)
+
+        # [B, HxW, C] -> [B, H, W, C] -> [B, C, H, W]
+        output = output.view(B, H, W, C).permute(0, 3, 1, 2)
+        output = self.weight_Output(output)
+
+        return x + output, attention
 
 
 if __name__ == '__main__':

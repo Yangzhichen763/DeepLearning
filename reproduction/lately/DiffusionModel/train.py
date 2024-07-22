@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
-from reproduction.lately.DiffusionModel.interpret import linear
+from modules.diffusion.interpret import linear
 from lossFunc.WeightedLoss import WeightedL2Loss
 from model import DDPMSampler, GaussianDiffusionTrainer, DDIMSampler
 from reproduction.lately.DiffusionModel.modules import UNet

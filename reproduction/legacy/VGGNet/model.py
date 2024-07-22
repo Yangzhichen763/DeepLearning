@@ -9,7 +9,7 @@ class VGG(nn.Module):
     团队主页：https://www.robots.ox.ac.uk/~vgg/research/very_deep/
     """
 
-    def __init__(self, feature_layers, num_features=4096, num_classes=1000):
+    def __init__(self, feature_layers, num_features=4096, num_classes=1000, init_weights=True):
         """
         :param feature_layers: VGG 网络特征层的结构
         :param num_classes: 分类个数
@@ -29,12 +29,28 @@ class VGG(nn.Module):
             nn.Linear(num_features, num_classes),           # 全连接到分类结果
         )
 
+        if init_weights:
+            self.initialize()
+
     def forward(self, x):
         x = self.feature_layers(x)      # 特征提取，根据不同的 Configuration 选取不同的网络结构
         x = self.avg_pool(x)            # 全连接层前的池化
         x = self.flattener(x)           # 将张量维度压平到一维，以便全连接层计算
         x = self.classifier(x)          # 全连接层以及分类
         return x
+
+    def initialize(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                nn.init.constant_(m.bias, 0)
 
 
 # VGG 的网络结构配置

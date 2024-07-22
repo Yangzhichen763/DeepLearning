@@ -3,27 +3,10 @@ import torch.nn as nn
 from tqdm import tqdm
 
 from lossFunc.WeightedLoss import *
-from interpret import *
+from modules.diffusion.interpret import *
+from utils.torch import extract
 
 import enum
-
-
-def extract(a, t, x_shape):
-    """
-    将 a 按照 t 进行切片，并将切片后的结果展平为 shape=[batch_size, 1, 1, 1, ...]
-    Args:
-        a (torch.Tensor):
-        t (torch.Tensor | int):
-        x_shape (tuple|torch.Size):
-    """
-    if isinstance(t, torch.Tensor):
-        out = a.gather(dim=-1, index=t)
-        return out.view(x_shape[0], *((1,) * (len(x_shape) - 1)))
-    elif isinstance(t, int):
-        out = a[t]
-        return out.repeat(x_shape[0], *((1,) * (len(x_shape) - 1)))
-    else:
-        raise ValueError("t must be int or tensor")
 
 
 class SamplingType(enum.Enum):
@@ -145,8 +128,10 @@ class GaussianDiffusionTrainer(GaussianDiffusionBase):
         if sampling_type == SamplingType.ANTITHETIC:
             t = torch.randint(0, self.t, size=(batch_size // 2 + 1,), device=x_0.device)
             t = torch.cat([t, self.t - t - 1], dim=0)[:batch_size]
-        else:  # sampling_type == SamplingType.STOCHASTIC:
+        elif sampling_type == SamplingType.STOCHASTIC:
             t = torch.randint(0, self.t, size=(batch_size,), device=x_0.device)
+        else:
+            raise NotImplementedError(f"Not implemented sampling_type: {sampling_type}")
 
         # 计算前向传播第 t 步的预测图像
         noise = torch.randn_like(x_0)

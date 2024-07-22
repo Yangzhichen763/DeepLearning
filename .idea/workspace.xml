@@ -4,11 +4,29 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 Lora 模块">
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 Swish 激活函数&#10;2. 添加从 huggingface 中下载预训练模型的代码，以及从 modelscope（镜像）下载预训练模型的代码">
+      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/modules/diffusion/DDIM/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/modules/diffusion/DDPM/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/modules/diffusion/ScoreSDEs/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/modules/diffusion/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/ScoreSDEs/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/ScoreSDEs/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/ScoreSDEs/modules.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/reproduction/lately/ScoreSDEs/train.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/modules/attention/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/attention/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/embedding/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/embedding/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/multimodal/CLIP/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/multimodal/CLIP/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/interpret.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/diffusion/interpret.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/modules.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/modules.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproduction/lately/DiffusionModel/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reproduction/lately/UNet/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproduction/lately/UNet/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reproduction/lately/UNet/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproduction/lately/UNet/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reproduction/legacy/VGGNet/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproduction/legacy/VGGNet/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/general.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/general.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/torch/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/torch/__init__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,51 +82,51 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.FPN.executor": "Run",
-    "Python.Image.executor": "Run",
-    "Python.Inception.executor": "Run",
-    "Python.LSTM.executor": "Run",
-    "Python.Models.executor": "Run",
-    "Python.Modules.executor": "Run",
-    "Python.OBB.executor": "Run",
-    "Python.Res2Net.executor": "Run",
-    "Python.ResNeXt.executor": "Run",
-    "Python.ResNet.executor": "Run",
-    "Python.Transformer.executor": "Run",
-    "Python.__init__.executor": "Run",
-    "Python.coco.executor": "Run",
-    "Python.datapicker.executor": "Run",
-    "Python.datasets.executor": "Run",
-    "Python.general.executor": "Run",
-    "Python.interpret.executor": "Run",
-    "Python.learning.executor": "Run",
-    "Python.loss.executor": "Run",
-    "Python.model (1).executor": "Run",
-    "Python.model.executor": "Run",
-    "Python.modellogger.executor": "Run",
-    "Python.models.executor": "Run",
-    "Python.modules.executor": "Run",
-    "Python.nn.executor": "Run",
-    "Python.part.executor": "Run",
-    "Python.save.executor": "Run",
-    "Python.test.executor": "Run",
-    "Python.train.executor": "Run",
-    "Python.viewer3d.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "E:/Developments/PythonLearning/DeepLearning",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.FPN.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Image.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Inception.executor&quot;: &quot;Run&quot;,
+    &quot;Python.LSTM.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Models.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Modules.executor&quot;: &quot;Run&quot;,
+    &quot;Python.OBB.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Res2Net.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ResNeXt.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ResNet.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Transformer.executor&quot;: &quot;Run&quot;,
+    &quot;Python.__init__.executor&quot;: &quot;Run&quot;,
+    &quot;Python.coco.executor&quot;: &quot;Run&quot;,
+    &quot;Python.datapicker.executor&quot;: &quot;Run&quot;,
+    &quot;Python.datasets.executor&quot;: &quot;Run&quot;,
+    &quot;Python.general.executor&quot;: &quot;Run&quot;,
+    &quot;Python.interpret.executor&quot;: &quot;Run&quot;,
+    &quot;Python.learning.executor&quot;: &quot;Run&quot;,
+    &quot;Python.loss.executor&quot;: &quot;Run&quot;,
+    &quot;Python.model (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.modellogger.executor&quot;: &quot;Run&quot;,
+    &quot;Python.models.executor&quot;: &quot;Run&quot;,
+    &quot;Python.modules.executor&quot;: &quot;Run&quot;,
+    &quot;Python.nn.executor&quot;: &quot;Run&quot;,
+    &quot;Python.part.executor&quot;: &quot;Run&quot;,
+    &quot;Python.save.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.viewer3d.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/Developments/PythonLearning/DeepLearning&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.fonts.default&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\Developments\PythonLearning\DeepLearning\lately\DiffusionModel\figures" />
@@ -533,6 +551,7 @@
       <workItem from="1721377504516" duration="282000" />
       <workItem from="1721377913760" duration="363000" />
       <workItem from="1721444701648" duration="6390000" />
+      <workItem from="1721658337265" duration="2061000" />
     </task>
     <task id="LOCAL-00001" summary="添加 MLPMixer 的网络结构代码">
       <option name="closed" value="true" />

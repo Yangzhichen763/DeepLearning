@@ -5,28 +5,29 @@ from torch import nn
 from torch.nn import init
 from torch.nn import functional as F
 
-
-class Swish(nn.Module):
-    def forward(self, x):
-        return x * torch.sigmoid(x)
+from modules.attention import VisionAttention
+from modules.activation import Swish
 
 
-class TimeEmbedding(nn.Module):
-    def __init__(self, T, d_model, dim):
-        assert d_model % 2 == 0
+class TimeEmbeddingProjection(nn.Module):
+    """
+    Time embedding projection module.
+    """
+    # noinspection PyPep8Naming
+    def __init__(self, T, embedding_dim, dim):
+        assert embedding_dim % 2 == 0
         super().__init__()
-        emb = torch.arange(0, d_model, step=2) / d_model * math.log(10000)
-        emb = torch.exp(-emb)
-        pos = torch.arange(T).float()
-        emb = pos[:, None] * emb[None, :]
-        assert list(emb.shape) == [T, d_model // 2]
-        emb = torch.stack([torch.sin(emb), torch.cos(emb)], dim=-1)
-        assert list(emb.shape) == [T, d_model // 2, 2]
-        emb = emb.view(T, d_model)
+        position = torch.arange(T).float()                  # [T]
+        embedding = torch.exp(
+            torch.arange(0, embedding_dim, step=2)
+            / embedding_dim * math.log(10000)
+        )                                                   # [d_model // 2]
+        embedding = position[:, None] * embedding[None, :]  # [T, 1] * [1, d_model // 2] -> [T, d_model // 2]
+        embedding = torch.cat([torch.sin(embedding), torch.cos(embedding)], dim=-1)
 
-        self.timembedding = nn.Sequential(
-            nn.Embedding.from_pretrained(emb),
-            nn.Linear(d_model, dim),
+        self.time_embedding = nn.Sequential(
+            nn.Embedding.from_pretrained(embedding),
+            nn.Linear(embedding_dim, dim),
             Swish(),
             nn.Linear(dim, dim),
         )
@@ -39,21 +40,21 @@ class TimeEmbedding(nn.Module):
                 init.zeros_(module.bias)
 
     def forward(self, t):
-        emb = self.timembedding(t)
-        return emb
+        embedding = self.time_embedding(t)
+        return embedding
 
 
 class DownSample(nn.Module):
-    def __init__(self, in_ch):
+    def __init__(self, channels):
         super().__init__()
-        self.main = nn.Conv2d(in_ch, in_ch, 3, stride=2, padding=1)
+        self.main = nn.Conv2d(channels, channels, 3, stride=2, padding=1)
         self.initialize()
 
     def initialize(self):
         init.xavier_uniform_(self.main.weight)
         init.zeros_(self.main.bias)
 
-    def forward(self, x, temb):
+    def forward(self, x, time_embedding):
         x = self.main(x)
         return x
 
@@ -76,68 +77,43 @@ class UpSample(nn.Module):
         return x
 
 
-class AttnBlock(nn.Module):
-    def __init__(self, in_ch):
+class AttentionBlock(nn.Module):
+    def __init__(self, d_model):
         super().__init__()
-        self.group_norm = nn.GroupNorm(32, in_ch)
-        self.proj_q = nn.Conv2d(in_ch, in_ch, 1, stride=1, padding=0)
-        self.proj_k = nn.Conv2d(in_ch, in_ch, 1, stride=1, padding=0)
-        self.proj_v = nn.Conv2d(in_ch, in_ch, 1, stride=1, padding=0)
-        self.proj = nn.Conv2d(in_ch, in_ch, 1, stride=1, padding=0)
-        self.initialize()
-
-    def initialize(self):
-        for module in [self.proj_q, self.proj_k, self.proj_v, self.proj]:
-            init.xavier_uniform_(module.weight)
-            init.zeros_(module.bias)
-        init.xavier_uniform_(self.proj.weight, gain=1e-5)
+        self.group_norm = nn.GroupNorm(32, d_model)
+        self.attention = VisionAttention(d_model)
 
     def forward(self, x):
-        B, C, H, W = x.shape
-        h = self.group_norm(x)
-        q = self.proj_q(h)
-        k = self.proj_k(h)
-        v = self.proj_v(h)
+        x_norm = self.group_norm(x)
+        output, attention = self.attention(x_norm)
 
-        q = q.permute(0, 2, 3, 1).view(B, H * W, C)
-        k = k.view(B, C, H * W)
-        w = torch.bmm(q, k) * (int(C) ** (-0.5))
-        assert list(w.shape) == [B, H * W, H * W]
-        w = F.softmax(w, dim=-1)
-
-        v = v.permute(0, 2, 3, 1).view(B, H * W, C)
-        h = torch.bmm(w, v)
-        assert list(h.shape) == [B, H * W, C]
-        h = h.view(B, H, W, C).permute(0, 3, 1, 2)
-        h = self.proj(h)
-
-        return x + h
+        return x + output
 
 
 class ResBlock(nn.Module):
-    def __init__(self, in_ch, out_ch, tdim, dropout, attn=False):
+    def __init__(self, in_channels, out_channels, tdim, dropout, attn=False):
         super().__init__()
         self.block1 = nn.Sequential(
-            nn.GroupNorm(32, in_ch),
+            nn.GroupNorm(32, in_channels),
             Swish(),
-            nn.Conv2d(in_ch, out_ch, 3, stride=1, padding=1),
+            nn.Conv2d(in_channels, out_channels, 3, stride=1, padding=1),
         )
-        self.temb_proj = nn.Sequential(
+        self.time_embedding_projection = nn.Sequential(
             Swish(),
-            nn.Linear(tdim, out_ch),
+            nn.Linear(tdim, out_channels),
         )
         self.block2 = nn.Sequential(
-            nn.GroupNorm(32, out_ch),
+            nn.GroupNorm(32, out_channels),
             Swish(),
             nn.Dropout(dropout),
-            nn.Conv2d(out_ch, out_ch, 3, stride=1, padding=1),
+            nn.Conv2d(out_channels, out_channels, 3, stride=1, padding=1),
         )
-        if in_ch != out_ch:
-            self.shortcut = nn.Conv2d(in_ch, out_ch, 1, stride=1, padding=0)
+        if in_channels != out_channels:
+            self.shortcut = nn.Conv2d(in_channels, out_channels, 1, stride=1, padding=0)
         else:
             self.shortcut = nn.Identity()
         if attn:
-            self.attn = AttnBlock(out_ch)
+            self.attn = AttentionBlock(out_channels)
         else:
             self.attn = nn.Identity()
         self.initialize()
@@ -151,7 +127,7 @@ class ResBlock(nn.Module):
 
     def forward(self, x, temb):
         h = self.block1(x)
-        h += self.temb_proj(temb)[:, :, None, None]
+        h += self.time_embedding_projection(temb)[:, :, None, None]
         h = self.block2(h)
 
         h = h + self.shortcut(x)
@@ -164,7 +140,7 @@ class UNet(nn.Module):
         super().__init__()
         assert all([i < len(ch_mult) for i in attn]), 'attn index out of bound'
         tdim = ch * 4
-        self.time_embedding = TimeEmbedding(t, ch, tdim)
+        self.time_embedding = TimeEmbeddingProjection(t, ch, tdim)
 
         self.head = nn.Conv2d(3, ch, kernel_size=3, stride=1, padding=1)
         self.downblocks = nn.ModuleList()
@@ -174,7 +150,7 @@ class UNet(nn.Module):
             out_ch = ch * mult
             for _ in range(num_res_blocks):
                 self.downblocks.append(ResBlock(
-                    in_ch=now_ch, out_ch=out_ch, tdim=tdim,
+                    in_channels=now_ch, out_channels=out_ch, tdim=tdim,
                     dropout=dropout, attn=(i in attn)))
                 now_ch = out_ch
                 chs.append(now_ch)
@@ -192,7 +168,7 @@ class UNet(nn.Module):
             out_ch = ch * mult
             for _ in range(num_res_blocks + 1):
                 self.upblocks.append(ResBlock(
-                    in_ch=chs.pop() + now_ch, out_ch=out_ch, tdim=tdim,
+                    in_channels=chs.pop() + now_ch, out_channels=out_ch, tdim=tdim,
                     dropout=dropout, attn=(i in attn)))
                 now_ch = out_ch
             if i != 0:

@@ -1,4 +1,4 @@
-from lately.UNet.parts import *
+from .parts import *
 
 from utils.logger import *
 
@@ -70,27 +70,27 @@ class UNetBilinear(nn.Module):
 
 
 class UNetCustom(nn.Module):
-    def __init__(self, in_channels, num_classes, features=None):
+    def __init__(self, in_channels, num_classes, feature_dims=None):
         """
         Args:
             in_channels (int):
             num_classes (int):
-            features (list): 输入的参数有 n 个，则会进行 n - 1 次下采样和上采样
+            feature_dims (list): 输入的参数有 n 个，则会进行 n - 1 次下采样和上采样
         """
         super(UNetCustom, self).__init__()
-        if features is None:
-            features = [64, 128, 256, 512, 1024]
-        self.in_conv = InConv(in_channels, features[0])
+        if feature_dims is None:
+            feature_dims = [64, 128, 256, 512, 1024]
+        self.in_conv = InConv(in_channels, feature_dims[0])
         self.down_convs = nn.ModuleList()
         self.up_convs = nn.ModuleList()
-        self.out_conv = OutConv(features[0], num_classes)
+        self.out_conv = OutConv(feature_dims[0], num_classes)
 
-        in_channels = features[0]
-        for feature in features[1:]:
+        in_channels = feature_dims[0]
+        for feature in feature_dims[1:]:
             self.down_convs.append(Down(in_channels, feature))
             in_channels = feature
 
-        for feature in reversed(features[:-1]):
+        for feature in reversed(feature_dims[:-1]):
             self.up_convs.append(Up(in_channels, feature))
             in_channels = feature
 
@@ -153,7 +153,7 @@ def UNet_custom_light(num_classes=21, bilinear=True):
     if bilinear:
         return UNetBilinearCustom(3, num_classes, features=[4, 8, 16, 32, 64])
     else:
-        return UNetCustom(3, num_classes, features=[4, 8, 16, 32, 64])
+        return UNetCustom(3, num_classes, feature_dims=[4, 8, 16, 32, 64])
 
 
 if __name__ == '__main__':

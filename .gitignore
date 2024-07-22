@@ -13,6 +13,8 @@
 **/logs*/
 **/datas/
 **/figures/
+**/pictures/
+**/models/
 *.png
 *.jpg
 *.jpeg
