@@ -4,7 +4,7 @@ from torch import nn
 import torch.nn.functional as F
 from torch.nn import init
 
-from utils.logger.modellogger import *
+from utils.log.model import *
 
 
 """

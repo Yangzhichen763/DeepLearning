@@ -79,8 +79,8 @@ class GaussianDiffusionBase(nn.Module):
             得 x_0=\frac{x_t-\sqrt{1-\bar\alpha_t}\epsilon_0}{\sqrt{\bar\alpha_t}}
         """
         return (
-            extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t
-            - extract(self.sqrt_recipm1_alphas_bar, t, x_t.shape) * pred_noise
+            extract(self.sqrt_recip_alphas_cumprod, t, x_t) * x_t
+            - extract(self.sqrt_recipm1_alphas_bar, t, x_t) * pred_noise
         )
 
     def predict_xt(self, x_0, t, noise):
@@ -90,8 +90,8 @@ class GaussianDiffusionBase(nn.Module):
             x_t=\sqrt{\bar\alpha_t}x_0+\sqrt{1-\bar\alpha_t}\epsilon_0
         """
         return (
-            extract(self.sqrt_alphas_cumprod, t, x_0.shape) * x_0
-            + extract(self.sqrt_one_minus_alphas_cumprod, t, x_0.shape) * noise
+            extract(self.sqrt_alphas_cumprod, t, x_0) * x_0
+            + extract(self.sqrt_one_minus_alphas_cumprod, t, x_0) * noise
         )
 
 
@@ -188,8 +188,8 @@ class DDPMSampler(GaussianDiffusionBase):
         # 已知 x_t 和 pred_noise 预测 x_t-1 的均值
         def predict_xt_prev_mean_from_noise(pred_noise):
             return (
-                extract(self.posterior_mean_coeff_xt, time_step, x_t.shape) * x_t
-                - extract(self.posterior_mean_coeff_eps, time_step, x_t.shape) * pred_noise
+                extract(self.posterior_mean_coeff_xt, time_step, x_t) * x_t
+                - extract(self.posterior_mean_coeff_eps, time_step, x_t) * pred_noise
             )
 
         def q_mean_std(x_0):
@@ -209,11 +209,11 @@ class DDPMSampler(GaussianDiffusionBase):
             """
             # 后验均值
             posterior_mean = (
-                extract(self.posterior_mean_coeff_x0, time_step, x_t.shape) * x_0
-                + extract(self.posterior_mean_coeff_xt, time_step, x_t.shape) * x_t
+                extract(self.posterior_mean_coeff_x0, time_step, x_t) * x_0
+                + extract(self.posterior_mean_coeff_xt, time_step, x_t) * x_t
             )
             # 后验方差
-            posterior_std = extract(self.sigma, time_step, x_t.shape)
+            posterior_std = extract(self.sigma, time_step, x_t)
             return posterior_mean, posterior_std
 
         # 已知 x_t 和 pred_noise 得到 x_0，再通过 x_t 和 x_0 预测 x_t-1 的均值和标准差
@@ -234,7 +234,7 @@ class DDPMSampler(GaussianDiffusionBase):
             pred_noise = self.model(x_t, t)                             # 预测的噪声
             xt_prev_mean = predict_xt_prev_mean_from_noise(pred_noise)  # 根据原始噪声 (x_t) 和 pred_noise 预测 x_{t-1}
 
-            xt_prev_std = extract(self.sigma, time_step, x_t.shape)
+            xt_prev_std = extract(self.sigma, time_step, x_t)
             return xt_prev_mean, xt_prev_std
 
         get_mean_std = p_mean_std_accelerate if self.accelerate else p_mean_std
@@ -313,8 +313,8 @@ class DDIMSampler(GaussianDiffusionBase):
         # 已知 x_t 和 pred_noise 预测 x_t-1 的均值
         def predict_xt_prev_mean_from_noise(pred_noise):
             return (
-                extract(self.posterior_mean_coeff_xt, time_step, x_t.shape) * x_t
-                + extract(self.posterior_mean_coeff_eps, time_step, x_t.shape) * pred_noise
+                extract(self.posterior_mean_coeff_xt, time_step, x_t) * x_t
+                + extract(self.posterior_mean_coeff_eps, time_step, x_t) * pred_noise
             )
 
         def q_mean_std(x_0, pred_noise):
@@ -334,11 +334,11 @@ class DDIMSampler(GaussianDiffusionBase):
             """
             # 后验均值
             posterior_mean = (
-                extract(self.posterior_mean_coeff_x0, time_step, x_t.shape) * x_0
-                + extract(self.posterior_mean_coeff_eps, time_step, x_t.shape) * pred_noise  # direction pointing to x_t
+                extract(self.posterior_mean_coeff_x0, time_step, x_t) * x_0
+                + extract(self.posterior_mean_coeff_eps, time_step, x_t) * pred_noise  # direction pointing to x_t
             )
             # 后验标准差
-            posterior_std = extract(self.sigma, time_step, x_t.shape)
+            posterior_std = extract(self.sigma, time_step, x_t)
             return posterior_mean, posterior_std
 
         # 已知 x_t 和 pred_noise 得到 x_0，再通过 pred_noise 和 x_0 预测 x_t-1 的均值和标准差
@@ -356,7 +356,7 @@ class DDIMSampler(GaussianDiffusionBase):
             pred_noise = self.model(x_t, t)                              # 预测的噪声
             xt_prev_mean = predict_xt_prev_mean_from_noise(pred_noise)   # 根据原始噪声 (x_t) 和 pred_noise 预测 x_{t-1}
 
-            xt_prev_std = extract(self.sigma, time_step, x_t.shape)
+            xt_prev_std = extract(self.sigma, time_step, x_t)
             return xt_prev_mean, xt_prev_std
 
         get_mean_std = p_mean_std_accelerate if self.accelerate else p_mean_std

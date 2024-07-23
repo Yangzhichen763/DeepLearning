@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from utils.logger.modellogger import log_model_params
+from utils.log.model import log_model_params
 
 
 """

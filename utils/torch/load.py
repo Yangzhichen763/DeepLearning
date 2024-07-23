@@ -1,5 +1,7 @@
 import torch
 
+from utils.log.info import print_
+
 
 def from_model(model, device, load_path=None, file_name=None):
     """
@@ -19,6 +21,6 @@ def from_model(model, device, load_path=None, file_name=None):
             else:
                 load_path = f"./models/{file_name}.pt"
 
-    print(f"Loading model from {load_path}...", end="")
+    print_(f"Loading model from {load_path}...", end="")
     model.load_state_dict(torch.load(load_path, map_location=device))
-    print(f"\rModel {load_path} loaded.")
+    print_(f"\rModel {load_path} loaded.")

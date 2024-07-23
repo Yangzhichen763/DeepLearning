@@ -1,6 +1,8 @@
 import os.path
 from . import model_dir, local_cache_dir
 
+from utils.log.info import print_
+
 
 def download_model_using_modelscope(model_id='LLM-Research/Meta-Llama-3-8B', local_dir=model_dir):
     from modelscope import snapshot_download
@@ -20,10 +22,10 @@ def download_model_using_modelscope(model_id='LLM-Research/Meta-Llama-3-8B', loc
                                   "*.h5", "*.ot"],
                               )
         except Exception as e:
-            print(e)
-            print("尝试重新下载...")
+            print_(e)
+            print_("尝试重新下载...")
         else:
-            print(f'{model_id} 模型下载完成')
+            print_(f'{model_id} 模型下载完成')
             break
 
 
@@ -55,10 +57,10 @@ def download_model_using_huggingface_hub(repo_id='meta-llama/Meta-Llama-3-8B', l
                                                "*.h5", "*.ot", ],
                               )
         except Exception as e:
-            print(e)
-            print("尝试重新下载...")
+            print_(e)
+            print_("尝试重新下载...")
         else:
-            print(f"{repo_id} 模型下载完成")
+            print_(f"{repo_id} 模型下载完成")
             break
 
 

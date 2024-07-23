@@ -1,5 +1,7 @@
 import torch
 
+from utils.log.info import print_
+
 
 def flatten_(self, start_dim=0, end_dim=-1):
     """
@@ -21,4 +23,4 @@ torch.Tensor.flatten_ = flatten_
 
 if __name__ == '__main__':
     x = torch.randn(2, 3, 4, 5)
-    print(x.flatten_(start_dim=-4, end_dim=-2).shape)
+    print_(x.flatten_(start_dim=-4, end_dim=-2).shape)

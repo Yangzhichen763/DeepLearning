@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from torchvision.models import resnet18
-from utils.logger import *
+from utils.log import *
 from modules.residual import ResNetEncoder, ResNeXtEncoder, BasicBlock, Bottleneck
 from modules.fpn import FeaturePyramidNetwork
 

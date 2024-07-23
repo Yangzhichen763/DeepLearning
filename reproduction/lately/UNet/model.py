@@ -1,6 +1,6 @@
 from .parts import *
 
-from utils.logger import *
+from utils.log import *
 
 
 class UNet(nn.Module):

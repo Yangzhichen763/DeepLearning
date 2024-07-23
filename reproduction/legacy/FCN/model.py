@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from utils.logger.modellogger import *
+from utils.log.model import *
 
 
 def make_feature_layers(in_channels, out_channels, num_layers):

@@ -6,7 +6,7 @@ import flax.linen as nn2
 import jax
 import jax.numpy as jnp
 
-import utils.logger.modellogger
+import utils.log.model
 
 
 def calculate_num_patches(input_shape, patch_size):

@@ -63,8 +63,8 @@ class DDPMBase(nn.Module):
             得 x_0=\frac{x_t-\sqrt{1-\bar\alpha_t}\epsilon_0}{\sqrt{\bar\alpha_t}}
         """
         return (
-            extract(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t
-            - extract(self.sqrt_recipm1_alphas_bar, t, x_t.shape) * pred_noise
+            extract(self.sqrt_recip_alphas_cumprod, t, x_t) * x_t
+            - extract(self.sqrt_recipm1_alphas_bar, t, x_t) * pred_noise
         )
 
     def predict_xt(self, x_0, t, noise):
@@ -74,8 +74,8 @@ class DDPMBase(nn.Module):
             x_t=\sqrt{\bar\alpha_t}x_0+\sqrt{1-\bar\alpha_t}\epsilon_0
         """
         return (
-            extract(self.sqrt_alphas_cumprod, t, x_0.shape) * x_0
-            + extract(self.sqrt_one_minus_alphas_cumprod, t, x_0.shape) * noise
+            extract(self.sqrt_alphas_cumprod, t, x_0) * x_0
+            + extract(self.sqrt_one_minus_alphas_cumprod, t, x_0) * noise
         )
 
 
@@ -177,11 +177,11 @@ class DDPMSampler(DDPMBase):
             """
             # 后验均值
             posterior_mean = (
-                extract(self.posterior_mean_coeff_x0, time_step, x_t.shape) * x_0
-                + extract(self.posterior_mean_coeff_xt, time_step, x_t.shape) * x_t
+                extract(self.posterior_mean_coeff_x0, time_step, x_t) * x_0
+                + extract(self.posterior_mean_coeff_xt, time_step, x_t) * x_t
             )
             # 后验方差
-            posterior_std = extract(self.sigma, time_step, x_t.shape)
+            posterior_std = extract(self.sigma, time_step, x_t)
             return posterior_mean, posterior_std
 
         # 已知 x_t 和 pred_noise 得到 x_0，再通过 x_t 和 x_0 预测 x_t-1 的均值和标准差

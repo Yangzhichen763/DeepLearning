@@ -1,7 +1,7 @@
 from utils.tensorboard import *
 
 from model import (ResNet18, ResNet34, ResNet50, ResNet101, ResNet152)
-from legacy.classify_utils import get_transform, train_and_validate
+from ..classify_utils import get_transform, train_and_validate
 from utils.torch import *
 
 

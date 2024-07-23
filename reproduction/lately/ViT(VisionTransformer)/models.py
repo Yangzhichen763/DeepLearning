@@ -76,5 +76,5 @@ if __name__ == '__main__':
     y_pred = model(x_input)
     print(y_pred.shape)
 
-    # classify_utils.logger.log_model_params(model, x_input.shape)
+    # classify_utils.log.log_model_params(model, x_input.shape)
 

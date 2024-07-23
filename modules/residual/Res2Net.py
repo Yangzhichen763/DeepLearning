@@ -4,7 +4,7 @@ import torch.utils.model_zoo as model_zoo
 import torch
 import torch.nn.functional as F
 
-from utils.logger import log_model_params
+from utils.log import log_model_params
 
 
 """

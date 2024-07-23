@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from utils.torch.nn import flatten_     # flatten_ 相当于 view，但是更加灵活
 
-from utils.logger.modellogger import log_model_params
+from utils.log.model import log_model_params
 
 
 """

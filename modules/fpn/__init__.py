@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn import functional as F
 
 
-from utils.logger.modellogger import *
+from utils.log.model import *
 
 
 class FeaturePyramidNetwork(nn.Module):

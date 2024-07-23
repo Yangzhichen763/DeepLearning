@@ -80,11 +80,11 @@ class DDIMSampler(DDPMBase):
             """
             # 后验均值
             posterior_mean = (
-                extract(self.posterior_mean_coeff_x0, time_step, x_t.shape) * x_0
-                + extract(self.posterior_mean_coeff_eps, time_step, x_t.shape) * pred_noise  # direction pointing to x_t
+                extract(self.posterior_mean_coeff_x0, time_step, x_t) * x_0
+                + extract(self.posterior_mean_coeff_eps, time_step, x_t) * pred_noise  # direction pointing to x_t
             )
             # 后验标准差
-            posterior_std = extract(self.sigma, time_step, x_t.shape)
+            posterior_std = extract(self.sigma, time_step, x_t)
             return posterior_mean, posterior_std
 
         # 已知 x_t 和 pred_noise 得到 x_0，再通过 pred_noise 和 x_0 预测 x_t-1 的均值和标准差

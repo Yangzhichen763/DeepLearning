@@ -15,7 +15,7 @@ from torchvision.models import (
     resnet152
 )
 
-from utils.logger import log_model_params
+from utils.log import log_model_params
 
 
 """

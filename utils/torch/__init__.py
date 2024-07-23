@@ -8,14 +8,15 @@ __all__ = ["pick_sequential", "pick_random",
            "extract", "expend_as", "expend"]
 
 
-def extract(a, t, x_shape):
+def extract(a, t, x):
     """
-    将 a 按照 t 进行切片，并将切片后的结果展平为 shape=[batch_size, 1, 1, 1, ...]
+    将 a 按照 t 进行切片，并将切片后的结果展平为 shape=[batch_size, 1, 1, 1, ...]，其中多少个 1 由 x.shape 决定
     Args:
         a (torch.Tensor):
         t (torch.Tensor | int):
-        x_shape (tuple|torch.Size):
+        x (torch.Tensor):
     """
+    x_shape = x.shape
     if isinstance(t, torch.Tensor):
         out = a.gather(dim=-1, index=t)
         return out.view(x_shape[0], *((1,) * (len(x_shape) - 1)))
@@ -26,15 +27,15 @@ def extract(a, t, x_shape):
         raise ValueError("t must be int or tensor")
 
 
-def expend_as(a, x_shape):
+def expend_as(a, x):
     """
-    将 a 拓展为 shape=[batch_size, 1, 1, 1, ...]
+    将 a 拓展为 shape=[batch_size, 1, 1, 1, ...]，其中多少个 1 由 x.shape 决定
     Args:
         a (torch.Tensor):
-        x_shape (tuple|torch.Size):
+        x (torch.Tensor):
     """
-    assert a.shape[0] == 1, "a must have batch_size=1"
-    return a.repeat(x_shape[0], *((1,) * (len(x_shape) - 1)))
+    assert len(a.shape) == 1, f"a must be 1-D tensor, instead of {a.shape}"
+    return a.view(x.shape[0], *((1,) * (len(x.shape) - 1)))
 
 
 def expend(a):

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from math import log
 
-from utils.logger import log_model_params
+from utils.log import log_model_params
 
 
 """

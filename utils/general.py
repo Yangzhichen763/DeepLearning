@@ -10,6 +10,7 @@ import logging
 
 from utils.torch import save, load
 from utils.tensorboard import get_writer_by_name
+from utils.log.info import print_
 
 # 参数中 level 代表 INFO 即以上级别的日志信息才能被输出
 logging.basicConfig(format="\n%(asctime)s - %(levelname)s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S")
@@ -60,13 +61,13 @@ def load_states(model, device, file_name, return_except=False, **kwargs):
     """
     load_path = get_checkpoint_path(file_name)
 
-    tqdm.write(f"Loading model from {load_path}...", end="")
+    print_(f"Loading model from {load_path}...", end="")
     # 加载模型、优化器等参数
     states: dict = torch.load(load_path, map_location=device)
     model.load_state_dict(states['model'])
     if kwargs.__contains__('optimizer'):
         kwargs['optimizer'].load_state_dict(states['optimizer'])
-    tqdm.write(f"\rModel {load_path} loaded.")
+    print_(f"\rModel {load_path} loaded.")
 
     if return_except:
         states.pop('model')
@@ -76,15 +77,15 @@ def load_states(model, device, file_name, return_except=False, **kwargs):
 
 
 def buffer_dataloader(enumerate_obj):
-    tqdm.write("Loading Data...", end="")
+    print_("Loading Data...", end="")
     start_time = time()
     datas = enumerate(enumerate_obj) if enumerate_obj is not None else None
     end_time = time()
     if end_time - start_time <= 0.01:
         sleep(0.5)
-        tqdm.write("\r", end="")
+        print_("\r", end="")
     else:
-        tqdm.write(f"\rTime to load data: {end_time - start_time:.2f}s")
+        print_(f"\rTime to load data: {end_time - start_time:.2f}s")
 
     return datas
 
@@ -181,9 +182,9 @@ class Trainer:
         self.epoch = epoch
 
         # tqdm
-        tqdm.write(f"\nEpoch {epoch}: ")
+        print_(f"\nEpoch {epoch}: ")
         if kwargs.get('scheduler', None) is not None:
-            tqdm.write(f" - learning rate: {self.optimizer.param_groups[0]['lr']}")
+            print_(f" - learning rate: {self.optimizer.param_groups[0]['lr']}")
         datas = buffer_dataloader(self.train_loader)
         self.process_bar = tqdm(   # 将 tqdm 放在加载 dataloader 之后，是因为防止进度条显示不正确
             total=self.dataset_size,
@@ -255,7 +256,7 @@ class Trainer:
         self.process_bar.close()
 
         # 打印损失信息
-        tqdm.write(
+        print_(
             f"Min-Avg-Max loss: [{self.min_loss:.4f}, {self.average_loss:.4f}, {self.max_loss:.4f}]")
 
         # 更新学习率
@@ -360,17 +361,17 @@ class Validator:
 
         # 计算平均损失
         average_loss = self.total_loss / self.dataset_batches
-        tqdm.write(f"Average loss: {average_loss:.4f}")
+        print_(f"Average loss: {average_loss:.4f}")
         # 计算准确率
         correct = self.correct if kwargs.get('correct', None) is None else kwargs['correct']
         total = self.dataset_size if kwargs.get('total', None) is None else kwargs['total']
         accuracy = 100. * correct / total
-        tqdm.write(f"Accuracy: {correct:.0f}/{total:.0f} ({accuracy:.2f}%)")
+        print_(f"Accuracy: {correct:.0f}/{total:.0f} ({accuracy:.2f}%)")
         # 打印其他信息
         output_list = []
         for key, value in kwargs.items():
             if is_value(value) and key not in ['correct', 'total']:
-                tqdm.write(f"{key}: {get_value(value):.4f}")
+                print_(f"{key}: {get_value(value):.4f}")
                 output_list.append(get_value(value))
 
         # 记录到 TensorBoard
@@ -440,10 +441,10 @@ class Manager:
             **kwargs: 输入其他的 kwarg 可以按照 key, value 的形式记录到 TensorBoard 中，并打印出来
         """
         # 打印总结信息
-        tqdm.write(f"\nSummary: ")
-        tqdm.write(f" - [Best Accuracy]: {self.best_accuracy:.2f}%  [Last Accuracy]: {self.last_accuracy:.2f}%")
+        print_(f"\nSummary: ")
+        print_(f" - [Best Accuracy]: {self.best_accuracy:.2f}%  [Last Accuracy]: {self.last_accuracy:.2f}%")
         for key, value in kwargs.items():
-            tqdm.write(f" - [{key}]: {get_value(value)}")
+            print_(f" - [{key}]: {get_value(value)}")
 
     def save_checkpoint(self, **kwargs):
         """

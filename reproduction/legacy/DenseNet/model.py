@@ -13,7 +13,7 @@ from torchvision.models import (
     DenseNet161_Weights
 )
 from reproduction.legacy.DenseNet.parts import DenseBlock, TransitionBlock
-from utils.logger import *
+from utils.log import *
 
 
 class DenseNet(nn.Module):

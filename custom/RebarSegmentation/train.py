@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
-from lately.UNet.model import UNet_custom_light
+from reproduction.lately.UNet.model import UNet_custom_light
 from optim import CosineAnnealingWarmupRestarts
 from utils.torch import assert_on_cuda, save, load
 from utils.general import Trainer, Validator, Manager

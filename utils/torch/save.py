@@ -4,6 +4,7 @@ import torchvision
 import PIL.Image as Image
 
 from utils.os import get_unique_full_path, insert_before_dot
+from utils.log.info import print_
 from tqdm import tqdm
 
 import numpy as np
@@ -171,5 +172,5 @@ def to_image(data, save_path=None, make_grid=False, **kwargs):
 
 if __name__ == '__main__':
     _tensor = torch.randn(2, 3, 256, 256).clamp(0, 1).round()
-    print(_tensor.type(), _tensor.unique())
+    print_(_tensor.type(), _tensor.unique())
     tensor_to_image(_tensor, save_path="E:/Developments/PythonLearning/DeepLearning/test/logs/datas/test.png")

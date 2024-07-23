@@ -11,7 +11,7 @@ from torchvision.models import (
     resnext101_64x4d,
 )
 
-from utils.logger import log_model_params
+from utils.log import log_model_params
 
 from modules.residual.ResNet import BasicBlock as ResNetBasicBlock
 from modules.residual.ResNet import num_blocks_dict

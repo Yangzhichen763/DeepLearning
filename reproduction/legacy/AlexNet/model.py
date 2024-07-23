@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from utils.logger import *
+from utils.log import *
 
 
 class AlexNet(nn.Module):

@@ -2,7 +2,7 @@
 from utils.tensorboard import *
 
 from model import AlexNet_CIFAR10
-from legacy.classify_utils import get_transform, train_and_validate
+from ..classify_utils import get_transform, train_and_validate
 from utils.torch import *
 
 
