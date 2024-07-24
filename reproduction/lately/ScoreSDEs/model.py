@@ -5,7 +5,7 @@ from tqdm import tqdm
 from scipy import integrate
 
 from utils.torch import expend_as
-from modules.diffusion.sampler import MarkovChainNoiseSampler
+from modules.diffusion.Sampler import MarkovChainNoiseSampler
 
 
 def marginal_prob_std(t, sigma, device):
