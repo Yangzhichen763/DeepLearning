@@ -307,12 +307,14 @@ class Inception_v4(nn.Module):
 
 
 if __name__ == '__main__':
+    from utils.log.model import log_model_params
+
     x_input = torch.randn(1, 3, 224, 224)
     _in_channels = x_input.shape[1]
 
     models = [Inception_v1, Inception_v2_A, Inception_v2_B, Inception_v2_C]
     for model in models:
         inception = model(_in_channels)
-        y_output = inception(x_input)
-        print(f"{model.__name__}: {y_output.shape}")
+        print(f"{model.__name__}:")
+        log_model_params(inception, input_data=x_input)
 

@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 from utils.torch.nn import flatten_     # flatten_ 相当于 view，但是更加灵活
 
-from utils.log.model import log_model_params
-
 
 """
 Criss-Cross Attention Network (CCNet)
@@ -83,6 +81,8 @@ class CrissCrossAttention(nn.Module):
 
 
 if __name__ == '__main__':
+    from utils.log.model import log_model_params
+
     x_input = torch.randn(2, 64, 16, 16)
     cc_attn = CrissCrossAttention(in_channels=x_input.shape[1])
 

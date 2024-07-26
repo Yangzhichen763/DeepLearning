@@ -4,8 +4,6 @@ import torch.utils.model_zoo as model_zoo
 import torch
 import torch.nn.functional as F
 
-from utils.log import log_model_params
-
 
 """
 Res2Net: A New Multi-scale Backbone Architecture
@@ -318,7 +316,9 @@ def res2net50_14w_8s(pretrained=False, **kwargs):
 
 
 if __name__ == '__main__':
+    from utils.log.model import log_model_params
+
     x_input = torch.rand(1, 3, 224, 224)
     _model = res2net101_26w_4s()
 
-    log_model_params(_model, input_size=x_input.shape)
+    log_model_params(_model, input_data=x_input)

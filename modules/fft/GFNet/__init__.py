@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from utils.log.model import *
 
 
 """
@@ -91,7 +90,9 @@ class GlobalFilterBlock(nn.Module):
 
 
 if __name__ == '__main__':
+    from utils.log.model import log_model_params
+
     _patch_size, _channels = 16, 3
-    _x = torch.randn(2, _patch_size * _patch_size, _channels)
-    _model = GlobalFilterBlock(_channels, 128, _patch_size)
-    log_model_params(_model, input_data=_x)
+    x_input = torch.randn(2, _patch_size * _patch_size, _channels)
+    model = GlobalFilterBlock(_channels, 128, _patch_size)
+    log_model_params(model, input_data=x_input)

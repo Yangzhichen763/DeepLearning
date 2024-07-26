@@ -1,4 +1,4 @@
-from utils.log import *
-from utils.torch import *
+import utils.log
+import utils.torch
 
-__all__ = ['log', 'torch']
+__all__ = [utils.log, utils.torch]

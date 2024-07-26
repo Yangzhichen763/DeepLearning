@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 from utils.torch.nn import flatten_     # flatten_ 相当于 view，但是更加灵活
 
-from utils.log import log_model_params
-
 
 """
 DANet: Dual Attention Network for Scene Segmentation
@@ -119,6 +117,8 @@ class DANetHead(nn.Module):
 
 
 if __name__ == '__main__':
+    from utils.log import log_model_params
+
     # 测试 ChannelAttention
     print("\nChannelAttention:")
     x_input = torch.randn(2, 64, 16, 16)

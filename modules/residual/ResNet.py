@@ -15,8 +15,6 @@ from torchvision.models import (
     resnet152
 )
 
-from utils.log import log_model_params
-
 
 """
 Residual Network (ResNet)
@@ -257,7 +255,9 @@ def ResNet152(pretrained=False, **kwargs):
 
 
 if __name__ == '__main__':
-    _model = ResNet34()
-    x_input = torch.randn(2, 3, 32 * 7, 32 * 7)
+    from utils.log import log_model_params
 
-    log_model_params(_model, input_size=x_input.shape)
+    x_input = torch.randn(2, 3, 32 * 7, 32 * 7)
+    _model = ResNet34()
+
+    log_model_params(_model, input_data=x_input)

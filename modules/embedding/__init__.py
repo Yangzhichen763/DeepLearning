@@ -53,8 +53,8 @@ class RandomPositionalEmbedding(nn.Module):
         self.d_model = d_model
         self.max_length = max_length
 
-        embedding = torch.empty((max_length, d_model), device=device)
-        self.embedding = nn.Parameter(embedding, requires_grad=False)
+        position_embedding = torch.empty((max_length, d_model), device=device)
+        self.embedding = nn.Parameter(position_embedding, requires_grad=False)
 
         # Initialize the embedding parameters
         initialize_parameters(self.embedding, init_type)
@@ -75,20 +75,21 @@ class SinusoidalPositionalEmbedding1d(nn.Module):
         super().__init__()
         assert d_model % 2 == 0, f"d_model must be even (got d_model dim = {d_model})"
 
-        self.embedding = torch.zeros((max_length, d_model), device=device)
+        position_embedding = torch.zeros((max_length, d_model), device=device)
 
         position = torch.arange(0, max_length, dtype=torch.float, device=device).unsqueeze(1)
         _2i = torch.arange(0, d_model, step=2, dtype=torch.float, device=device)
         theta = torch.exp(_2i * -(math.log(10000.0) / d_model))
 
-        self.embedding[:, 0::2] = torch.sin(position * theta)
-        self.embedding[:, 1::2] = torch.cos(position * theta)
+        # Even dimensions use sine and odd dimensions use cosine
+        position_embedding[:, 0::2] = torch.sin(position * theta)
+        position_embedding[:, 1::2] = torch.cos(position * theta)
 
-        self.embedding = nn.Parameter(self.embedding, requires_grad=False)
+        self.embedding = nn.Parameter(position_embedding, requires_grad=False)
 
     def forward(self, x):
-        seq_len = x.shape[1]
-        return self.embedding[:seq_len, :]
+        length = x.shape[-2]
+        return self.embedding[:length, :]
 
 
 class SinusoidalPositionalEmbedding2d(nn.Module):
@@ -100,7 +101,7 @@ class SinusoidalPositionalEmbedding2d(nn.Module):
         super().__init__()
         assert d_model % 4 == 0, f"d_model must be divisible by 4 (got d_model dim = {d_model})"
 
-        self.embedding = torch.zeros((d_model, height, width), device=device)
+        position_embedding = torch.zeros((d_model, height, width), device=device)
         d_model = d_model // 2     # 使用 d_model 的一半作为向量的每个维度
 
         _2i = torch.arange(0, d_model, step=2, dtype=torch.float, device=device)
@@ -108,27 +109,50 @@ class SinusoidalPositionalEmbedding2d(nn.Module):
         position_width = torch.arange(0, width, dtype=torch.float, device=device).unsqueeze(1)
         position_height = torch.arange(0, height, dtype=torch.float, device=device).unsqueeze(1)
 
-        self.embedding[0:d_model:2, :, :] = (torch.sin(position_width * theta)
+        position_embedding[0:d_model:2, :, :] = (torch.sin(position_width * theta)
                                              .transpose(0, 1)
                                              .unsqueeze(1)
                                              .repeat(1, height, 1))
-        self.embedding[1:d_model:2, :, :] = (torch.cos(position_width * theta)
+        position_embedding[1:d_model:2, :, :] = (torch.cos(position_width * theta)
                                              .transpose(0, 1)
                                              .unsqueeze(1)
                                              .repeat(1, height, 1))
-        self.embedding[d_model::2, :, :] = (torch.sin(position_height * theta)
+        position_embedding[d_model::2, :, :] = (torch.sin(position_height * theta)
                                             .transpose(0, 1)
                                             .unsqueeze(2)
                                             .repeat(1, 1, width))
-        self.embedding[d_model + 1::2, :, :] = (torch.cos(position_height * theta)
+        position_embedding[d_model + 1::2, :, :] = (torch.cos(position_height * theta)
                                                 .transpose(0, 1)
                                                 .unsqueeze(2)
                                                 .repeat(1, 1, width))
 
-        self.embedding = nn.Parameter(self.embedding, requires_grad=False)
+        self.embedding = nn.Parameter(position_embedding, requires_grad=False)
 
     def forward(self, x):
         return self.embedding
+
+
+class RotaryPositionalEmbedding(nn.Module):
+    def __init__(self, d_model: int, max_length: int, device=None):
+        super().__init__()
+        self.spe = SinusoidalPositionalEmbedding1d(d_model, max_length, device)
+        self.embedding = self.spe.embedding
+
+    def forward(self, x):
+        embedding = self.spe(x)
+        repeat_shape = (*x.shape[:-len(embedding.shape)], *([1] * len(embedding.shape)))  # (B, N, C) -> (B, 1, 1)
+        embedding = embedding.repeat(repeat_shape)                                        # [N, C] -> [B, N, C]
+        cos_position = embedding[..., 1::2].repeat_interleave(2, dim=-1)
+        sin_position = embedding[..., 0::2].repeat_interleave(2, dim=-1)
+
+        # stack + reshape != cat, 不能使用 cat 代替，但是 stack(dim=n) + reshape == cat(dim=n+1)
+        # stack(dim=n) + reshape 可以达到交替的效果(其中 reshape 的 shape 和 cat(dim=n) 的 shape 度相同）
+        # 比如：stack([[1, 2], [-1, -2]], dim=-1).reshape -> [1, -1, 2, -2]
+        _x = (torch.stack([-x[..., 1::2], x[..., 0::2]], dim=-1)
+              .reshape(x.shape))
+        x = x * cos_position + _x * sin_position    # 相当于将 x 进行旋转
+
+        return x
 
 
 class RelativePositionalEmbedding(nn.Module):
@@ -253,3 +277,7 @@ class RotaryEmbedding(nn.Module):
         return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)
 
 
+if __name__ == '__main__':
+    a = torch.randn(2, 3, 4, 5)
+    _sum = torch.sum(a, dim=0)
+    print(_sum)

@@ -1,4 +1,5 @@
-from modules.residual.ResNet import *
-from modules.residual.ResNeXt import *
-from modules.residual.Inception import *
+import modules.residual.ResNet
+import modules.residual.ResNeXt
+import modules.residual.Res2Net
+import modules.residual.Inception
 

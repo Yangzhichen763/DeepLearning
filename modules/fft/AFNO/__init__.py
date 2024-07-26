@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.fft as fft
 import torch.nn.functional as F
 
 
@@ -112,8 +111,12 @@ class AFNO2D(nn.Module):
 
 
 if __name__ == '__main__':
+    from utils.log.model import log_model_params
+
     _patch_size, _channels = 16, 128
-    _x = torch.randn(2, _patch_size * _patch_size, _channels)
-    _model = AFNO2D(channels=_channels, patch_size=_patch_size)
-    _y = _model(_x)
-    print(_y.shape)
+    x_input = torch.randn(2, _patch_size * _patch_size, _channels)
+    model = AFNO2D(channels=_channels, patch_size=_patch_size)
+    y_output = model(x_input)
+
+    log_model_params(model, input_data=x_input)
+    print(y_output.shape)

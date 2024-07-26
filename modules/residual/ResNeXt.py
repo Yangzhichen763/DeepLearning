@@ -11,8 +11,6 @@ from torchvision.models import (
     resnext101_64x4d,
 )
 
-from utils.log import log_model_params
-
 from modules.residual.ResNet import BasicBlock as ResNetBasicBlock
 from modules.residual.ResNet import num_blocks_dict
 
@@ -213,8 +211,9 @@ def ResNeXt101_64x4d(in_channels=3, num_classes=10, pretrained=False):
 
 
 if __name__ == '__main__':
-    # 测试 ResNeXt
-    _model = ResNeXt50_32x4d(in_channels=3, num_classes=10, pretrained=False)
-    x_input = torch.randn(2, 3, 256, 256)
+    from utils.log import log_model_params
 
-    log_model_params(_model, input_size=x_input.shape)
+    x_input = torch.randn(2, 3, 256, 256)
+    _model = ResNeXt50_32x4d(in_channels=3, num_classes=10, pretrained=False)
+
+    log_model_params(_model, input_data=x_input)

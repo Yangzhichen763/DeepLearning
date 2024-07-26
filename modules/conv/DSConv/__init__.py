@@ -2,7 +2,11 @@ import torch.nn as nn
 
 
 """
-Depthwise Separable Convolution 在 MobileNetV2 中被提及
+Depthwise Separable Convolution 在 MobileNetV2 中被提及，旨在减少模型参数量和计算量，从而提高模型的效率和性能
+  - 传统的卷积操作在每个输入通道上使用一个卷积核来进行卷积操作，而深度可分离卷积将这个操作拆分成深度卷积和逐点卷积。
+  - 深度卷积：在每个输入通道上使用一个卷积核，不改变输入数据的通道数
+  - 逐点卷积：在每个像素点上使用一个卷积核，卷积核大小为 1×1xC
+    
 论文链接：
     MobileNet-v1 2017: https://arxiv.org/abs/1704.04861
         - 旨在设计适用于移动设备和嵌入式设备的轻量级卷积神经网络结构。
@@ -61,3 +65,12 @@ class DepthwiseSeparableConv2d(nn.Module):
     def forward(self, x):
         out = self.net(x)
         return out
+
+
+if __name__ == '__main__':
+    import torch
+    from utils.log.model import log_model_params
+
+    x_input = torch.randn(1, 32, 224, 224)
+    model = DepthwiseSeparableConv2d(32, 64, 3, padding=1)
+    log_model_params(model, input_data=x_input)

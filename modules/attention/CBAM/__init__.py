@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 
-from utils.log.model import log_model_params
-
 
 """
 CBAM: Convolutional Block Attention Module
@@ -96,7 +94,9 @@ class BasicBlock(nn.Module):
 
 
 if __name__ == '__main__':
-    model = BasicBlock(3, 64, 2)
-    x = torch.randn(2, 3, 224, 224)
+    from utils.log.model import log_model_params
 
-    log_model_params(model, x.shape)
+    x_input = torch.randn(2, 3, 224, 224)
+    model = BasicBlock(3, 64, 2)
+
+    log_model_params(model, input_data=x_input)

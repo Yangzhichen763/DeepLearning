@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from modules.residual.ResNet import ResNet
-from utils.log import log_model_params
 
 
 """
@@ -17,13 +16,13 @@ class SEModule(nn.Module):
     """
     更泛的通道注意力机制见 CBAM(Convolutional Block Attention Module)
     """
-    def __init__(self, in_channels, reduction=16):
+    def __init__(self, in_channels, squeeze_factor=16):
         super(SEModule, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Sequential(
-            nn.Conv2d(in_channels, in_channels // reduction, kernel_size=1, bias=False),
+            nn.Conv2d(in_channels, in_channels // squeeze_factor, kernel_size=1, bias=False),
             nn.ReLU(inplace=True),
-            nn.Conv2d(in_channels // reduction, in_channels, kernel_size=1, bias=False),
+            nn.Conv2d(in_channels // squeeze_factor, in_channels, kernel_size=1, bias=False),
             nn.Sigmoid()
         )
 
@@ -133,7 +132,8 @@ def SEResNet152(**kwargs):
 
 
 if __name__ == '__main__':
+    from utils.log.model import log_model_params
     x_input = torch.randn(1, 3, 224, 224)
     model = SEResNet18()
 
-    log_model_params(model, x_input.shape)
+    log_model_params(model, input_data=x_input)

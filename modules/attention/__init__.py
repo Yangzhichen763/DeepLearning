@@ -1,10 +1,6 @@
 import torch
-import torchvision.datasets.voc
-from torch import nn
+from torch import nn, init
 import torch.nn.functional as F
-from torch.nn import init
-
-from utils.log.model import *
 
 
 """
@@ -220,6 +216,7 @@ if __name__ == '__main__':
     _query = torch.rand(10, 20, 512)
     _context = torch.rand(10, 30, 512)
     _output, _attention = _model(_query, _context)
+
     print(_output.shape)
     print(_attention.shape)
 

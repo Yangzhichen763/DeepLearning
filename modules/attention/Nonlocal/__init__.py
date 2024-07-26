@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 from utils.torch.nn import flatten_     # flatten_ 相当于 view，但是更加灵活
 
-from utils.log.model import log_model_params
-
 
 """
 Non-Local Neural Networks
@@ -53,6 +51,8 @@ class NonLocalBlock(nn.Module):
 
 
 if __name__ == '__main__':
+    from utils.log.model import log_model_params
+
     x_input = torch.randn(3, 16, 64, 64)
     model = NonLocalBlock(in_channels=x_input.shape[1])
 

@@ -1,11 +1,13 @@
-from utils.torch.deploy import *
-from utils.torch.classify import *
-from utils.torch.dataset.datapicker import *
+from .deploy import *
+from .classify import *
+from .dataset.datapicker import *
+from .load import *
+from .save import *
 
 __all__ = ["pick_sequential", "pick_random",
            "assert_on_cuda",
            "classify", "deploy", "load", "save",
-           "extract", "expend_as", "expend"]
+           "extract", "expend", "expend_as"]
 
 
 def extract(a, t, x):
@@ -19,10 +21,10 @@ def extract(a, t, x):
     x_shape = x.shape
     if isinstance(t, torch.Tensor):
         out = a.gather(dim=-1, index=t)
-        return out.view(x_shape[0], *((1,) * (len(x_shape) - 1)))
+        return out.view(x_shape[0], *([1] * (len(x_shape) - 1)))
     elif isinstance(t, int):
         out = a[t]
-        return out.repeat(x_shape[0], *((1,) * (len(x_shape) - 1)))
+        return out.repeat(x_shape[0], *([1] * (len(x_shape) - 1)))
     else:
         raise ValueError("t must be int or tensor")
 

@@ -1,10 +1,9 @@
 
 import torch
-import torch.nn.functional as F
-from utils.tensorboard import get_writer
+from utils.torch import extract
 
 
-a = get_writer()
-a.add_scalar('loss', 10, 0)
+a = torch.Tensor([[1, 2, 3], [4, 5, 6]])
+print(extract(a, 1, a))
 
 

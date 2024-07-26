@@ -3,9 +3,6 @@ from torch import nn
 from torch.nn import functional as F
 
 
-from utils.log.model import *
-
-
 class FeaturePyramidNetwork(nn.Module):
     """
     [B, C, H, W]
@@ -110,6 +107,8 @@ class FeaturePyramidNetwork(nn.Module):
 
 
 if __name__ == '__main__':
+    from utils.log.model import log_model_params
+
     model = FeaturePyramidNetwork(
         in_channels=3,
         num_blocks=[3, 4, 6, 3],
@@ -117,4 +116,4 @@ if __name__ == '__main__':
         dim_smooth=64)
     x_input = torch.randn(2, 3, 224, 224)
 
-    log_model_params(model, x_input.shape)
+    log_model_params(model, input_data=x_input)

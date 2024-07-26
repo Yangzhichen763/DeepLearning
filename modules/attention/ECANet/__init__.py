@@ -3,8 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from math import log
 
-from utils.log import log_model_params
-
 
 """
 ECA-Net: Efficient Channel Attention for Deep Convolutional Neural Networks
@@ -94,7 +92,9 @@ def eca_layer(in_channels, b=1, gamma=2):
 
 
 if __name__ == '__main__':
+    from utils.log import log_model_params
+
     x_input = torch.randn(2, 16, 32, 32)
     eca_block = ECABlock(16)
 
-    log_model_params(eca_block, x_input.shape)
+    log_model_params(eca_block, input_data=x_input)
