@@ -30,7 +30,7 @@ class VGG(nn.Module):
         )
 
         if init_weights:
-            self.initialize()
+            self.init_weights()
 
     def forward(self, x):
         x = self.feature_layers(x)      # 特征提取，根据不同的 Configuration 选取不同的网络结构
@@ -39,7 +39,7 @@ class VGG(nn.Module):
         x = self.classifier(x)          # 全连接层以及分类
         return x
 
-    def initialize(self):
+    def init_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')

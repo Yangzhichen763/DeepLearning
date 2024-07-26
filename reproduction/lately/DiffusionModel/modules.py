@@ -31,9 +31,9 @@ class TimeEmbeddingProjection(nn.Module):
             Swish(),
             nn.Linear(dim, dim),
         )
-        self.initialize()
+        self.init_weights()
 
-    def initialize(self):
+    def init_weights(self):
         for module in self.modules():
             if isinstance(module, nn.Linear):
                 init.xavier_uniform_(module.weight)
@@ -48,9 +48,9 @@ class DownSample(nn.Module):
     def __init__(self, channels):
         super().__init__()
         self.main = nn.Conv2d(channels, channels, 3, stride=2, padding=1)
-        self.initialize()
+        self.init_weights()
 
-    def initialize(self):
+    def init_weights(self):
         init.xavier_uniform_(self.main.weight)
         init.zeros_(self.main.bias)
 
@@ -63,9 +63,9 @@ class UpSample(nn.Module):
     def __init__(self, in_ch):
         super().__init__()
         self.main = nn.Conv2d(in_ch, in_ch, 3, stride=1, padding=1)
-        self.initialize()
+        self.init_weights()
 
-    def initialize(self):
+    def init_weights(self):
         init.xavier_uniform_(self.main.weight)
         init.zeros_(self.main.bias)
 
@@ -116,9 +116,9 @@ class ResBlock(nn.Module):
             self.attn = AttentionBlock(out_channels)
         else:
             self.attn = nn.Identity()
-        self.initialize()
+        self.init_weights()
 
-    def initialize(self):
+    def init_weights(self):
         for module in self.modules():
             if isinstance(module, (nn.Conv2d, nn.Linear)):
                 init.xavier_uniform_(module.weight)
@@ -180,9 +180,9 @@ class UNet(nn.Module):
             Swish(),
             nn.Conv2d(now_ch, 3, 3, stride=1, padding=1)
         )
-        self.initialize()
+        self.init_weights()
 
-    def initialize(self):
+    def init_weights(self):
         init.xavier_uniform_(self.head.weight)
         init.zeros_(self.head.bias)
         init.xavier_uniform_(self.tail[-1].weight, gain=1e-5)

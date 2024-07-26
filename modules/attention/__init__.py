@@ -182,11 +182,11 @@ class VisionAttention(nn.Module):
         self.weight_K = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
         self.weight_V = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
         self.weight_Output = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
-        self.initialize()
+        self.init_weights()
 
         self.attention = ScaledDotProductAttention(temperature=d_model ** 0.5, dropout=0)
 
-    def initialize(self):
+    def init_weights(self):
         for module in [self.weight_Q, self.weight_K, self.weight_V, self.weight_Output]:
             init.xavier_uniform_(module.weight)
             init.zeros_(module.bias)

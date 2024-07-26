@@ -11,7 +11,7 @@ class ParameterInitType(enum.Enum):
     XAVIER_NORMAL = enum.auto()
 
 
-def initialize_parameters(parameter, init_type):
+def init_parameters(parameter, init_type):
     """
     Initialize the parameters of a module using the specified initialization type.
 
@@ -57,7 +57,7 @@ class RandomPositionalEmbedding(nn.Module):
         self.embedding = nn.Parameter(position_embedding, requires_grad=False)
 
         # Initialize the embedding parameters
-        initialize_parameters(self.embedding, init_type)
+        init_parameters(self.embedding, init_type)
 
     def forward(self, x):
         seq_len = x.shape[1]
@@ -198,7 +198,7 @@ class RelativePositionalEmbedding(nn.Module):
         self.embedding = nn.Parameter(embedding)
 
         # Initialize the embedding parameters
-        initialize_parameters(self.embedding, init_type)
+        init_parameters(self.embedding, init_type)
 
     def forward(self, q: torch.Tensor, kv: torch.Tensor) -> torch.Tensor:
         """
