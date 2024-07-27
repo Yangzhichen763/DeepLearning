@@ -11,22 +11,22 @@ CBAM 是一种混合注意力机制，是对空间注意力机制 SAM(Spatial At
 
 class ChannelAttention(nn.Module):
     """
-    相比于 SENet 更加灵活，有 ratio 可以控制通道方向上的压缩比率。
+    相比于 SENet 更加灵活，有 squeeze_factor 可以控制通道方向上的压缩比率。
     """
-    def __init__(self, in_channels, ratio=16):
+    def __init__(self, in_channels, squeeze_factor=16):
         """
         Args:
             in_channels: 输入通道数
-            ratio: 通道方向压缩比率，默认值为 16。
+            squeeze_factor: 通道方向压缩比率，默认值为 16。
         """
         super(ChannelAttention, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.max_pool = nn.AdaptiveMaxPool2d(1)
 
         self.fc = nn.Sequential(
-            nn.Conv2d(in_channels, in_channels // ratio, 1, bias=False),
+            nn.Conv2d(in_channels, in_channels // squeeze_factor, 1, bias=False),
             nn.ReLU(),
-            nn.Conv2d(in_channels // ratio, in_channels, 1, bias=False)
+            nn.Conv2d(in_channels // squeeze_factor, in_channels, 1, bias=False)
         )
         self.sigmoid = nn.Sigmoid()
 
