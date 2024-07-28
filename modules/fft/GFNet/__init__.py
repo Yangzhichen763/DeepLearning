@@ -47,7 +47,7 @@ class GlobalFilter(nn.Module):
             x (torch.Tensor): shape: [B, N, C]
         """
         dtype = x.dtype
-        x = x.float()
+        x = x.to(torch.float32)
 
         B, N, C = x.shape
         P = self.patch_size
@@ -61,7 +61,7 @@ class GlobalFilter(nn.Module):
         x = torch.fft.irfft2(x, s=(P, P), dim=(1, 2), norm='ortho')  # [B, H, W, C] -> [B, P, P, C]
 
         x = x.reshape(B, N, C)                                       # [B, P, P, C] -> [B, N, C]
-        x = x.type(dtype)
+        x = x.to(dtype)
 
         return x
 

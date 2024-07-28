@@ -9,6 +9,7 @@ from einops import rearrange
 HAT: Hybrid Attention Transformer for Super-Resolution
   - 应用于超分辨率（SR）领域
 论文链接 2022-2023：https://arxiv.org/abs/2205.04437
+参考代码：https://github.com/XPixelGroup/HAT/blob/main/hat/archs/discriminator_arch.py
 """
 # TODO: 理解代码
 

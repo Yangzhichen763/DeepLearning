@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
+import enum
 
 
 """
@@ -11,45 +12,46 @@ FcaNet: Frequency Channel Attention Networks
 """
 
 
-def get_freq_indices(method):
-    assert method in ['top1', 'top2', 'top4', 'top8', 'top16', 'top32',
-                      'bot1', 'bot2', 'bot4', 'bot8', 'bot16', 'bot32',
-                      'low1', 'low2', 'low4', 'low8', 'low16', 'low32']
-    num_freq = int(method[3:])
-    if 'top' in method:
-        all_top_indices_x = [0, 0, 6, 0, 0, 1, 1, 4, 5, 1, 3, 0, 0, 0, 3, 2, 4, 6, 3, 5, 5, 2, 6, 5, 5, 3, 3, 4, 2, 2,
-                             6, 1]
-        all_top_indices_y = [0, 1, 0, 5, 2, 0, 2, 0, 0, 6, 0, 4, 6, 3, 5, 2, 6, 3, 3, 3, 5, 1, 1, 2, 4, 2, 1, 1, 3, 0,
-                             5, 3]
-        mapper_x = all_top_indices_x[:num_freq]
-        mapper_y = all_top_indices_y[:num_freq]
-    elif 'low' in method:
-        all_low_indices_x = [0, 0, 1, 1, 0, 2, 2, 1, 2, 0, 3, 4, 0, 1, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 1, 2,
-                             3, 4]
-        all_low_indices_y = [0, 1, 0, 1, 2, 0, 1, 2, 2, 3, 0, 0, 4, 3, 1, 5, 4, 3, 2, 1, 0, 6, 5, 4, 3, 2, 1, 0, 6, 5,
-                             4, 3]
-        mapper_x = all_low_indices_x[:num_freq]
-        mapper_y = all_low_indices_y[:num_freq]
-    elif 'bot' in method:
-        all_bot_indices_x = [6, 1, 3, 3, 2, 4, 1, 2, 4, 4, 5, 1, 4, 6, 2, 5, 6, 1, 6, 2, 2, 4, 3, 3, 5, 5, 6, 2, 5, 5,
-                             3, 6]
-        all_bot_indices_y = [6, 4, 4, 6, 6, 3, 1, 4, 4, 5, 6, 5, 2, 2, 5, 1, 4, 3, 5, 0, 3, 1, 1, 2, 4, 2, 1, 1, 5, 3,
-                             3, 3]
-        mapper_x = all_bot_indices_x[:num_freq]
-        mapper_y = all_bot_indices_y[:num_freq]
+class Method(enum.Enum):
+    TOP = enum.auto()
+    BOT = enum.auto()
+    LOW = enum.auto()
+
+
+def get_freq_indices(method: Method, num_freq: int):
+    assert num_freq in [1, 2, 4, 8, 16, 32]
+
+    if method == Method.TOP:
+        all_indices_x = [0, 0, 6, 0, 0, 1, 1, 4, 5, 1, 3, 0, 0, 0, 3, 2,
+                         4, 6, 3, 5, 5, 2, 6, 5, 5, 3, 3, 4, 2, 2, 6, 1]
+        all_indices_y = [0, 1, 0, 5, 2, 0, 2, 0, 0, 6, 0, 4, 6, 3, 5, 2,
+                         6, 3, 3, 3, 5, 1, 1, 2, 4, 2, 1, 1, 3, 0, 5, 3]
+    elif method == Method.BOT:
+        all_indices_x = [0, 0, 1, 1, 0, 2, 2, 1, 2, 0, 3, 4, 0, 1, 3, 0,
+                         1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4]
+        all_indices_y = [0, 1, 0, 1, 2, 0, 1, 2, 2, 3, 0, 0, 4, 3, 1, 5,
+                         4, 3, 2, 1, 0, 6, 5, 4, 3, 2, 1, 0, 6, 5, 4, 3]
+    elif method == Method.LOW:
+        all_indices_x = [6, 1, 3, 3, 2, 4, 1, 2, 4, 4, 5, 1, 4, 6, 2, 5,
+                         6, 1, 6, 2, 2, 4, 3, 3, 5, 5, 6, 2, 5, 5, 3, 6]
+        all_indices_y = [6, 4, 4, 6, 6, 3, 1, 4, 4, 5, 6, 5, 2, 2, 5, 1,
+                         4, 3, 5, 0, 3, 1, 1, 2, 4, 2, 1, 1, 5, 3, 3, 3]
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Method {method} not implemented")
+
+    mapper_x = all_indices_x[:num_freq]
+    mapper_y = all_indices_y[:num_freq]
     return mapper_x, mapper_y
 
 
 class MultiSpectralAttentionLayer(torch.nn.Module):
-    def __init__(self, channel, dct_h, dct_w, reduction=16, freq_sel_method='top16'):
+    def __init__(self, channel, dct_h, dct_w, reduction=16, method: Method = Method.TOP, num_freq=16):
         super(MultiSpectralAttentionLayer, self).__init__()
         self.reduction = reduction
         self.dct_h = dct_h
         self.dct_w = dct_w
 
-        mapper_x, mapper_y = get_freq_indices(freq_sel_method)
+        mapper_x, mapper_y = get_freq_indices(method, num_freq)
         self.num_split = len(mapper_x)
         mapper_x = [temp_x * (dct_h // 7) for temp_x in mapper_x]
         mapper_y = [temp_y * (dct_w // 7) for temp_y in mapper_y]
@@ -82,7 +84,6 @@ class MultiSpectralDCTLayer(nn.Module):
     """
     Generate DCT(Discrete Cosine Transform) filters
     """
-
     def __init__(self, height, width, mapper_x, mapper_y, channel):
         super(MultiSpectralDCTLayer, self).__init__()
 
@@ -114,8 +115,8 @@ class MultiSpectralDCTLayer(nn.Module):
         result = torch.sum(x, dim=[2, 3])
         return result
 
-    def build_filter(self, pos, freq, POS):
-        result = math.cos(math.pi * freq * (pos + 0.5) / POS) / math.sqrt(POS)
+    def build_filter(self, pos, freq, max_pos):
+        result = math.cos(math.pi * freq * (pos + 0.5) / max_pos) / math.sqrt(max_pos)
         if freq == 0:
             return result
         else:
@@ -129,8 +130,7 @@ class MultiSpectralDCTLayer(nn.Module):
         for i, (u_x, v_y) in enumerate(zip(mapper_x, mapper_y)):
             for t_x in range(tile_size_x):
                 for t_y in range(tile_size_y):
-                    dct_filter[i * c_part: (i + 1) * c_part, t_x, t_y] = self.build_filter(t_x, u_x,
-                                                                                           tile_size_x) * self.build_filter(
-                        t_y, v_y, tile_size_y)
+                    dct_filter[i * c_part: (i + 1) * c_part, t_x, t_y] = (
+                            self.build_filter(t_x, u_x, tile_size_x) * self.build_filter(t_y, v_y, tile_size_y))
 
         return dct_filter

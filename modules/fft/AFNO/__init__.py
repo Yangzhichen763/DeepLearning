@@ -119,4 +119,3 @@ if __name__ == '__main__':
     y_output = model(x_input)
 
     log_model_params(model, input_data=x_input)
-    print(y_output.shape)

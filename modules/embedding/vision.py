@@ -8,7 +8,7 @@ class PatchEmbedding(nn.Module):
         super(PatchEmbedding, self).__init__()
         self.patcher = nn.Sequential(
             nn.Conv2d(in_channels=in_channels, out_channels=embedding_dim, kernel_size=patch_size, stride=patch_size),
-            nn.Flatten(start_dim=-2, end_dim=-1)    # 将 patch 展平为 [B, C, H * W]
+            nn.Flatten(start_dim=-2, end_dim=-1)    # 将 patch 从 [B, C, H, W] 展平为 [B, C, H * W]
         )
 
         self.cls_token = nn.Parameter(torch.randn(size=(1, 1, embedding_dim)), requires_grad=True)
