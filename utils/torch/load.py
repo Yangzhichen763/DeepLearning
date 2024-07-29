@@ -22,5 +22,6 @@ def from_model(model, device, load_path=None, file_name=None):
                 load_path = f"./models/{file_name}.pt"
 
     print_(f"Loading model from {load_path}...", end="")
-    model.load_state_dict(torch.load(load_path, map_location=device))
+    state_dict = torch.load(load_path, map_location=device)
+    model.load_state_dict(state_dict)
     print_(f"\rModel {load_path} loaded.")
