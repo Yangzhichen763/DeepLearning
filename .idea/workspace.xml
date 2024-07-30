@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 TSLANet 及其相关模块；&#10;2. 修改 fft 相关代码">
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 WTConv 小波卷积层">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/torch/load.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/torch/load.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/conv/WTConv/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/conv/WTConv/__init__.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -100,7 +99,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
-    "last_opened_file_path": "E:/Developments/PythonLearning/_cutting-edge/latent-diffusion-main",
+    "last_opened_file_path": "E:/Developments/PythonLearning/_advance/yolov5-master",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -537,7 +536,8 @@
       <workItem from="1721658337265" duration="2061000" />
       <workItem from="1721660442703" duration="50044000" />
       <workItem from="1721978430385" duration="29599000" />
-      <workItem from="1722168985083" duration="12320000" />
+      <workItem from="1722168985083" duration="12658000" />
+      <workItem from="1722322497424" duration="6152000" />
     </task>
     <task id="LOCAL-00001" summary="添加 MLPMixer 的网络结构代码">
       <option name="closed" value="true" />
@@ -907,7 +907,15 @@
       <option name="project" value="LOCAL" />
       <updated>1722136456001</updated>
     </task>
-    <option name="localTasksCounter" value="47" />
+    <task id="LOCAL-00047" summary="1. 添加 WTConv 小波卷积层">
+      <option name="closed" value="true" />
+      <created>1722266562606</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1722266562606</updated>
+    </task>
+    <option name="localTasksCounter" value="48" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -972,7 +980,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="1. 实现 ResNeXt 网络结构，包括 ResNeXt50_32x4d、ResNeXt101_32x8d、ResNeXt152_64x4d 等。" />
     <MESSAGE value="1. 使用 ResNet 和 ResNeXt 改进椭圆检测模型，准确率从 30% 提升到 67%。" />
     <MESSAGE value="1. 使用 ResNet 和 ResNeXt 改进椭圆检测模型，准确率从 30% 提升到 67%。&#10;2. 使用 torch.cuda.amp 和 num_worker、persistent_workers、pin_memory 等参数提升训练速度，从原本的一个 epoch 5 分钟提升到初始 epoch 4 分钟，后面的每个 epoch 1 分钟。" />
     <MESSAGE value="1. 实用 CosineAnnealingWarmupRestarts 学习步长优化器，椭圆检测模型的准确率从 70% 提升到 75%；&#10;2. 学习并编写了简单的 MoE 模块；" />
@@ -997,7 +1004,8 @@
     <MESSAGE value="1. 增加 StarNet 即插即用模块代&#10;2. 整理文件结构，优化项目结构" />
     <MESSAGE value="1. 添加 HAB（Hybrid Attention Block）模块" />
     <MESSAGE value="1. 添加 TSLANet 及其相关模块；&#10;2. 修改 fft 相关代码" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 TSLANet 及其相关模块；&#10;2. 修改 fft 相关代码" />
+    <MESSAGE value="1. 添加 WTConv 小波卷积层" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 WTConv 小波卷积层" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="XDebuggerManager">
