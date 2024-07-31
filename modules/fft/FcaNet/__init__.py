@@ -1,12 +1,13 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import math
 import enum
 
 
+# TODO: 只做了誊抄和测试，未对代码进行理解
 """
 FcaNet: Frequency Channel Attention Networks
+
 论文链接 2020-2021: https://arxiv.org/abs/2012.11879
 代码修改自：https://github.com/cfzd/FcaNet/blob/master/model/layer.py
 """
@@ -134,3 +135,12 @@ class MultiSpectralDCTLayer(nn.Module):
                             self.build_filter(t_x, u_x, tile_size_x) * self.build_filter(t_y, v_y, tile_size_y))
 
         return dct_filter
+
+
+if __name__ == '__main__':
+    from utils.log.model import log_model_params
+
+    # test MultiSpectralAttentionLayer
+    x_input = torch.rand(1, 16, 14, 14)
+    layer = MultiSpectralAttentionLayer(16, 14, 14, method=Method.TOP, num_freq=16)
+    log_model_params(layer, input_data=x_input)

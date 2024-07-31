@@ -18,6 +18,14 @@ class SEModule(nn.Module):
     """
     def __init__(self, in_channels, squeeze_factor=16):
         super(SEModule, self).__init__()
+
+        assert in_channels // squeeze_factor > 0, \
+            (f"Squeeze factor should be less than or equal to the number of input channels,"
+             f" instead of {in_channels} // {squeeze_factor} = {in_channels // squeeze_factor}")
+        assert in_channels % squeeze_factor == 0, \
+            (f"Squeeze factor should be divisible by the number of input channels,"
+             f" instead of {in_channels} % {squeeze_factor} = {in_channels % squeeze_factor}")
+
         self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Sequential(
             nn.Conv2d(in_channels, in_channels // squeeze_factor, kernel_size=1, bias=False),
