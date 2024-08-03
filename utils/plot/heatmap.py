@@ -3,6 +3,8 @@ import torch.nn.functional as F
 from matplotlib import pyplot as plt
 
 
+# 生成 ERF 图，参考：https://github.com/DingXiaoH/RepLKNet-pytorch/blob/main/erf/analyze_erf.py
+
 def show_heatmaps(
         matrices,
         x_label,

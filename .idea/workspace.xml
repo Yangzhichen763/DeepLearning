@@ -4,12 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 Morphological Convolution 形态学卷积层">
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 TransNeXt 中的 Aggregated Attention 模块">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/attention/SENet/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/attention/SENet/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/fft/FcaNet/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/fft/FcaNet/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/fpn/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/featurefusion/fpn/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/fpn/info.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/activation/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/activation/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/display/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/plot/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/display/heatmap.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/plot/heatmap.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,8 +24,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="JavaScript File" />
-        <option value="Jupyter Notebook" />
         <option value="Python Script" />
+        <option value="Jupyter Notebook" />
       </list>
     </option>
   </component>
@@ -51,8 +50,15 @@
     &quot;accountId&quot;: &quot;5369861c-e97c-4851-b4de-7c43957e3a22&quot;
   }
 }</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$USER_HOME$/AppData/Local/Programs/Python/Python39/Lib/site-packages/plottable/table.py" root0="SKIP_INSPECTION" />
+    <setting file="file://D:/Softwares/Developments/Python/Python39/Lib/site-packages/matplotlib/table.py" root0="SKIP_INSPECTION" />
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
@@ -65,54 +71,54 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python tests.Doctests in __init__.executor": "Run",
-    "Python.ConvolutionalGLU.executor": "Run",
-    "Python.FPN.executor": "Run",
-    "Python.Image.executor": "Run",
-    "Python.Inception.executor": "Run",
-    "Python.LSTM.executor": "Run",
-    "Python.Models.executor": "Run",
-    "Python.Modules.executor": "Run",
-    "Python.OBB.executor": "Run",
-    "Python.Res2Net.executor": "Run",
-    "Python.ResNeXt.executor": "Run",
-    "Python.ResNet.executor": "Run",
-    "Python.Transformer.executor": "Run",
-    "Python.__init__.executor": "Run",
-    "Python.coco.executor": "Run",
-    "Python.datapicker.executor": "Run",
-    "Python.datasets.executor": "Run",
-    "Python.general.executor": "Run",
-    "Python.interpret.executor": "Run",
-    "Python.learning.executor": "Run",
-    "Python.loss.executor": "Run",
-    "Python.model (1).executor": "Run",
-    "Python.model.executor": "Run",
-    "Python.modellogger.executor": "Run",
-    "Python.models.executor": "Run",
-    "Python.modules.executor": "Run",
-    "Python.nn.executor": "Run",
-    "Python.part.executor": "Run",
-    "Python.parts.executor": "Debug",
-    "Python.save.executor": "Run",
-    "Python.test.executor": "Run",
-    "Python.train.executor": "Run",
-    "Python.viewer3d.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "E:/Developments/PythonLearning/_cutting-edge/fast-transformers-master",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python tests.Doctests in __init__.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ConvolutionalGLU.executor&quot;: &quot;Run&quot;,
+    &quot;Python.FPN.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Image.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Inception.executor&quot;: &quot;Run&quot;,
+    &quot;Python.LSTM.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Models.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Modules.executor&quot;: &quot;Run&quot;,
+    &quot;Python.OBB.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Res2Net.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ResNeXt.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ResNet.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Transformer.executor&quot;: &quot;Run&quot;,
+    &quot;Python.__init__.executor&quot;: &quot;Run&quot;,
+    &quot;Python.coco.executor&quot;: &quot;Run&quot;,
+    &quot;Python.datapicker.executor&quot;: &quot;Run&quot;,
+    &quot;Python.datasets.executor&quot;: &quot;Run&quot;,
+    &quot;Python.general.executor&quot;: &quot;Run&quot;,
+    &quot;Python.interpret.executor&quot;: &quot;Run&quot;,
+    &quot;Python.learning.executor&quot;: &quot;Run&quot;,
+    &quot;Python.loss.executor&quot;: &quot;Run&quot;,
+    &quot;Python.model (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.modellogger.executor&quot;: &quot;Run&quot;,
+    &quot;Python.models.executor&quot;: &quot;Run&quot;,
+    &quot;Python.modules.executor&quot;: &quot;Run&quot;,
+    &quot;Python.nn.executor&quot;: &quot;Run&quot;,
+    &quot;Python.part.executor&quot;: &quot;Run&quot;,
+    &quot;Python.parts.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.save.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.viewer3d.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/Developments/PythonLearning/_misc/SciencePlots-master&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\attention\TransNeXt\figures" />
@@ -543,15 +549,10 @@
       <workItem from="1721978430385" duration="29599000" />
       <workItem from="1722168985083" duration="12658000" />
       <workItem from="1722322497424" duration="16921000" />
-      <workItem from="1722411257250" duration="1154000" />
-    </task>
-    <task id="LOCAL-00001" summary="添加 MLPMixer 的网络结构代码">
-      <option name="closed" value="true" />
-      <created>1715157511023</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1715157511023</updated>
+      <workItem from="1722411257250" duration="66289000" />
+      <workItem from="1722656215059" duration="12083000" />
+      <workItem from="1722675559475" duration="1793000" />
+      <workItem from="1722685654473" duration="11631000" />
     </task>
     <task id="LOCAL-00002" summary="1. 修改了 AlexNet、ResNet、VGGNet 的训练代码&#10;2. 删除了 UNet、ViT 的训练代码，因为之前是使用图像分类的训练代码占着&#10;3. 增加 logger，方便输出调试信息">
       <option name="closed" value="true" />
@@ -929,7 +930,23 @@
       <option name="project" value="LOCAL" />
       <updated>1722336393196</updated>
     </task>
-    <option name="localTasksCounter" value="49" />
+    <task id="LOCAL-00049" summary="1. 添加 TransNeXt 中的 ConvolutionalGLU 模块&#10;2. 整理代码文件架构">
+      <option name="closed" value="true" />
+      <created>1722431339630</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1722431339630</updated>
+    </task>
+    <task id="LOCAL-00050" summary="1. 添加 TransNeXt 中的 Aggregated Attention 模块">
+      <option name="closed" value="true" />
+      <created>1722514914879</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1722514914881</updated>
+    </task>
+    <option name="localTasksCounter" value="51" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -994,8 +1011,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="1. 使用 ResNet 和 ResNeXt 改进椭圆检测模型，准确率从 30% 提升到 67%。&#10;2. 使用 torch.cuda.amp 和 num_worker、persistent_workers、pin_memory 等参数提升训练速度，从原本的一个 epoch 5 分钟提升到初始 epoch 4 分钟，后面的每个 epoch 1 分钟。" />
-    <MESSAGE value="1. 实用 CosineAnnealingWarmupRestarts 学习步长优化器，椭圆检测模型的准确率从 70% 提升到 75%；&#10;2. 学习并编写了简单的 MoE 模块；" />
     <MESSAGE value="1. 将 train 和 validate 中复用的部分写在一个类当中" />
     <MESSAGE value="1. 添加 Res2Net 模块。" />
     <MESSAGE value="1. 添加 SENet 即插即用模块；&#10;2. UNet 训练准确率达到 98.51%。" />
@@ -1019,7 +1034,9 @@
     <MESSAGE value="1. 添加 TSLANet 及其相关模块；&#10;2. 修改 fft 相关代码" />
     <MESSAGE value="1. 添加 WTConv 小波卷积层" />
     <MESSAGE value="1. 添加 Morphological Convolution 形态学卷积层" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 Morphological Convolution 形态学卷积层" />
+    <MESSAGE value="1. 添加 TransNeXt 中的 ConvolutionalGLU 模块&#10;2. 整理代码文件架构" />
+    <MESSAGE value="1. 添加 TransNeXt 中的 Aggregated Attention 模块" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 TransNeXt 中的 Aggregated Attention 模块" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="XDebuggerManager">
