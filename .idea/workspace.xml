@@ -4,11 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加科研表格绘制内容，参考《TransNeXt: Robust Foveal Visual Perception for Vision Transformers》">
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 GAU 和 GLU 模块">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/activation/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/activation/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/attention/Nonlocal/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/attention/NonLocal/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/attention/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/attention/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/plot/figure_tutorial.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/utils/plot/figure_tutorial.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/plot/table_tutorial.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/utils/plot/table_tutorial.ipynb" afterDir="false" />
     </list>
@@ -103,6 +100,7 @@
     "Python.modellogger.executor": "Run",
     "Python.models.executor": "Run",
     "Python.modules.executor": "Run",
+    "Python.mousestrategy.executor": "Run",
     "Python.nn.executor": "Run",
     "Python.part.executor": "Run",
     "Python.parts.executor": "Debug",
@@ -110,6 +108,7 @@
     "Python.test.executor": "Run",
     "Python.text.executor": "Run",
     "Python.train.executor": "Run",
+    "Python.transform.executor": "Run",
     "Python.viewer3d.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -560,15 +559,8 @@
       <workItem from="1722685654473" duration="48563000" />
       <workItem from="1722845853817" duration="17068000" />
       <workItem from="1722867872559" duration="17337000" />
-      <workItem from="1722933781076" duration="1544000" />
-    </task>
-    <task id="LOCAL-00007" summary="从2024.4.18到2024.5.10的学习记录，包括经典的网络结构（包括AlexNet、ResNet、VGGNet等，还有对应的训练代码）以及Transformer、UNet、ViT、MLPMixer网络结构。&#10;4.18-5.6：学习并实现了AlexNet、ResNet、VGGNet等网络结构和训练代码，以及 Transformer 的网络结构。&#10;5.7：添加 ViT、MLPMixer 的网络结构代码。&#10;5.8：修改 AlexNet、ResNet、VGGNet 的训练代码；增加一些调试代码。&#10;5.9：添加 UNet 自定义特征层；在 ViT、MLPMixer 的网络结构代码中添加注释；增加基于 torchvision.summary 的网络结构可视化代码，方便输出调试信息；修改了 MLPMixer 的输入参数（input shape），自动计算 num_patches 和 in_channels。&#10;5.10：添加图像分割训练代码，建文件夹区分图像分类、图像分割的训练代码；添加 MLPMixer、ViT 网络模型代码添加部分注释；整理文件组织架构；学习 segmentation 和 keypoints 的输出。">
-      <option name="closed" value="true" />
-      <created>1715346995216</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1715346995216</updated>
+      <workItem from="1722933781076" duration="14830000" />
+      <workItem from="1723104468178" duration="12395000" />
     </task>
     <task id="LOCAL-00008" summary="1. 实现 DenseNet 的网络结构和训练代码。">
       <option name="closed" value="true" />
@@ -954,7 +946,15 @@
       <option name="project" value="LOCAL" />
       <updated>1722783342798</updated>
     </task>
-    <option name="localTasksCounter" value="56" />
+    <task id="LOCAL-00056" summary="1. 添加 GAU 和 GLU 模块">
+      <option name="closed" value="true" />
+      <created>1723014180004</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1723014180005</updated>
+    </task>
+    <option name="localTasksCounter" value="57" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1019,7 +1019,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="1. 学习并编写 CBAM 视觉混合注意力模块；&#10;2. 添加钢筋分割网络模型，基于 UNet 实现。" />
     <MESSAGE value="1. 学习并编写 ECA 模块，相对于 SENet 参数量少了非常多，去除了不必要的全局通道捕获，避免了维度缩减。" />
     <MESSAGE value="1. 增加 ECA-NS 模块。" />
     <MESSAGE value="1. 编写 DANet 视觉注意力模块。" />
@@ -1044,7 +1043,8 @@
     <MESSAGE value="1. 添加科研图表绘制内容" />
     <MESSAGE value="1. 添加科研表格绘制内容" />
     <MESSAGE value="1. 添加科研表格绘制内容，参考《TransNeXt: Robust Foveal Visual Perception for Vision Transformers》" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 添加科研表格绘制内容，参考《TransNeXt: Robust Foveal Visual Perception for Vision Transformers》" />
+    <MESSAGE value="1. 添加 GAU 和 GLU 模块" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 GAU 和 GLU 模块" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="XDebuggerManager">
@@ -1062,10 +1062,11 @@
     <SUITE FILE_PATH="coverage/DeepLearning$ResNet.coverage" NAME="ResNet Coverage Results" MODIFIED="1716984747744" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$train.coverage" NAME="train Coverage Results" MODIFIED="1721804635894" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reproduction/lately/ScoreSDEs" />
     <SUITE FILE_PATH="coverage/DeepLearning$ResNeXt.coverage" NAME="ResNeXt Coverage Results" MODIFIED="1716909700686" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
-    <SUITE FILE_PATH="coverage/DeepLearning$interpret.coverage" NAME="interpret Coverage Results" MODIFIED="1718419539445" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lately/DiffusionModel" />
     <SUITE FILE_PATH="coverage/DeepLearning$parts.coverage" NAME="parts Coverage Results" MODIFIED="1721739213176" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reproduction/lately/ScoreSDEs" />
+    <SUITE FILE_PATH="coverage/DeepLearning$interpret.coverage" NAME="interpret Coverage Results" MODIFIED="1718419539445" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lately/DiffusionModel" />
     <SUITE FILE_PATH="coverage/DeepLearning$SRA.coverage" NAME="SRA Coverage Results" MODIFIED="1722847304932" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/attention/PVT" />
     <SUITE FILE_PATH="coverage/DeepLearning$ConvolutionalGLU.coverage" NAME="ConvolutionalGLU Coverage Results" MODIFIED="1722351349797" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/conv/TransNeXt" />
+    <SUITE FILE_PATH="coverage/DeepLearning$transform.coverage" NAME="transform Coverage Results" MODIFIED="1723118551423" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot/imagedraw/cv" />
     <SUITE FILE_PATH="coverage/DeepLearning$general.coverage" NAME="general Coverage Results" MODIFIED="1717506648226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
     <SUITE FILE_PATH="coverage/DeepLearning$text.coverage" NAME="text Coverage Results" MODIFIED="1722921515710" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot" />
     <SUITE FILE_PATH="coverage/DeepLearning$Doctests_in___init__.coverage" NAME="Doctests in __init__ Coverage Results" MODIFIED="1721832888959" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
@@ -1081,8 +1082,9 @@
     <SUITE FILE_PATH="coverage/DeepLearning$Image.coverage" NAME="Image Coverage Results" MODIFIED="1715606972619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Programs/Python/Python39/Lib/site-packages/PIL" />
     <SUITE FILE_PATH="coverage/DeepLearning$loss.coverage" NAME="loss Coverage Results" MODIFIED="1717857075022" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork" />
     <SUITE FILE_PATH="coverage/DeepLearning$test.coverage" NAME="test Coverage Results" MODIFIED="1722258535251" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
+    <SUITE FILE_PATH="coverage/DeepLearning$mousestrategy.coverage" NAME="mousestrategy Coverage Results" MODIFIED="1723113654247" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot/imagedraw/strategies" />
     <SUITE FILE_PATH="coverage/DeepLearning$datasets.coverage" NAME="datasets Coverage Results" MODIFIED="1717566181770" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch/segment" />
-    <SUITE FILE_PATH="coverage/DeepLearning$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1722352018567" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/fft/FcaNet" />
+    <SUITE FILE_PATH="coverage/DeepLearning$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1723107982973" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot/imagedraw" />
     <SUITE FILE_PATH="coverage/DeepLearning$Res2Net.coverage" NAME="Res2Net Coverage Results" MODIFIED="1717518061114" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$Models.coverage" NAME="Models Coverage Results" MODIFIED="1715155425885" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/MLPMixer" />
     <SUITE FILE_PATH="coverage/DeepLearning$modellogger.coverage" NAME="modellogger Coverage Results" MODIFIED="1717740874234" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/logger" />
