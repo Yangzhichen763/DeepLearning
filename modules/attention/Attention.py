@@ -147,18 +147,27 @@ class CrossAttention(nn.Module):
 
 class MultiheadAttention(nn.Module):
     """
-    Multi-Head attention
+    Multi-Head Attention
     """
-    def __init__(self, num_heads, d_model, dropout=0.1):
+    def __init__(self, num_heads, d_model, dropout=0.1, is_weighted=False):
+        """
+        Args:
+            num_heads: 多头注意力的头数
+            d_model: 模型的维度
+            dropout: dropout 率
+            is_weighted: 是否使用权重矩阵对输入和输出进行全连接处理，如果为 False，则不适用全连接层和 dropout 处理
+        """
         super(MultiheadAttention, self).__init__()
 
         self.num_heads = num_heads
         self.d_model = d_model
 
-        self.weight_Q = nn.Linear(d_model, d_model, bias=False)
-        self.weight_K = nn.Linear(d_model, d_model, bias=False)
-        self.weight_V = nn.Linear(d_model, d_model, bias=False)
-        self.weight_combine = nn.Linear(d_model, d_model, bias=False)
+        self.is_weighted = is_weighted
+        if self.is_weighted:
+            self.weight_Q = nn.Linear(d_model, d_model, bias=False)
+            self.weight_K = nn.Linear(d_model, d_model, bias=False)
+            self.weight_V = nn.Linear(d_model, d_model, bias=False)
+            self.weight_combine = nn.Linear(d_model, d_model, bias=False)
 
         self.attention = ScaledDotProductAttention(temperature=d_model ** 0.5, dropout=dropout)
         self.dropout = nn.Dropout(dropout)
@@ -178,21 +187,68 @@ class MultiheadAttention(nn.Module):
         n_dim = self.d_model // self.num_heads
 
         # 获得 Q, K, V 矩阵
-        q = self.weight_Q(q).view(B, -1, self.num_heads, n_dim).permute(0, 2, 1, 3)
-        k = self.weight_K(k).view(B, -1, self.num_heads, n_dim).permute(0, 2, 1, 3)
-        v = self.weight_V(v).view(B, -1, self.num_heads, n_dim).permute(0, 2, 1, 3)
+        if self.is_weighted:
+            q = self.weight_Q(q)
+            k = self.weight_K(k)
+            v = self.weight_V(v)
+        q, k, v = map(lambda x: x.view(B, -1, self.num_heads, n_dim).permute(0, 2, 1, 3), (q, k, v))
 
         # 计算注意力权重
         q, attention = self.attention(q, k, v, mask=mask)
 
         # 合并输出
         q = q.permute(0, 2, 1, 3).contiguous().view(B, -1, C)
-        q = self.dropout(self.weight_combine(q))
+        if self.is_weighted:
+            q = self.dropout(self.weight_combine(q))
         attention = attention.permute(0, 2, 1, 3).contiguous().view(B, -1, attention.shape[-1] * self.num_heads)
         return q, attention
 
 
-class VisionAttention(nn.Module):
+# == 以下是 Spatial Attention 相关的实现 == （即在 Attention 的输入输出做修改）
+
+
+class LinearAttention(nn.Module):
+    """
+    参考代码：
+    """
+    def __init__(self, d_model: int):
+        super().__init__()
+        self.weights = nn.Conv2d(d_model, 3 * d_model, 1, stride=1, padding=0, bias=False)
+        self.weight_Output = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
+        self.init_weights()
+
+        self.attention = ScaledDotProductAttention(temperature=d_model ** 0.5, dropout=0)
+
+    def init_weights(self):
+        for module in [self.weight_Q, self.weight_K, self.weight_V, self.weight_Output]:
+            init.xavier_uniform_(module.weight)
+            init.zeros_(module.bias)
+        init.xavier_uniform_(self.weight_Output.weight, gain=1e-5)
+
+    # noinspection PyPep8Naming
+    def forward(self, x):
+        B, C, H, W = x.shape
+        # [B, C, H, W] -> [B, H, W, 3*C] -> [B, H*W, 3*C] -> 3*[B, H*W, C]
+        # 先 permute 或者 transpose 再 view 需要注意是否会影响 view ，否则要在中间添加 contiguous
+        # 也可以 q = einops.rearrange(q, 'b c h w -> b (h w) c')
+        qkv = self.weights(x).permute(0, 2, 3, 1).view(B, H * W, -1)
+        q, k, v = torch.split(qkv, C, dim=-1)
+
+        # 计算注意力权重
+        output, attention = self.attention(q, k, v)
+
+        # [B, H*W, C] -> [B, H, W, C] -> [B, C, H, W]
+        # 也可以 output = einops.rearrange(output, 'b (h w) c -> b c h w', h=H, w=W)
+        output = output.view(B, H, W, C).permute(0, 3, 1, 2)
+        output = self.weight_Output(output)
+
+        return x + output, attention
+
+
+class SpatialSelfAttention(nn.Module):
+    """
+    参考代码：
+    """
     def __init__(self, d_model: int):
         super().__init__()
         self.weight_Q = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
@@ -214,6 +270,7 @@ class VisionAttention(nn.Module):
         B, C, H, W = x.shape
         # [B, C, H, W] -> [B, H, W, C] -> [B, H*W, C]
         # 先 permute 或者 transpose 再 view 需要注意是否会影响 view ，否则要在中间添加 contiguous
+        # 也可以 q = einops.rearrange(q, 'b c h w -> b (h w) c')
         q = self.weight_Q(x).permute(0, 2, 3, 1).view(B, H * W, C)
         k = self.weight_K(x).permute(0, 2, 3, 1).view(B, H * W, C)
         v = self.weight_V(x).permute(0, 2, 3, 1).view(B, H * W, C)
@@ -221,7 +278,8 @@ class VisionAttention(nn.Module):
         # 计算注意力权重
         output, attention = self.attention(q, k, v)
 
-        # [B, HxW, C] -> [B, H, W, C] -> [B, C, H, W]
+        # [B, H*W, C] -> [B, H, W, C] -> [B, C, H, W]
+        # 也可以 output = einops.rearrange(output, 'b (h w) c -> b c h w', h=H, w=W)
         output = output.view(B, H, W, C).permute(0, 3, 1, 2)
         output = self.weight_Output(output)
 

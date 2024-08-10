@@ -5,7 +5,7 @@ from torch import nn
 from torch.nn import init
 from torch.nn import functional as F
 
-from modules.attention import VisionAttention
+from modules.attention import SpatialSelfAttention
 from modules.activation import Swish
 
 
@@ -14,7 +14,7 @@ class TimeEmbeddingProjection(nn.Module):
     Time embedding projection module.
     """
     # noinspection PyPep8Naming
-    def __init__(self, T, embedding_dim, dim):
+    def __init__(self, T, embedding_dim, hidden_dim):
         assert embedding_dim % 2 == 0
         super().__init__()
         position = torch.arange(T).float()                  # [T]
@@ -27,9 +27,9 @@ class TimeEmbeddingProjection(nn.Module):
 
         self.time_embedding = nn.Sequential(
             nn.Embedding.from_pretrained(embedding),
-            nn.Linear(embedding_dim, dim),
+            nn.Linear(embedding_dim, hidden_dim),
             Swish(),
-            nn.Linear(dim, dim),
+            nn.Linear(hidden_dim, hidden_dim),
         )
         self.init_weights()
 
@@ -81,7 +81,7 @@ class AttentionBlock(nn.Module):
     def __init__(self, d_model):
         super().__init__()
         self.group_norm = nn.GroupNorm(32, d_model)
-        self.attention = VisionAttention(d_model)
+        self.attention = SpatialSelfAttention(d_model)
 
     def forward(self, x):
         x_norm = self.group_norm(x)
