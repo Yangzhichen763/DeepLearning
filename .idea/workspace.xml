@@ -4,10 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 GAU 和 GLU 模块">
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 实现 Lite Vision Transformer 的 CSA 模块；&#10;2. 实现 LDM 中与 time-embedding 相关的 UNet 结构，和 Encoder、Decoder 结构；">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/plot/figure_tutorial.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/utils/plot/figure_tutorial.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/plot/table_tutorial.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/utils/plot/table_tutorial.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,6 +72,7 @@
   "keyToString": {
     "Python tests.Doctests in __init__.executor": "Run",
     "Python.Attention.executor": "Run",
+    "Python.CSA.executor": "Run",
     "Python.ConvolutionalGLU.executor": "Run",
     "Python.FPN.executor": "Run",
     "Python.Image.executor": "Run",
@@ -105,21 +104,22 @@
     "Python.part.executor": "Run",
     "Python.parts.executor": "Debug",
     "Python.save.executor": "Run",
-    "Python.test.executor": "Run",
+    "Python.test.executor": "Debug",
     "Python.text.executor": "Run",
+    "Python.timestep.executor": "Run",
     "Python.train.executor": "Run",
     "Python.transform.executor": "Run",
     "Python.viewer3d.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
-    "last_opened_file_path": "E:/Developments/PythonLearning/DeepLearning",
+    "last_opened_file_path": "E:/Developments/PythonLearning/_cutting-edge/latent-diffusion-main",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "settings.editor.selected.configurable": "preferences.keymap",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -130,11 +130,11 @@
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\plugandplay\SENet\figures" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Developments\PythonLearning\DeepLearning\utils\plot\manifoldlearning" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\featurefusion" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\conv" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\fft" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\diffusion" />
-      <recent name="E:\Developments\PythonLearning\DeepLearning\modules\multimodal\CLIP\pictures" />
     </key>
   </component>
   <component name="RunManager">
@@ -560,39 +560,15 @@
       <workItem from="1722845853817" duration="17068000" />
       <workItem from="1722867872559" duration="17337000" />
       <workItem from="1722933781076" duration="14830000" />
-      <workItem from="1723104468178" duration="12395000" />
-    </task>
-    <task id="LOCAL-00008" summary="1. 实现 DenseNet 的网络结构和训练代码。">
-      <option name="closed" value="true" />
-      <created>1715434763260</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1715434763260</updated>
-    </task>
-    <task id="LOCAL-00009" summary="1. 学习 plt 图像绘制代码。">
-      <option name="closed" value="true" />
-      <created>1715498092896</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1715498092896</updated>
-    </task>
-    <task id="LOCAL-00010" summary="1. 完成 UNet 训练部分代码，图像分割训练时，掩码需要先转换成label值组成的图像，具体见./lately/segment_utils/datasets&#10;2. 修改文件夹名">
-      <option name="closed" value="true" />
-      <created>1715614355505</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1715614355505</updated>
-    </task>
-    <task id="LOCAL-00011" summary="1. 训练过程和验证过程使用 tqdm 库进行进度条显示。&#10;2. 学习了怎么获取到项目的路径，numpy 和 tensor 之间的转换。&#10;3. 改进 UNet 训练代码。">
-      <option name="closed" value="true" />
-      <created>1715701726810</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1715701726810</updated>
+      <workItem from="1723104468178" duration="20117000" />
+      <workItem from="1723170147476" duration="426000" />
+      <workItem from="1723170599074" duration="1223000" />
+      <workItem from="1723172592145" duration="860000" />
+      <workItem from="1723173499617" duration="912000" />
+      <workItem from="1723174497179" duration="1220000" />
+      <workItem from="1723175805574" duration="2735000" />
+      <workItem from="1723184332436" duration="33439000" />
+      <workItem from="1723295473688" duration="2361000" />
     </task>
     <task id="LOCAL-00012" summary="1. 训练部分代码除了 VOC 数据集外，还添加了 Carvana 数据集；成功将 label 转换成 mask，mask 转换成 label。&#10;2. UNet 中添加了 bilinear 上采样。">
       <option name="closed" value="true" />
@@ -954,7 +930,39 @@
       <option name="project" value="LOCAL" />
       <updated>1723014180005</updated>
     </task>
-    <option name="localTasksCounter" value="57" />
+    <task id="LOCAL-00057" summary="1. 整理一些模块代码，新添加的模块没有代码实现，但是有论文和代码来源，可供学习和参考；&#10;2. 修改图表绘制代码">
+      <option name="closed" value="true" />
+      <created>1723119800868</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1723119800869</updated>
+    </task>
+    <task id="LOCAL-00058" summary="1. 整理一些模块代码，新添加的模块没有代码实现，但是有论文和代码来源，可供学习和参考；&#10;2. 修改图表绘制代码">
+      <option name="closed" value="true" />
+      <created>1723190133663</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1723190133664</updated>
+    </task>
+    <task id="LOCAL-00059" summary="1. 添加特征降维可视化 t-SNE、UMAP 等算法应用代码">
+      <option name="closed" value="true" />
+      <created>1723190192702</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1723190192702</updated>
+    </task>
+    <task id="LOCAL-00060" summary="1. 实现 Lite Vision Transformer 的 CSA 模块；&#10;2. 实现 LDM 中与 time-embedding 相关的 UNet 结构，和 Encoder、Decoder 结构；">
+      <option name="closed" value="true" />
+      <created>1723296794092</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1723296794092</updated>
+    </task>
+    <option name="localTasksCounter" value="61" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1019,9 +1027,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="1. 学习并编写 ECA 模块，相对于 SENet 参数量少了非常多，去除了不必要的全局通道捕获，避免了维度缩减。" />
-    <MESSAGE value="1. 增加 ECA-NS 模块。" />
-    <MESSAGE value="1. 编写 DANet 视觉注意力模块。" />
     <MESSAGE value="1. 编写 DSConv(Depthwise Separable Convolution) 视觉注意力模块。" />
     <MESSAGE value="1. 终于把最基础的 DDPM(Denoising Diffusion Probabilistic Models) 做出来了。代码的运行速度很慢，需要再学习其他的论文对模型进行优化（速度，生成图像质量，目前 Train 一次需要 2 小时，生成的还是噪声）。" />
     <MESSAGE value="1. 添加 DDIM，并训练和测试模型，得出来的结果和论文中描述的相反，后面会继续修改代码。" />
@@ -1044,7 +1049,10 @@
     <MESSAGE value="1. 添加科研表格绘制内容" />
     <MESSAGE value="1. 添加科研表格绘制内容，参考《TransNeXt: Robust Foveal Visual Perception for Vision Transformers》" />
     <MESSAGE value="1. 添加 GAU 和 GLU 模块" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 GAU 和 GLU 模块" />
+    <MESSAGE value="1. 整理一些模块代码，新添加的模块没有代码实现，但是有论文和代码来源，可供学习和参考；&#10;2. 修改图表绘制代码" />
+    <MESSAGE value="1. 添加特征降维可视化 t-SNE、UMAP 等算法应用代码" />
+    <MESSAGE value="1. 实现 Lite Vision Transformer 的 CSA 模块；&#10;2. 实现 LDM 中与 time-embedding 相关的 UNet 结构，和 Encoder、Decoder 结构；" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 实现 Lite Vision Transformer 的 CSA 模块；&#10;2. 实现 LDM 中与 time-embedding 相关的 UNet 结构，和 Encoder、Decoder 结构；" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="XDebuggerManager">
@@ -1062,14 +1070,16 @@
     <SUITE FILE_PATH="coverage/DeepLearning$ResNet.coverage" NAME="ResNet Coverage Results" MODIFIED="1716984747744" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$train.coverage" NAME="train Coverage Results" MODIFIED="1721804635894" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reproduction/lately/ScoreSDEs" />
     <SUITE FILE_PATH="coverage/DeepLearning$ResNeXt.coverage" NAME="ResNeXt Coverage Results" MODIFIED="1716909700686" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
-    <SUITE FILE_PATH="coverage/DeepLearning$parts.coverage" NAME="parts Coverage Results" MODIFIED="1721739213176" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reproduction/lately/ScoreSDEs" />
     <SUITE FILE_PATH="coverage/DeepLearning$interpret.coverage" NAME="interpret Coverage Results" MODIFIED="1718419539445" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lately/DiffusionModel" />
+    <SUITE FILE_PATH="coverage/DeepLearning$parts.coverage" NAME="parts Coverage Results" MODIFIED="1721739213176" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reproduction/lately/ScoreSDEs" />
     <SUITE FILE_PATH="coverage/DeepLearning$SRA.coverage" NAME="SRA Coverage Results" MODIFIED="1722847304932" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/attention/PVT" />
     <SUITE FILE_PATH="coverage/DeepLearning$ConvolutionalGLU.coverage" NAME="ConvolutionalGLU Coverage Results" MODIFIED="1722351349797" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/conv/TransNeXt" />
-    <SUITE FILE_PATH="coverage/DeepLearning$transform.coverage" NAME="transform Coverage Results" MODIFIED="1723118551423" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot/imagedraw/cv" />
+    <SUITE FILE_PATH="coverage/DeepLearning$transform.coverage" NAME="transform Coverage Results" MODIFIED="1723120456247" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot/imagedraw/cv" />
     <SUITE FILE_PATH="coverage/DeepLearning$general.coverage" NAME="general Coverage Results" MODIFIED="1717506648226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
     <SUITE FILE_PATH="coverage/DeepLearning$text.coverage" NAME="text Coverage Results" MODIFIED="1722921515710" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot" />
     <SUITE FILE_PATH="coverage/DeepLearning$Doctests_in___init__.coverage" NAME="Doctests in __init__ Coverage Results" MODIFIED="1721832888959" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
+    <SUITE FILE_PATH="coverage/DeepLearning$CSA.coverage" NAME="CSA Coverage Results" MODIFIED="1723295914326" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/attention/LVT" />
+    <SUITE FILE_PATH="coverage/DeepLearning$timestep.coverage" NAME="timestep Coverage Results" MODIFIED="1723196148708" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
     <SUITE FILE_PATH="coverage/DeepLearning$Inception.coverage" NAME="Inception Coverage Results" MODIFIED="1716882238004" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$Attention.coverage" NAME="Attention Coverage Results" MODIFIED="1722847207795" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/attention" />
     <SUITE FILE_PATH="coverage/DeepLearning$model.coverage" NAME="model Coverage Results" MODIFIED="1721732050178" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reproduction/lately/ScoreSDEs" />
@@ -1081,7 +1091,7 @@
     <SUITE FILE_PATH="coverage/DeepLearning$models.coverage" NAME="models Coverage Results" MODIFIED="1715236069032" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/ViT(VisionTransformer)" />
     <SUITE FILE_PATH="coverage/DeepLearning$Image.coverage" NAME="Image Coverage Results" MODIFIED="1715606972619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Programs/Python/Python39/Lib/site-packages/PIL" />
     <SUITE FILE_PATH="coverage/DeepLearning$loss.coverage" NAME="loss Coverage Results" MODIFIED="1717857075022" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork" />
-    <SUITE FILE_PATH="coverage/DeepLearning$test.coverage" NAME="test Coverage Results" MODIFIED="1722258535251" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
+    <SUITE FILE_PATH="coverage/DeepLearning$test.coverage" NAME="test Coverage Results" MODIFIED="1723283168373" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/DeepLearning$mousestrategy.coverage" NAME="mousestrategy Coverage Results" MODIFIED="1723113654247" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot/imagedraw/strategies" />
     <SUITE FILE_PATH="coverage/DeepLearning$datasets.coverage" NAME="datasets Coverage Results" MODIFIED="1717566181770" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch/segment" />
     <SUITE FILE_PATH="coverage/DeepLearning$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1723107982973" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot/imagedraw" />
