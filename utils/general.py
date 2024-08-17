@@ -120,6 +120,8 @@ class Trainer:
             >>> for epoch in range(1, num_epochs + 1):
             >>>     total_loss = 0.
             >>>     num_items = 0
+
+            >>>     model.train()
             >>>     for (i, (x, y)) in enumerate(data_loader):
             >>>         x = x.to(device)
             >>>
@@ -136,14 +138,15 @@ class Trainer:
 
             改为：
             >>> trainer = Trainer(data_loader, optimizer)
-            >>> manager = Manager(score_model, device)
+            >>> manager = Manager(model, device)
             >>> for epoch in range(1, num_epochs + 1):
             >>>     datas = trainer.start(epoch)
-            >>>     sde_model.train()
+
+            >>>     model.train()
             >>>     for (i, (x, y)) in datas:
             >>>         x = x.to(device)
             >>>
-            >>>         predict, loss = trainer.predict(sde_model, x, y, sde_model.loss_func)  # 预测和计算损失
+            >>>         predict, loss = trainer.predict(model, x, y, criterion)  # 预测和计算损失
             >>>         trainer.backward(loss)  # 反向传播
             >>>         trainer.step(i, loss)   # 更新参数
             >>>

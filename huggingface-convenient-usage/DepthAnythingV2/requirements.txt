@@ -1,0 +1,8 @@
+transformers
+pillow
+torch
+torchvision
+
+# 如果需要在 jupyter notebook 中演示，还需要安装以下包：
+jupyter
+matplotlib
