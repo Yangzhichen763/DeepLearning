@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加改进，整理文件">
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 DepthAnything 的 transformers 调用">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/general.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/general.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/transformers/download.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/transformers/download.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/huggingface-convenient-usage/DepthAnythingV2/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/huggingface-convenient-usage/DepthAnythingV2/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,6 +96,7 @@
     "Python.interpret.executor": "Run",
     "Python.learning.executor": "Run",
     "Python.loss.executor": "Run",
+    "Python.main.executor": "Run",
     "Python.model (1).executor": "Run",
     "Python.model.executor": "Run",
     "Python.modellogger.executor": "Run",
@@ -117,7 +116,7 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
-    "last_opened_file_path": "E:/Developments/PythonLearning/_cutting-edge/ttt-lm-pytorch-main",
+    "last_opened_file_path": "E:/Developments/PythonLearning/DeepLearning/huggingface-convenient-usage/Hiera(MAEImageEncoder)/figures",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -129,6 +128,8 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\Developments\PythonLearning\DeepLearning\huggingface-convenient-usage\Hiera(MAEImageEncoder)\figures" />
+      <recent name="E:\Developments\PythonLearning\DeepLearning\huggingface-convenient-usage\Hiera ImageEncoder" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\attention\TransNeXt\figures" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\lately\DiffusionModel\figures" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\plugandplay\SENet\figures" />
@@ -887,14 +888,7 @@
       <workItem from="1723533162975" duration="1138000" />
       <workItem from="1723790296440" duration="4465000" />
       <workItem from="1723880122196" duration="4656000" />
-    </task>
-    <task id="LOCAL-00014" summary="1. 尝试训练一个椭圆识别网络模型，目前存在的问题是①不会收敛；②梯度爆炸；③网络模型需要优化，椭圆识别的问题可以转化目标检测&#10;2. 解决 tqdm 和 print 输出冲突的问题，用 tqdm.write 替代 print 输出">
-      <option name="closed" value="true" />
-      <created>1716010680868</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1716010680868</updated>
+      <workItem from="1723887358860" duration="10864000" />
     </task>
     <task id="LOCAL-00015" summary="1. 使用 Carvana 数据集训练 UNet，成功运行。&#10;2. 改进椭圆识别网络模型的 Loss 函数。&#10;3. 添加热度图的三维可视化代码。">
       <option name="closed" value="true" />
@@ -1280,7 +1274,15 @@
       <option name="project" value="LOCAL" />
       <updated>1723473755264</updated>
     </task>
-    <option name="localTasksCounter" value="63" />
+    <task id="LOCAL-00063" summary="1. 添加 DepthAnything 的 transformers 调用">
+      <option name="closed" value="true" />
+      <created>1723887537659</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1723887537659</updated>
+    </task>
+    <option name="localTasksCounter" value="64" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1345,7 +1347,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="1. 添加 DDIM，并训练和测试模型，得出来的结果和论文中描述的相反，后面会继续修改代码。" />
     <MESSAGE value="1. 添加 GlobalFilter，傅里叶变换模块" />
     <MESSAGE value="1. 添加 AFNO 傅里叶变换模块，性能优于之前的傅里叶变换模块" />
     <MESSAGE value="1. 添加 FCANet 傅里叶变换频域通道注意力机制模块&#10;2. 整理文件架构" />
@@ -1370,7 +1371,8 @@
     <MESSAGE value="1. 实现 Lite Vision Transformer 的 CSA 模块；&#10;2. 实现 LDM 中与 time-embedding 相关的 UNet 结构，和 Encoder、Decoder 结构；" />
     <MESSAGE value="1. 添加包含各种 Attention 的论文合集（来自《Attention Mechanisms in Computer Vision:  A Survey》）&#10;2. 添加 dpm_solver 代码，但是还没有理解其中的代码" />
     <MESSAGE value="1. 添加改进，整理文件" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 添加改进，整理文件" />
+    <MESSAGE value="1. 添加 DepthAnything 的 transformers 调用" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 DepthAnything 的 transformers 调用" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="XDebuggerManager">
@@ -1406,6 +1408,7 @@
     <SUITE FILE_PATH="coverage/DeepLearning$OBB.coverage" NAME="OBB Coverage Results" MODIFIED="1717165364906" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lossFunc/BBLoss" />
     <SUITE FILE_PATH="coverage/DeepLearning$learning.coverage" NAME="learning Coverage Results" MODIFIED="1715751498928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch/segment" />
     <SUITE FILE_PATH="coverage/DeepLearning$FPN.coverage" NAME="FPN Coverage Results" MODIFIED="1716731835081" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules" />
+    <SUITE FILE_PATH="coverage/DeepLearning$main.coverage" NAME="main Coverage Results" MODIFIED="1724046140103" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/huggingface-convenient-usage/Hiera(MAEImageEncoder)" />
     <SUITE FILE_PATH="coverage/DeepLearning$models.coverage" NAME="models Coverage Results" MODIFIED="1715236069032" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/ViT(VisionTransformer)" />
     <SUITE FILE_PATH="coverage/DeepLearning$Image.coverage" NAME="Image Coverage Results" MODIFIED="1715606972619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Programs/Python/Python39/Lib/site-packages/PIL" />
     <SUITE FILE_PATH="coverage/DeepLearning$loss.coverage" NAME="loss Coverage Results" MODIFIED="1717857075022" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork" />
