@@ -4,9 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 DepthAnything 的 transformers 调用">
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 Hiera(MAE pre-trained ImageEncoder) 的 torch.hub 调用">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/huggingface-convenient-usage/DepthAnythingV2/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/huggingface-convenient-usage/DepthAnythingV2/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/embedding/embedding.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/embedding/embedding.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/embedding/timestep.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/embedding/timestep.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/embedding/vision.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/embedding/vision.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/mlp/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/mlp/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/models.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,6 +77,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Python tests.Doctests in __init__.executor": "Run",
+    "Python tests.Doctests in embedding.executor": "Run",
     "Python.Attention.executor": "Run",
     "Python.CSA.executor": "Run",
     "Python.ConvolutionalGLU.executor": "Run",
@@ -89,10 +95,13 @@
     "Python.Transformer.executor": "Run",
     "Python.__init__.executor": "Run",
     "Python.coco.executor": "Run",
+    "Python.complex_test.executor": "Run",
     "Python.datapicker.executor": "Run",
     "Python.datasets.executor": "Run",
     "Python.depthanythingv2.executor": "Run",
+    "Python.embedding.executor": "Run",
     "Python.general.executor": "Run",
+    "Python.hydra_test.executor": "Run",
     "Python.interpret.executor": "Run",
     "Python.learning.executor": "Run",
     "Python.loss.executor": "Run",
@@ -107,22 +116,24 @@
     "Python.part.executor": "Run",
     "Python.parts.executor": "Debug",
     "Python.save.executor": "Run",
+    "Python.stack_cat_test.executor": "Run",
     "Python.test.executor": "Debug",
     "Python.text.executor": "Run",
     "Python.timestep.executor": "Run",
     "Python.train.executor": "Run",
     "Python.transform.executor": "Run",
     "Python.viewer3d.executor": "Run",
+    "Python.vision.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
-    "last_opened_file_path": "E:/Developments/PythonLearning/DeepLearning/huggingface-convenient-usage/Hiera(MAEImageEncoder)/figures",
+    "last_opened_file_path": "E:/Developments/PythonLearning/_cutting-edge/tensor2tensor-master",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "settings.editor.selected.configurable": "editor.preferences.completion",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -135,11 +146,11 @@
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\plugandplay\SENet\figures" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Developments\PythonLearning\DeepLearning\modeling" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\huggingface-convenient-usage\DepthAnythingV2" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\utils\plot\manifoldlearning" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\featurefusion" />
       <recent name="E:\Developments\PythonLearning\DeepLearning\modules\conv" />
-      <recent name="E:\Developments\PythonLearning\DeepLearning\modules\fft" />
     </key>
   </component>
   <component name="RunManager">
@@ -666,6 +677,29 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="embedding" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="DeepLearning" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/modules/embedding" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/modules/embedding/embedding.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="Python.FlaskServer">
       <module name="pythonProject" />
       <option name="ENV_FILES" value="" />
@@ -763,6 +797,11 @@
       <option name="USE_PATTERN" value="false" />
       <method v="2" />
     </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.embedding" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -888,15 +927,9 @@
       <workItem from="1723533162975" duration="1138000" />
       <workItem from="1723790296440" duration="4465000" />
       <workItem from="1723880122196" duration="4656000" />
-      <workItem from="1723887358860" duration="10864000" />
-    </task>
-    <task id="LOCAL-00015" summary="1. 使用 Carvana 数据集训练 UNet，成功运行。&#10;2. 改进椭圆识别网络模型的 Loss 函数。&#10;3. 添加热度图的三维可视化代码。">
-      <option name="closed" value="true" />
-      <created>1716206386538</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1716206386538</updated>
+      <workItem from="1723887358860" duration="13539000" />
+      <workItem from="1724065039855" duration="2644000" />
+      <workItem from="1724069140163" duration="48676000" />
     </task>
     <task id="LOCAL-00016" summary="1. 添加 FPN 模块；&#10;2. 整理 Attention 代码。">
       <option name="closed" value="true" />
@@ -1282,7 +1315,15 @@
       <option name="project" value="LOCAL" />
       <updated>1723887537659</updated>
     </task>
-    <option name="localTasksCounter" value="64" />
+    <task id="LOCAL-00064" summary="1. 添加 Hiera(MAE pre-trained ImageEncoder) 的 torch.hub 调用">
+      <option name="closed" value="true" />
+      <created>1724046241625</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1724046241625</updated>
+    </task>
+    <option name="localTasksCounter" value="65" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1347,7 +1388,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="1. 添加 GlobalFilter，傅里叶变换模块" />
     <MESSAGE value="1. 添加 AFNO 傅里叶变换模块，性能优于之前的傅里叶变换模块" />
     <MESSAGE value="1. 添加 FCANet 傅里叶变换频域通道注意力机制模块&#10;2. 整理文件架构" />
     <MESSAGE value="1. 添加 Lora 模块" />
@@ -1372,7 +1412,8 @@
     <MESSAGE value="1. 添加包含各种 Attention 的论文合集（来自《Attention Mechanisms in Computer Vision:  A Survey》）&#10;2. 添加 dpm_solver 代码，但是还没有理解其中的代码" />
     <MESSAGE value="1. 添加改进，整理文件" />
     <MESSAGE value="1. 添加 DepthAnything 的 transformers 调用" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 DepthAnything 的 transformers 调用" />
+    <MESSAGE value="1. 添加 Hiera(MAE pre-trained ImageEncoder) 的 torch.hub 调用" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 Hiera(MAE pre-trained ImageEncoder) 的 torch.hub 调用" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="XDebuggerManager">
@@ -1397,15 +1438,20 @@
     <SUITE FILE_PATH="coverage/DeepLearning$transform.coverage" NAME="transform Coverage Results" MODIFIED="1723120456247" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot/imagedraw/cv" />
     <SUITE FILE_PATH="coverage/DeepLearning$general.coverage" NAME="general Coverage Results" MODIFIED="1717506648226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
     <SUITE FILE_PATH="coverage/DeepLearning$text.coverage" NAME="text Coverage Results" MODIFIED="1722921515710" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot" />
+    <SUITE FILE_PATH="coverage/DeepLearning$hydra_test.coverage" NAME="hydra_test Coverage Results" MODIFIED="1724227860205" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/DeepLearning$Doctests_in___init__.coverage" NAME="Doctests in __init__ Coverage Results" MODIFIED="1721832888959" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
     <SUITE FILE_PATH="coverage/DeepLearning$CSA.coverage" NAME="CSA Coverage Results" MODIFIED="1723295914326" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/attention/LVT" />
     <SUITE FILE_PATH="coverage/DeepLearning$timestep.coverage" NAME="timestep Coverage Results" MODIFIED="1723196148708" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
+    <SUITE FILE_PATH="coverage/DeepLearning$Doctests_in_embedding.coverage" NAME="Doctests in embedding Coverage Results" MODIFIED="1724319595621" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
     <SUITE FILE_PATH="coverage/DeepLearning$Inception.coverage" NAME="Inception Coverage Results" MODIFIED="1716882238004" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$Attention.coverage" NAME="Attention Coverage Results" MODIFIED="1722847207795" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/attention" />
+    <SUITE FILE_PATH="coverage/DeepLearning$complex_test.coverage" NAME="complex_test Coverage Results" MODIFIED="1724323247260" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
+    <SUITE FILE_PATH="coverage/DeepLearning$stack_cat_test.coverage" NAME="stack_cat_test Coverage Results" MODIFIED="1724149482868" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/DeepLearning$model.coverage" NAME="model Coverage Results" MODIFIED="1721732050178" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reproduction/lately/ScoreSDEs" />
     <SUITE FILE_PATH="coverage/DeepLearning$coco.coverage" NAME="coco Coverage Results" MODIFIED="1717724181755" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/DeepLearning$part.coverage" NAME="part Coverage Results" MODIFIED="1715424131810" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/legacy/DenseNet" />
     <SUITE FILE_PATH="coverage/DeepLearning$OBB.coverage" NAME="OBB Coverage Results" MODIFIED="1717165364906" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lossFunc/BBLoss" />
+    <SUITE FILE_PATH="coverage/DeepLearning$embedding.coverage" NAME="embedding Coverage Results" MODIFIED="1724324039655" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
     <SUITE FILE_PATH="coverage/DeepLearning$learning.coverage" NAME="learning Coverage Results" MODIFIED="1715751498928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch/segment" />
     <SUITE FILE_PATH="coverage/DeepLearning$FPN.coverage" NAME="FPN Coverage Results" MODIFIED="1716731835081" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules" />
     <SUITE FILE_PATH="coverage/DeepLearning$main.coverage" NAME="main Coverage Results" MODIFIED="1724046140103" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/huggingface-convenient-usage/Hiera(MAEImageEncoder)" />
@@ -1424,5 +1470,6 @@
     <SUITE FILE_PATH="coverage/DeepLearning$nn.coverage" NAME="nn Coverage Results" MODIFIED="1717920026332" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/torch" />
     <SUITE FILE_PATH="coverage/DeepLearning$save.coverage" NAME="save Coverage Results" MODIFIED="1717726003510" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch" />
     <SUITE FILE_PATH="coverage/DeepLearning$modules.coverage" NAME="modules Coverage Results" MODIFIED="1718259653939" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lately/DiffusionModel" />
+    <SUITE FILE_PATH="coverage/DeepLearning$vision.coverage" NAME="vision Coverage Results" MODIFIED="1724072090660" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
   </component>
 </project>

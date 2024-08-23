@@ -42,18 +42,19 @@ class TimeEmbeddingProjection(Embedding):
         return embedding
 
 
-def get_timestep_embedding(timesteps, embedding_dim):
+def get_timestep_embedding(timesteps, embedding_dim, temperature=10000.0):
     """
     Args:
         timesteps: [T]
         embedding_dim (int): the dimension of the embedding vector
+        temperature (float): the temperature of the positional encoding
     """
     assert len(timesteps.shape) == 1
 
     position = timesteps.float()                        # [T]
     embedding = torch.exp(
         torch.arange(0, embedding_dim, step=2, device=position.device, dtype=torch.float32)
-        / embedding_dim * -math.log(10000)
+        / embedding_dim * -math.log(temperature)
     )                                                   # [d_model // 2]
     embedding = position[:, None] * embedding[None, :]  # [T, 1] * [1, d_model // 2] -> [T, d_model // 2]
     embedding = torch.cat([torch.sin(embedding), torch.cos(embedding)], dim=-1)

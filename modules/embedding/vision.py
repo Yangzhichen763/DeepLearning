@@ -3,24 +3,102 @@ import torch
 import torch.nn as nn
 
 
-class PatchEmbedding(nn.Module):
-    def __init__(self, in_channels, patch_size,  embedding_dim, num_patches, dropout):
-        super(PatchEmbedding, self).__init__()
-        self.patcher = nn.Sequential(
-            nn.Conv2d(in_channels=in_channels, out_channels=embedding_dim, kernel_size=patch_size, stride=patch_size),
-            nn.Flatten(start_dim=-2, end_dim=-1)    # 将 patch 从 [B, C, H, W] 展平为 [B, C, H * W]
-        )
-
-        self.cls_token = nn.Parameter(torch.randn(size=(1, 1, embedding_dim)), requires_grad=True)
-        self.position_embedding = nn.Parameter(torch.randn(size=(1, num_patches + 1, embedding_dim)), requires_grad=True)
-        self.dropout = nn.Dropout(dropout)
+class GlobalPatchEmbedding(nn.Module):
+    """
+    patch pattern:
+        X O X O
+        O O O O
+        X O X O
+        O O O O
+    """
+    def __init__(self, in_channels: int, image_size: tuple[int, int], patch_size: int, embedding_dim: int):
+        super(GlobalPatchEmbedding, self).__init__()
+        self.image_size = image_size
+        self.patch_size = patch_size
+        self.dilation = (image_size[0] // patch_size, image_size[1] // patch_size)
+        self.patcher = nn.Conv2d(in_channels=in_channels,
+                                 out_channels=embedding_dim,
+                                 kernel_size=patch_size,
+                                 dilation=self.dilation)
 
     def forward(self, x):
-        x = self.patcher(x).permute(0, 2, 1)                    # [B, C, H, W] ->[B, C, H * W] -> [B, H * W, C]
-        cls_token = self.cls_token.expand(x.shape[0], -1, -1)   # [1, 1, embedding_dim] -> [B, 1, embedding_dim]
-        print(cls_token.shape, x.shape)
+        """
+        Args:
+            x: [B, C, H, W]
 
-        x = torch.cat([cls_token, x], dim=1)
-        x = x + self.position_embedding
-        x = self.dropout(x)
+        Returns:
+            embedding: [B, H * W, C]
+        """
+        x = self.patcher(x).permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, P, P, C*H*W//P^2], p=patch_size
         return x
+
+
+class LocalPatchEmbedding(nn.Module):
+    """
+    patch pattern:
+        X X O O
+        X X O O
+        O O O O
+        O O O O
+    """
+    def __init__(self, in_channels: int, patch_size: int, embedding_dim: int):
+        super(LocalPatchEmbedding, self).__init__()
+        self.patch_size = patch_size
+        self.patcher = nn.Conv2d(in_channels=in_channels,
+                                 out_channels=embedding_dim,
+                                 kernel_size=patch_size,
+                                 stride=patch_size)
+
+    def forward(self, x):
+        """
+        Args:
+            x: [B, C, H, W]
+
+        Returns:
+            embedding: [B, H * W, C]
+        """
+        x = self.patcher(x).permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, P, P, C*H*W//P^2], p=patch_size
+        return x
+
+
+class PatchEmbedding(nn.Module):
+    def __init__(
+            self,
+            in_channels: int,
+            embedding_dim: int,
+            kernel_size: tuple[int, int],
+            stride: tuple[int, int],
+            padding: tuple[int, int]
+    ):
+        super(PatchEmbedding, self).__init__()
+        self.patcher = nn.Conv2d(in_channels=in_channels,
+                                 out_channels=embedding_dim,
+                                 kernel_size=kernel_size,
+                                 stride=stride,
+                                 padding=padding)
+
+    def forward(self, x):
+        """
+        Args:
+            x: [B, C, H, W]
+
+        Returns:
+            embedding: [B, H, W, C]
+        """
+        x = self.patcher(x).permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, P, P, C*H*W//P^2], p=patch_size
+        return x
+
+
+if __name__ == '__main__':
+
+    x_input = torch.randn(size=(2, 3, 224, 224))
+
+    # GlobalPatchEmbedding
+    model = GlobalPatchEmbedding(in_channels=3, image_size=(224, 224), patch_size=16, embedding_dim=768)
+    out = model(x_input)
+    print("GlobalPatchEmbedding out.shape:", out.shape)
+
+    # LocalPatchEmbedding
+    model = LocalPatchEmbedding(in_channels=3, patch_size=16, embedding_dim=768)
+    out = model(x_input)
+    print("LocalPatchEmbedding out.shape:", out.shape)

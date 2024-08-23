@@ -1,5 +1,6 @@
 import enum
 import math
+from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -28,6 +29,56 @@ def init_parameters(parameter, init_type):
         nn.init.xavier_normal_(parameter)
     else:
         raise NotImplementedError(f"Unsupported parameter initialization type: {init_type}")
+
+
+def get_1d_sinusoidal_positional_embedding(
+    position_indices,
+    max_length: int,
+    temperature: float = 10000.0,
+    device=None
+):
+    """
+    PE_(pos, 2i) = sin(pos/10000^(2i/d_model))
+    PE_(pos, 2i+1) = cos(pos/10000^(2i/d_model))
+    参考代码：
+      1.https://github.com/facebookresearch/segment-anything-2/blob/main/sam2/modeling/position_encoding.py
+      2.https://github.com/facebookresearch/segment-anything-2/blob/main/sam2/modeling/sam2_utils.py
+    """
+    assert max_length % 2 == 0, f"max_length must be even (got max_length = {max_length})"
+
+    # stack((a, b), dim=-1).flatten(start_dim=-2) <==shape=equal==> cat((a, b), dim=-1)
+    dim_pe = max_length // 2
+    _2i = torch.arange(dim_pe, dtype=torch.float, device=device)  # // 2 * 2，参考代码2中使用 // 2 * 2
+    dim_t = temperature ** (_2i / dim_pe)
+
+    # 或者 position_indices[:, None] @ (1 / dim_t)[None, :]
+    position_embedding = position_indices.unsqueeze(-1) / dim_t
+    print(position_embedding.shape)
+    position_embedding = torch.stack(  # 使用 stack 再 flatten 的结果和隔项 cos 和 sin 相加的结果相同，与 cat 结果不一样
+        [position_embedding.sin(), position_embedding.cos()],
+        dim=-1).flatten(start_dim=-2)
+
+    # 结果与下方代码相同
+    # _2i = torch.arange(max_length, dtype=torch.float, device=device) // 2 * 2
+    # dim_t = torch.exp(_2i * -(math.log(temperature) / max_length))
+    #
+    # # 或者 position_indices[:, None] @ dim_t[None, :]
+    # position_embedding = position_indices.unsqueeze(-1) * dim_t
+    # position_embedding = torch.stack(
+    #     [position_embedding[..., 0::2].sin(), position_embedding[..., 1::2].cos()],
+    #     dim=-1).flatten(start_dim=-2)
+
+    # 结果与下方代码相同
+    # _2i = torch.arange(0, max_length, step=2, dtype=torch.float, device=device)
+    # theta = torch.exp(_2i * -(math.log(temperature) / max_length))
+    #
+    # # Even dimensions use sine and odd dimensions use cosine
+    # _embedding = position_indices.unsqueeze(-1) * theta
+    # position_embedding = torch.zeros((*position_indices.shape, max_length), device=device)
+    # position_embedding[..., 0::2] = torch.sin(_embedding)
+    # position_embedding[..., 1::2] = torch.cos(_embedding)
+
+    return position_embedding
 
 
 # == Embedding Modules ==
@@ -80,7 +131,7 @@ class SinusoidalPositionalEmbedding1d(Embedding):
     一维相对位置编码，可区别位置关系但无法区别前后关系
     代码修改于：https://github.com/wzlxjtu/PositionalEncoding2D/blob/master/positionalembedding2d.py
     """
-    def __init__(self, d_model: int, max_length: int, device=None):
+    def __init__(self, d_model: int, max_length: int, device=None, temperature=10000.0):
         super().__init__()
         assert d_model % 2 == 0, f"d_model must be even (got d_model dim = {d_model})"
 
@@ -88,7 +139,7 @@ class SinusoidalPositionalEmbedding1d(Embedding):
 
         position = torch.arange(0, max_length, dtype=torch.float, device=device).unsqueeze(1)
         _2i = torch.arange(0, d_model, step=2, dtype=torch.float, device=device)
-        theta = torch.exp(_2i * -(math.log(10000.0) / d_model))
+        theta = torch.exp(_2i * -(math.log(temperature) / d_model))
 
         # Even dimensions use sine and odd dimensions use cosine
         position_embedding[:, 0::2] = torch.sin(position * theta)
@@ -106,7 +157,7 @@ class SinusoidalPositionalEmbedding2d(Embedding):
     二维相对位置编码，可区别位置关系但无法区别前后关系
     代码修改于：https://github.com/wzlxjtu/PositionalEncoding2D/blob/master/positionalembedding2d.py
     """
-    def __init__(self, d_model: int, height: int, width: int, device=None):
+    def __init__(self, d_model: int, height: int, width: int, device=None, temperature=10000.0):
         super().__init__()
         assert d_model % 4 == 0, f"d_model must be divisible by 4 (got d_model dim = {d_model})"
 
@@ -114,7 +165,7 @@ class SinusoidalPositionalEmbedding2d(Embedding):
         d_model = d_model // 2     # 使用 d_model 的一半作为向量的每个维度
 
         _2i = torch.arange(0, d_model, step=2, dtype=torch.float, device=device)
-        theta = torch.exp(_2i * -(math.log(10000.0) / d_model))
+        theta = torch.exp(_2i * -(math.log(temperature) / d_model))
         position_width = torch.arange(0, width, dtype=torch.float, device=device).unsqueeze(1)
         position_height = torch.arange(0, height, dtype=torch.float, device=device).unsqueeze(1)
 
@@ -141,11 +192,33 @@ class SinusoidalPositionalEmbedding2d(Embedding):
         return self.embedding
 
 
+# 位置编码参考文章：《让研究人员绞尽脑汁的Transformer位置编码》https://kexue.fm/archives/8130
+# 参考代码：https://github.com/ZhuiyiTechnology/roformer/tree/main
 class RotaryPositionalEmbedding(Embedding):
     def __init__(self, d_model: int, max_length: int, device=None):
         super().__init__()
         self.spe = SinusoidalPositionalEmbedding1d(d_model, max_length, device)
         self.embedding = self.spe.embedding
+
+    def forward_qk(self, q, k):
+        embedding = self.spe(q)
+        repeat_shape = (*q.shape[:-len(embedding.shape)], *([1] * len(embedding.shape)))  # (B, N, C) -> (B, 1, 1)
+        embedding = embedding.repeat(repeat_shape)                                        # [N, C] -> [B, N, C]
+        cos_position = embedding[..., 1::2].repeat_interleave(2, dim=-1)
+        sin_position = embedding[..., 0::2].repeat_interleave(2, dim=-1)
+
+        def apply_rotary_pos_emb(x):
+            # stack + reshape != cat, 不能使用 cat 代替，但是 stack(dim=n) + reshape == cat(dim=n+1)
+            # stack(dim=n) + reshape 可以达到交替的效果(其中 reshape 的 shape 和 cat(dim=n) 的 shape 度相同）
+            # 比如：stack([[1, 2], [-1, -2]], dim=-1).reshape -> [1, -1, 2, -2]
+            _x = (torch.stack([-x[..., 1::2], x[..., 0::2]], dim=-1)
+                  .reshape(x.shape))
+            x = x * cos_position + _x * sin_position    # 相当于将 x 进行旋转
+
+        q = apply_rotary_pos_emb(q)
+        k = apply_rotary_pos_emb(k)
+
+        return q, k
 
     def forward(self, x):
         embedding = self.spe(x)
@@ -160,6 +233,34 @@ class RotaryPositionalEmbedding(Embedding):
         _x = (torch.stack([-x[..., 1::2], x[..., 0::2]], dim=-1)
               .reshape(x.shape))
         x = x * cos_position + _x * sin_position    # 相当于将 x 进行旋转
+
+        return x
+
+    # 使用复数形式的旋转位置编码，结果和直接 forward 相同
+    def forward_complex(self, x):
+        embedding = self.spe(x)
+
+        # torch.view_as_complex(a.float().reshape(*a.shape[:-1], -1, 2))
+        def view_as_complex(a: torch.Tensor):
+            a_vec = a.float().reshape(*a.shape[:-1], -1, 2)
+            a_complex = torch.view_as_complex(a_vec)
+            return a_complex
+
+        # 奇偶项互换的 view_as_complex
+        def view_as_reverse_complex(a: torch.Tensor):
+            a_reverse = torch.stack([a[..., 1::2], a[..., 0::2]], dim=-1).reshape(a.shape)  # 奇偶项互换
+            a_vec = a_reverse.float().reshape(*a.shape[:-1], -1, 2)
+            a_complex = torch.view_as_complex(a_vec)
+            return a_complex
+
+        x_ = view_as_complex(x)                     # (real + imag i)
+        pos_ = view_as_reverse_complex(embedding)   # (cos + sin i) <-> (a[2k+1] + a[2k] i)
+        shape_broadcast = [
+            pos_.shape[i - x_.ndim + pos_.ndim] if i >= x_.ndim - 2 else 1
+            for i, _ in enumerate(x_.shape)
+        ]
+        pos_ = pos_.view(*shape_broadcast)
+        x = torch.view_as_real(x_ * pos_).flatten(start_dim=-2)     # 复数相乘就相当于旋转
 
         return x
 
@@ -184,7 +285,7 @@ class RelativePositionalEmbedding(Embedding):
         >>> # Create a RelativePosition instance with 16 dimensions and clipping distance of 10
         >>> relative_position = RelativePositionalEmbedding(d_model=16, clipping_distance=10)
         >>> # Generate relative position embeddings for sequences of lengths 5 and 7
-        >>> embeddings = relative_position(length_query=5, length_key=7)
+        >>> embeddings = relative_position(length_q=5, length_kv=7)
     """
 
     def __init__(self,
@@ -209,20 +310,20 @@ class RelativePositionalEmbedding(Embedding):
         # Initialize the embedding parameters
         init_parameters(self.embedding, init_type)
 
-    def forward(self, q: torch.Tensor, kv: torch.Tensor) -> torch.Tensor:
+    def forward(self, length_q: int, length_kv: int) -> torch.Tensor:
         """
         Compute relative position embeddings.
 
         Args:
-            q (torch.Tensor): query.
-            kv (torch.Tensor): key or value.
+            length_q (torch.Tensor): Lengths of the query sequences.
+            length_kv (torch.Tensor): Lengths of the key-value sequences.
 
         Returns:
             embeddings (torch.Tensor): Relative position embeddings (length_query, length_key, embedding_dim).
         """
         # Generate relative position embeddings
-        indices_q = torch.arange(q.shape[1], device=self.embedding.device)
-        indices_k = torch.arange(kv.shape[1], device=self.embedding.device)
+        indices_q = torch.arange(length_q, device=self.embedding.device)
+        indices_k = torch.arange(length_kv, device=self.embedding.device)
 
         distance_matrix = indices_k[None, :] - indices_q[:, None]
         distance_matrix_clipped = torch.clamp(distance_matrix, -self.clipping_distance, self.clipping_distance)
@@ -257,16 +358,16 @@ class RotaryEmbedding(Embedding):
         self,
         dim,
         max_position_embeddings=16,
-        base=10000,
         device=None,
         scaling_factor=1.0,
+        temperature=10000.0
     ):
         super().__init__()
         self.scaling_factor = scaling_factor
         self.dim = dim
         self.max_position_embeddings = max_position_embeddings
-        self.base = base
-        inv_freq = 1.0 / (self.base ** (torch.arange(0, self.dim, 2, dtype=torch.int64).float().to(device) / self.dim))
+        self.temperature = temperature
+        inv_freq = 1.0 / (temperature ** (torch.arange(0, self.dim, 2, dtype=torch.int64).float().to(device) / self.dim))
         self.register_buffer("inv_freq", inv_freq, persistent=False)
 
     @torch.no_grad()
@@ -287,6 +388,12 @@ class RotaryEmbedding(Embedding):
 
 
 if __name__ == '__main__':
-    a = torch.randn(2, 3, 4, 5)
-    _sum = torch.sum(a, dim=0)
-    print(_sum)
+    x_input = torch.tensor([1, 2, 3, 4])
+    x_input = x_input.repeat(2, 3, 1)
+    model = RotaryPositionalEmbedding(d_model=4, max_length=10)
+    y_output = model(x_input)
+    print(y_output)
+
+    y_output = model.forward_complex(x_input)
+    print(y_output)
+
