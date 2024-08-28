@@ -6,7 +6,7 @@ from torch.nn import init
 from torch.nn import functional as F
 
 from modules.activation import Swish
-from embedding import Embedding
+from .embedding import Embedding
 
 
 class TimeEmbeddingProjection(Embedding):

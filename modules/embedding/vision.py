@@ -27,7 +27,7 @@ class GlobalPatchEmbedding(nn.Module):
             x: [B, C, H, W]
 
         Returns:
-            embedding: [B, H * W, C]
+            embedding: [B, P, P, C*H*W//P^2], p=patch_size
         """
         x = self.patcher(x).permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, P, P, C*H*W//P^2], p=patch_size
         return x
@@ -55,9 +55,9 @@ class LocalPatchEmbedding(nn.Module):
             x: [B, C, H, W]
 
         Returns:
-            embedding: [B, H * W, C]
+            embedding: [B, P, P, C*H*W//P^2], P=patch_size
         """
-        x = self.patcher(x).permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, P, P, C*H*W//P^2], p=patch_size
+        x = self.patcher(x).permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, P, P, C*H*W//P^2], P=patch_size
         return x
 
 
@@ -83,9 +83,9 @@ class PatchEmbedding(nn.Module):
             x: [B, C, H, W]
 
         Returns:
-            embedding: [B, H, W, C]
+            embedding: [B, P, P, C*H*W//P^2], P=patch_size
         """
-        x = self.patcher(x).permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, P, P, C*H*W//P^2], p=patch_size
+        x = self.patcher(x).permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, P, P, C*H*W//P^2], P=patch_size
         return x
 
 

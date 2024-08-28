@@ -23,17 +23,17 @@ class ViTPatchEmbedding(nn.Module):
     def __init__(self, in_channels, patch_size, embedding_dim, num_patches, dropout):
         super(ViTPatchEmbedding, self).__init__()
         self.patcher = LocalPatchEmbedding(in_channels, patch_size, embedding_dim)
-        self.flatten = nn.Flatten(start_dim=-2, end_dim=-1)  # 将 patch 从 [B, C, H, W] 展平为 [B, C, H * W]
+        self.flatten = nn.Flatten(start_dim=-3, end_dim=-2)  # 将 patch 从 [B, H, W, C] 展平为 [B, H * W, C]
 
         self.cls_token = nn.Parameter(torch.randn(size=(1, 1, embedding_dim)), requires_grad=True)
         self.position_embedding = nn.Parameter(torch.randn(size=(1, num_patches + 1, embedding_dim)), requires_grad=True)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        x = self.flatten(self.patcher(x)).permute(0, 2, 1)                    # [B, C, H, W] ->[B, C, H * W] -> [B, H * W, C]
+        x = self.flatten(self.patcher(x))             # [B, P, P, N] -> [B, P * P, N]
         cls_token = self.cls_token.expand(x.shape[0], -1, -1)   # [1, 1, embedding_dim] -> [B, 1, embedding_dim]
 
-        x = torch.cat([cls_token, x], dim=1)
+        x = torch.cat([cls_token, x], dim=1)   # [B, 1, N] + [B, P * P, N] ==concat=> [B, 1 + P * P, N]
         x = x + self.position_embedding
         x = self.dropout(x)
         return x
@@ -65,7 +65,7 @@ class VisionTransformer(nn.Module):
         in_channels = input_shape[-3]                                 # 输入图像的通道数
         num_patches = calculate_num_patches(input_shape, patch_size)  # 输入图像的 patch 数量
 
-        self.patch_embedding = GlobalRelativePatchEmbedding(in_channels, patch_size, embed_dim, num_patches, dropout)
+        self.patch_embedding = ViTPatchEmbedding(in_channels, patch_size, embed_dim, num_patches, dropout)
         encoder_layer = nn.TransformerEncoderLayer(
                                 d_model=embed_dim,
                                 nhead=num_heads,
