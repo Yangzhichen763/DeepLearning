@@ -4,16 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 添加 OPENClip 的使用样例&#10;2. 添加模型文件夹，保存 encoder - decoder 模型代码&#10;3. 添加 CXBlock，来自 ConvNeXt&#10;4. 添加一些测试样例">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 编写常用 backbone 和 neck 的代码，包括 FpnNeck">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modeling/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modeling/backbones/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/modeling/backbones/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/block.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/embedding/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/embedding/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/embedding/timestep.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/embedding/timestep.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/neck/fpn.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/neck/fpn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modeling/backbones/trunk/vit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/trunk/vit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/attention/Attention.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/attention/Attention.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/attention/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/attention/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/modules/embedding/vision.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/embedding/vision.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/mlp/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/mlp/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/plot/figure_tutorial.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/utils/plot/figure_tutorial.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,6 +43,7 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="MIXED" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -76,70 +78,72 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python tests.Doctests in __init__.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Doctests in embedding.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Attention.executor&quot;: &quot;Run&quot;,
-    &quot;Python.CSA.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ConvolutionalGLU.executor&quot;: &quot;Run&quot;,
-    &quot;Python.FPN.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Image.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Inception.executor&quot;: &quot;Run&quot;,
-    &quot;Python.LSTM.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Models.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Modules.executor&quot;: &quot;Run&quot;,
-    &quot;Python.OBB.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Res2Net.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ResNeXt.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ResNet.executor&quot;: &quot;Run&quot;,
-    &quot;Python.SRA.executor&quot;: &quot;Run&quot;,
-    &quot;Python.Transformer.executor&quot;: &quot;Run&quot;,
-    &quot;Python.__init__.executor&quot;: &quot;Run&quot;,
-    &quot;Python.coco.executor&quot;: &quot;Run&quot;,
-    &quot;Python.complex_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.datapicker.executor&quot;: &quot;Run&quot;,
-    &quot;Python.datasets.executor&quot;: &quot;Run&quot;,
-    &quot;Python.depthanythingv2.executor&quot;: &quot;Run&quot;,
-    &quot;Python.embedding.executor&quot;: &quot;Run&quot;,
-    &quot;Python.fpn.executor&quot;: &quot;Run&quot;,
-    &quot;Python.general.executor&quot;: &quot;Run&quot;,
-    &quot;Python.hydra_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.interpret.executor&quot;: &quot;Run&quot;,
-    &quot;Python.learning.executor&quot;: &quot;Run&quot;,
-    &quot;Python.loss.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.model (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.model.executor&quot;: &quot;Run&quot;,
-    &quot;Python.modellogger.executor&quot;: &quot;Run&quot;,
-    &quot;Python.models.executor&quot;: &quot;Run&quot;,
-    &quot;Python.modules.executor&quot;: &quot;Run&quot;,
-    &quot;Python.mousestrategy.executor&quot;: &quot;Run&quot;,
-    &quot;Python.nn.executor&quot;: &quot;Run&quot;,
-    &quot;Python.part.executor&quot;: &quot;Run&quot;,
-    &quot;Python.parts.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.save.executor&quot;: &quot;Run&quot;,
-    &quot;Python.stack_cat_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.text.executor&quot;: &quot;Run&quot;,
-    &quot;Python.timestep.executor&quot;: &quot;Run&quot;,
-    &quot;Python.train.executor&quot;: &quot;Run&quot;,
-    &quot;Python.transform.executor&quot;: &quot;Run&quot;,
-    &quot;Python.viewer3d.executor&quot;: &quot;Run&quot;,
-    &quot;Python.vision.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;E:/Developments/PythonLearning/DeepLearning/modeling/backbones/trunk&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python tests.Doctests in __init__.executor": "Run",
+    "Python tests.Doctests in embedding.executor": "Run",
+    "Python.Attention.executor": "Run",
+    "Python.CSA.executor": "Run",
+    "Python.ConvolutionalGLU.executor": "Run",
+    "Python.FPN.executor": "Run",
+    "Python.Image.executor": "Run",
+    "Python.Inception.executor": "Run",
+    "Python.LSTM.executor": "Run",
+    "Python.Models.executor": "Run",
+    "Python.Modules.executor": "Run",
+    "Python.OBB.executor": "Run",
+    "Python.Res2Net.executor": "Run",
+    "Python.ResNeXt.executor": "Run",
+    "Python.ResNet.executor": "Run",
+    "Python.SRA.executor": "Run",
+    "Python.Transformer.executor": "Run",
+    "Python.__init__.executor": "Run",
+    "Python.block.executor": "Run",
+    "Python.coco.executor": "Run",
+    "Python.complex_test.executor": "Run",
+    "Python.datapicker.executor": "Run",
+    "Python.datasets.executor": "Run",
+    "Python.depthanythingv2.executor": "Run",
+    "Python.embedding.executor": "Run",
+    "Python.fpn.executor": "Run",
+    "Python.general.executor": "Run",
+    "Python.hydra_test.executor": "Run",
+    "Python.interpret.executor": "Run",
+    "Python.learning.executor": "Run",
+    "Python.loss.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.model (1).executor": "Run",
+    "Python.model.executor": "Run",
+    "Python.modellogger.executor": "Run",
+    "Python.models.executor": "Run",
+    "Python.modules.executor": "Run",
+    "Python.mousestrategy.executor": "Run",
+    "Python.nn.executor": "Run",
+    "Python.part.executor": "Run",
+    "Python.parts.executor": "Debug",
+    "Python.save.executor": "Run",
+    "Python.stack_cat_test.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.text.executor": "Run",
+    "Python.timestep.executor": "Run",
+    "Python.train.executor": "Run",
+    "Python.transform.executor": "Run",
+    "Python.viewer3d.executor": "Run",
+    "Python.vision.executor": "Run",
+    "Python.vit.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "E:/Developments/PythonLearning/DeepLearning",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\Developments\PythonLearning\DeepLearning\modeling\backbones\trunk" />
@@ -680,29 +684,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="embedding" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="DeepLearning" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/modules/embedding" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/modules/embedding/embedding.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration default="true" type="Python.FlaskServer">
       <module name="pythonProject" />
       <option name="ENV_FILES" value="" />
@@ -800,11 +781,6 @@
       <option name="USE_PATTERN" value="false" />
       <method v="2" />
     </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Python.embedding" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -934,15 +910,10 @@
       <workItem from="1724065039855" duration="2644000" />
       <workItem from="1724069140163" duration="52783000" />
       <workItem from="1724510996702" duration="1328000" />
-      <workItem from="1724659395071" duration="13980000" />
-    </task>
-    <task id="LOCAL-00017" summary="1. 添加 Focal Loss 损失函数，后续会继续添加 GFL、DFL 等损失函数；&#10;2. 使用 ResNet 改进椭圆检测模型。">
-      <option name="closed" value="true" />
-      <created>1716823529010</created>
-      <option name="number" value="00017" />
-      <option name="presentableId" value="LOCAL-00017" />
-      <option name="project" value="LOCAL" />
-      <updated>1716823529010</updated>
+      <workItem from="1724659395071" duration="28540000" />
+      <workItem from="1725106478531" duration="5000" />
+      <workItem from="1725166199731" duration="15670000" />
+      <workItem from="1725190636402" duration="946000" />
     </task>
     <task id="LOCAL-00018" summary="1. 实现 Inception-v1, Inception-v2 的各种模块；&#10;2. 更新 FPN，使得可拓展性更强">
       <option name="closed" value="true" />
@@ -1328,7 +1299,15 @@
       <option name="project" value="LOCAL" />
       <updated>1724402026980</updated>
     </task>
-    <option name="localTasksCounter" value="66" />
+    <task id="LOCAL-00066" summary="1. 编写常用 backbone 和 neck 的代码，包括 FpnNeck">
+      <option name="closed" value="true" />
+      <created>1724854823502</created>
+      <option name="number" value="00066" />
+      <option name="presentableId" value="LOCAL-00066" />
+      <option name="project" value="LOCAL" />
+      <updated>1724854823503</updated>
+    </task>
+    <option name="localTasksCounter" value="67" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1393,7 +1372,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="1. 添加 FCANet 傅里叶变换频域通道注意力机制模块&#10;2. 整理文件架构" />
     <MESSAGE value="1. 添加 Lora 模块" />
     <MESSAGE value="1. 添加 ScoreSDEs 的 EulerMaruyamaSampler（噪声采样）和 PredictorCorrectorSampler（Langevin MCMC矫正）&#10;2. 整理 DDPM 和 DDIM 文件" />
     <MESSAGE value="1. 添加 NumericalODESampler；&#10;2. 整理 Sampler（采样器）的相关代码；&#10;3. 整理 utils 的组织架构。" />
@@ -1418,7 +1396,8 @@
     <MESSAGE value="1. 添加 DepthAnything 的 transformers 调用" />
     <MESSAGE value="1. 添加 Hiera(MAE pre-trained ImageEncoder) 的 torch.hub 调用" />
     <MESSAGE value="1. 添加 OPENClip 的使用样例&#10;2. 添加模型文件夹，保存 encoder - decoder 模型代码&#10;3. 添加 CXBlock，来自 ConvNeXt&#10;4. 添加一些测试样例" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 添加 OPENClip 的使用样例&#10;2. 添加模型文件夹，保存 encoder - decoder 模型代码&#10;3. 添加 CXBlock，来自 ConvNeXt&#10;4. 添加一些测试样例" />
+    <MESSAGE value="1. 编写常用 backbone 和 neck 的代码，包括 FpnNeck" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 编写常用 backbone 和 neck 的代码，包括 FpnNeck" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="XDebuggerManager">
@@ -1435,6 +1414,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/DeepLearning$ResNet.coverage" NAME="ResNet Coverage Results" MODIFIED="1716984747744" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$train.coverage" NAME="train Coverage Results" MODIFIED="1721804635894" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reproduction/lately/ScoreSDEs" />
+    <SUITE FILE_PATH="coverage/DeepLearning$block.coverage" NAME="block Coverage Results" MODIFIED="1725179611440" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modeling/backbones" />
     <SUITE FILE_PATH="coverage/DeepLearning$ResNeXt.coverage" NAME="ResNeXt Coverage Results" MODIFIED="1716909700686" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$interpret.coverage" NAME="interpret Coverage Results" MODIFIED="1718419539445" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lately/DiffusionModel" />
     <SUITE FILE_PATH="coverage/DeepLearning$parts.coverage" NAME="parts Coverage Results" MODIFIED="1721739213176" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reproduction/lately/ScoreSDEs" />
@@ -1450,24 +1430,25 @@
     <SUITE FILE_PATH="coverage/DeepLearning$timestep.coverage" NAME="timestep Coverage Results" MODIFIED="1723196148708" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
     <SUITE FILE_PATH="coverage/DeepLearning$Doctests_in_embedding.coverage" NAME="Doctests in embedding Coverage Results" MODIFIED="1724319595621" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
     <SUITE FILE_PATH="coverage/DeepLearning$Inception.coverage" NAME="Inception Coverage Results" MODIFIED="1716882238004" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
-    <SUITE FILE_PATH="coverage/DeepLearning$Attention.coverage" NAME="Attention Coverage Results" MODIFIED="1722847207795" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/attention" />
+    <SUITE FILE_PATH="coverage/DeepLearning$Attention.coverage" NAME="Attention Coverage Results" MODIFIED="1725179271628" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/attention" />
     <SUITE FILE_PATH="coverage/DeepLearning$complex_test.coverage" NAME="complex_test Coverage Results" MODIFIED="1724323247260" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/DeepLearning$stack_cat_test.coverage" NAME="stack_cat_test Coverage Results" MODIFIED="1724149482868" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/DeepLearning$model.coverage" NAME="model Coverage Results" MODIFIED="1721732050178" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reproduction/lately/ScoreSDEs" />
     <SUITE FILE_PATH="coverage/DeepLearning$coco.coverage" NAME="coco Coverage Results" MODIFIED="1717724181755" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/DeepLearning$part.coverage" NAME="part Coverage Results" MODIFIED="1715424131810" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/legacy/DenseNet" />
     <SUITE FILE_PATH="coverage/DeepLearning$OBB.coverage" NAME="OBB Coverage Results" MODIFIED="1717165364906" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lossFunc/BBLoss" />
-    <SUITE FILE_PATH="coverage/DeepLearning$embedding.coverage" NAME="embedding Coverage Results" MODIFIED="1724834026914" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
+    <SUITE FILE_PATH="coverage/DeepLearning$embedding.coverage" NAME="embedding Coverage Results" MODIFIED="1725021201485" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/embedding" />
     <SUITE FILE_PATH="coverage/DeepLearning$learning.coverage" NAME="learning Coverage Results" MODIFIED="1715751498928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch/segment" />
     <SUITE FILE_PATH="coverage/DeepLearning$FPN.coverage" NAME="FPN Coverage Results" MODIFIED="1716731835081" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules" />
     <SUITE FILE_PATH="coverage/DeepLearning$main.coverage" NAME="main Coverage Results" MODIFIED="1724046140103" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/huggingface-convenient-usage/Hiera(MAEImageEncoder)" />
     <SUITE FILE_PATH="coverage/DeepLearning$models.coverage" NAME="models Coverage Results" MODIFIED="1724841202514" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/reproduction/lately/ViT(VisionTransformer)" />
     <SUITE FILE_PATH="coverage/DeepLearning$Image.coverage" NAME="Image Coverage Results" MODIFIED="1715606972619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Programs/Python/Python39/Lib/site-packages/PIL" />
     <SUITE FILE_PATH="coverage/DeepLearning$loss.coverage" NAME="loss Coverage Results" MODIFIED="1717857075022" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/custom/EllipseDetectionNeuralNetwork" />
-    <SUITE FILE_PATH="coverage/DeepLearning$test.coverage" NAME="test Coverage Results" MODIFIED="1723283168373" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
+    <SUITE FILE_PATH="coverage/DeepLearning$test.coverage" NAME="test Coverage Results" MODIFIED="1725175392702" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/DeepLearning$mousestrategy.coverage" NAME="mousestrategy Coverage Results" MODIFIED="1723113654247" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot/imagedraw/strategies" />
     <SUITE FILE_PATH="coverage/DeepLearning$datasets.coverage" NAME="datasets Coverage Results" MODIFIED="1717566181770" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/pytorch/segment" />
     <SUITE FILE_PATH="coverage/DeepLearning$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1723459495323" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/plot/imagedraw" />
+    <SUITE FILE_PATH="coverage/DeepLearning$vit.coverage" NAME="vit Coverage Results" MODIFIED="1725179628538" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modeling/backbones/trunk" />
     <SUITE FILE_PATH="coverage/DeepLearning$Res2Net.coverage" NAME="Res2Net Coverage Results" MODIFIED="1717518061114" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/residual" />
     <SUITE FILE_PATH="coverage/DeepLearning$Models.coverage" NAME="Models Coverage Results" MODIFIED="1715155425885" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/modules/MLPMixer" />
     <SUITE FILE_PATH="coverage/DeepLearning$modellogger.coverage" NAME="modellogger Coverage Results" MODIFIED="1717740874234" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils/logger" />

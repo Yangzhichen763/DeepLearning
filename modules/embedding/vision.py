@@ -16,6 +16,8 @@ class GlobalPatchEmbedding(nn.Module):
         self.image_size = image_size
         self.patch_size = patch_size
         self.dilation = (image_size[0] // patch_size, image_size[1] // patch_size)
+        self.num_patches = image_size[0] // patch_size * image_size[1] // patch_size
+
         self.patcher = nn.Conv2d(in_channels=in_channels,
                                  out_channels=embedding_dim,
                                  kernel_size=patch_size,
@@ -49,6 +51,11 @@ class LocalPatchEmbedding(nn.Module):
                                  kernel_size=patch_size,
                                  stride=patch_size)
 
+        self.image_size = None
+        self.patch_size = patch_size
+        self.num_patches = None
+
+    # noinspection PyPep8Naming
     def forward(self, x):
         """
         Args:
@@ -57,18 +64,22 @@ class LocalPatchEmbedding(nn.Module):
         Returns:
             embedding: [B, P, P, C*H*W//P^2], P=patch_size
         """
+        B, C, H, W = x.shape
+        self.image_size = (H, W)
+        self.num_patches = (H // self.patch_size) * (W // self.patch_size)
+
         x = self.patcher(x).permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, P, P, C*H*W//P^2], P=patch_size
         return x
 
 
 class PatchEmbedding(nn.Module):
     def __init__(
-            self,
-            in_channels: int,
-            embedding_dim: int,
-            kernel_size: tuple[int, int],
-            stride: tuple[int, int],
-            padding: tuple[int, int]
+        self,
+        in_channels: int,
+        embedding_dim: int,
+        kernel_size: tuple[int, int],
+        stride: tuple[int, int],
+        padding: tuple[int, int]
     ):
         super(PatchEmbedding, self).__init__()
         self.patcher = nn.Conv2d(in_channels=in_channels,
@@ -77,6 +88,11 @@ class PatchEmbedding(nn.Module):
                                  stride=stride,
                                  padding=padding)
 
+        self.image_size = None
+        self.patch_size = kernel_size
+        self.num_patches = None
+
+    # noinspection PyPep8Naming
     def forward(self, x):
         """
         Args:
@@ -85,6 +101,10 @@ class PatchEmbedding(nn.Module):
         Returns:
             embedding: [B, P, P, C*H*W//P^2], P=patch_size
         """
+        B, C, H, W = x.shape
+        self.image_size = (H, W)
+        self.num_patches = (H // self.patch_size) * (W // self.patch_size)
+
         x = self.patcher(x).permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, P, P, C*H*W//P^2], P=patch_size
         return x
 

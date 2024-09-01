@@ -1,3 +1,5 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,7 +12,7 @@ class FPNNeck(Neck):
         self, *,
         backbone_out_channels: list[int],
         out_channels: int,
-        kernel_size:int = 1,
+        kernel_size: int = 1,
         stride: int = 1,
         padding: int = 0,
 
@@ -26,7 +28,7 @@ class FPNNeck(Neck):
             stride (int, optional): stride of the convolutional layer. Defaults to 1.
             padding (int, optional): padding of the convolutional layer. Defaults to 0.
             out_levels (list[int], optional): list of output levels to be used for the FPN. Defaults to None.
-            interpolate_mode (str, optional): interpolation mode for upsampling. Defaults to "nearest".
+            interpolate_mode (str, optional): interpolation mode for up-sampling. Defaults to "nearest".
             fuse_type (str, optional): type of fusing method for combining the features from different levels. Defaults to "avg".
         """
         super(FPNNeck, self).__init__()
@@ -68,8 +70,8 @@ class FPNNeck(Neck):
         """
         assert len(xs) == len(self.convs), "Number of input tensors and convolutional layers should be the same"
 
-        out: list[torch.Tensor] = [None] * len(xs)
-        prev_features: torch.Tensor = None
+        out: list[Optional[torch.Tensor]] = [None] * len(xs)
+        prev_features: Optional[torch.Tensor] = None
         n = len(xs) - 1
         for i in range(n, -1, -1):    # [n, n-1, ..., 0]
             x = xs[i]

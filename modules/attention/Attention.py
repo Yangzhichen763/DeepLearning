@@ -3,7 +3,6 @@ from torch import nn
 from torch.nn import init
 import torch.nn.functional as F
 
-
 """
 Attention is All You Need
 论文链接 2017-2023：https://arxiv.org/abs/1706.03762
@@ -16,6 +15,7 @@ class AdditiveAttention(nn.Module):
     一般来说，当 query 和 key 维度不同时，可以使用 additive attention。
     论文链接 2014-2016：https://arxiv.org/abs/1409.0473
     """
+
     def __init__(self, dim_hidden, q_dim, k_dim, dropout=0.1):
         super(AdditiveAttention, self).__init__()
         self.q_weight = nn.Linear(q_dim, dim_hidden, bias=False)
@@ -31,8 +31,8 @@ class AdditiveAttention(nn.Module):
         :param mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(time, time, dtype=torch.bool))
         :return:
         """
-        q = self.q_weight(q)     # [batch_size, q_n, q_dim] -> [batch_size, q_n, dim_hidden]
-        k = self.k_weight(k)     # [batch_size, kv_n, k_dim] -> [batch_size, kv_n, dim_hidden]
+        q = self.q_weight(q)  # [batch_size, q_n, q_dim] -> [batch_size, q_n, dim_hidden]
+        k = self.k_weight(k)  # [batch_size, kv_n, k_dim] -> [batch_size, kv_n, dim_hidden]
 
         # 加性融合
         # q: [batch_size, q_n, dim_hidden] -> [batch_size, q_n, 1, dim_hidden]
@@ -45,7 +45,7 @@ class AdditiveAttention(nn.Module):
 
         # v_weight 只有一个输出，所以要移除左后一个维度
         scores = self.v_weight(energy).squeeze(-1)  # [batch_size, q_n, kv_n, 1] -> [batch_size, q_n, kv_n]
-        attention = F.softmax(scores, dim=-1)       # [batch_size, q_n, kv_n]
+        attention = F.softmax(scores, dim=-1)  # [batch_size, q_n, kv_n]
         attention = self.dropout(attention)
 
         # [batch_size, q_n, kv_n] @ [batch_size, kv_n, v_dim] -> [batch_size, q_n, v_dim]
@@ -58,6 +58,7 @@ class ScaledDotProductAttention(nn.Module):
     Scaled Dot-Product attention
     使用点积可以得到计算效率更高的评分函数，但是点积操作要求 query 和 key 具有相同的维度 d
     """
+
     def __init__(self, temperature, dropout=0.1):
         super(ScaledDotProductAttention, self).__init__()
         self.temperature = temperature
@@ -75,9 +76,9 @@ class ScaledDotProductAttention(nn.Module):
         q_shape = q.shape
         k_shape = k.shape
         v_shape = v.shape
-        q = q.view(-1, q_shape[-2], q_shape[-1])
-        k = k.view(-1, k_shape[-2], k_shape[-1])
-        v = v.view(-1, v_shape[-2], v_shape[-1])
+        q = q.reshape(-1, *q_shape[-2:])
+        k = k.reshape(-1, *k_shape[-2:])
+        v = v.reshape(-1, *v_shape[-2:])
 
         # q @ k.transpose(-2, -1) 得到的矩阵可以用来表示 attention 强度
         # / self.temperature 是为了防止内积过大导致偏导数趋近于 0（可以让注意力的分布更加均匀）
@@ -88,7 +89,8 @@ class ScaledDotProductAttention(nn.Module):
             attention = attention.masked_fill(mask == 0, float("-inf"))
 
         # dim=-1 表示在最后一个维度上应用 softmax 函数，前面几个维度保持不变
-        attention = self.dropout(F.softmax(attention, dim=-1))
+        attention = attention.softmax(dim=-1)
+        attention = self.dropout(attention)
         # torch.bmm 在处理批量矩阵乘法的性能比 torch.matmul（或者 @ 运算符）要好
         # [batch_size, q_n, kv_n] @ [batch_size, kv_n, dim] -> [batch_size, q_n, dim]
         output = torch.bmm(attention, v)
@@ -103,6 +105,7 @@ class SelfAttention(nn.Module):
     """
     Self-attention
     """
+
     def __init__(self, d_model, dropout=0.1):
         super(SelfAttention, self).__init__()
         self.attention = ScaledDotProductAttention(temperature=d_model ** 0.5, dropout=dropout)
@@ -129,6 +132,7 @@ class CrossAttention(nn.Module):
     2. Self Attention -> (query, key, value)
     3. Scaled Dot-Product Attention -> query, key, value
     """
+
     def __init__(self, d_model, dropout=0.1):
         super(CrossAttention, self).__init__()
         self.attention = ScaledDotProductAttention(temperature=d_model ** 0.5, dropout=dropout)
@@ -149,13 +153,18 @@ class MultiheadAttention(nn.Module):
     """
     Multi-Head Attention
     """
-    def __init__(self, num_heads, d_model, dropout=0.1, is_weighted=False):
+
+    def __init__(self, num_heads, d_model, attn_drop=0.1, proj_drop=0.1,
+                 is_weighted=False, any_bias=False,
+                 temperature=None):
         """
         Args:
             num_heads: 多头注意力的头数
             d_model: 模型的维度
-            dropout: dropout 率
-            is_weighted: 是否使用权重矩阵对输入和输出进行全连接处理，如果为 False，则不适用全连接层和 dropout 处理
+            attn_drop: attention 的 dropout 率
+            proj_drop: 输出的 dropout 率
+            is_weighted: 是否使用权重矩阵对输入和输出进行全连接处理，如果为 False，则不使用全连接层和 dropout 处理
+            any_bias: 是否使用偏置，只有在 is_weighted 为 True 时才有用
         """
         super(MultiheadAttention, self).__init__()
 
@@ -164,13 +173,14 @@ class MultiheadAttention(nn.Module):
 
         self.is_weighted = is_weighted
         if self.is_weighted:
-            self.weight_Q = nn.Linear(d_model, d_model, bias=False)
-            self.weight_K = nn.Linear(d_model, d_model, bias=False)
-            self.weight_V = nn.Linear(d_model, d_model, bias=False)
-            self.weight_combine = nn.Linear(d_model, d_model, bias=False)
+            self.weight_Q = nn.Linear(d_model, d_model, bias=any_bias)
+            self.weight_K = nn.Linear(d_model, d_model, bias=any_bias)
+            self.weight_V = nn.Linear(d_model, d_model, bias=any_bias)
+            self.weight_combine = nn.Linear(d_model, d_model, bias=any_bias)
 
-        self.attention = ScaledDotProductAttention(temperature=d_model ** 0.5, dropout=dropout)
-        self.dropout = nn.Dropout(dropout)
+        self.temperature = temperature or d_model ** 0.5
+        self.attention = ScaledDotProductAttention(temperature=self.temperature, dropout=attn_drop)
+        self.dropout = nn.Dropout(proj_drop)
 
     # noinspection PyPep8Naming
     def forward(self, q, k, v, mask=None):
@@ -204,6 +214,21 @@ class MultiheadAttention(nn.Module):
         return q, attention
 
 
+class MultiheadSelfAttention(nn.Module):
+    def __init__(self, num_heads, d_model, attn_drop=0.1, proj_drop=0.1,
+                 is_weighted=False, any_bias=False,
+                 temperature=None):
+        super().__init__()
+        self.multihead_attention = MultiheadAttention(
+            num_heads, d_model, attn_drop, proj_drop,
+            is_weighted, any_bias,
+            temperature)
+
+    def forward(self, x, mask=None):
+        x = self.multihead_attention(x, x, x, mask=mask)
+        return x
+
+
 # == 以下是 Spatial Attention 相关的实现 == （即在 Attention 的输入输出做修改）
 
 
@@ -211,6 +236,7 @@ class LinearAttention(nn.Module):
     """
     参考代码：
     """
+
     def __init__(self, d_model: int):
         super().__init__()
         self.weights = nn.Conv2d(d_model, 3 * d_model, 1, stride=1, padding=0, bias=False)
@@ -249,6 +275,7 @@ class SpatialSelfAttention(nn.Module):
     """
     参考代码：
     """
+
     def __init__(self, d_model: int):
         super().__init__()
         self.weight_Q = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
@@ -294,4 +321,3 @@ if __name__ == '__main__':
 
     print(_output.shape)
     print(_attention.shape)
-
