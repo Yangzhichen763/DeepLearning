@@ -17,8 +17,7 @@
 **/pictures/
 **/configs/
 **/models/
-**/.idea/
-**/.venv/
+**/.*/
 *.png
 *.jpg
 *.jpeg
