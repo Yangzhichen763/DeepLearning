@@ -108,7 +108,7 @@ class SelfAttentionBlock(nn.Module):
 
             return _x
 
-        # Attention + Q pooling
+        # Attention + Q pooling, norm -> (Q pooling) -> attention -> drop -> add
         x_norm = self.norm1(x)
         if self.q_stride and self.dim != self.dim_out:  # Q pooling
             x = switch_HWC(self.proj(x_norm), self.pool)
@@ -117,7 +117,7 @@ class SelfAttentionBlock(nn.Module):
             return x_attn
         x = drop(x, x_attn)
 
-        # MLP
+        # MLP, norm -> mlp -> drop -> add
         x_norm = self.norm2(x)
         x = drop(x, self.mlp(x_norm))
 

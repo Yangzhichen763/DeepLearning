@@ -4,17 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 编写常用 backbone 和 neck 的代码，包括 FpnNeck">
+    <list default="true" id="b44c2460-9605-4798-af31-8bb15b374e66" name="Changes" comment="1. 编写常用 backbone 中 trunk 的代码，包括 ViT&#10;2. 编写论文图表保存成 svg 格式文件">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/huggingface-convenient-usage/DepthAnythingV2/main.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/huggingface-convenient-usage/DepthAnythingV2/main.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/modeling/backbones/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/block.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modeling/backbones/neck/fpn.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/neck/fpn.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/modeling/backbones/trunk/vit.py" beforeDir="false" afterPath="$PROJECT_DIR$/modeling/backbones/trunk/vit.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/attention/Attention.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/attention/Attention.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/attention/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/attention/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/embedding/vision.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/embedding/vision.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/mlp/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/modules/mlp/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/plot/figure_tutorial.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/utils/plot/figure_tutorial.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,72 +72,72 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python tests.Doctests in __init__.executor": "Run",
-    "Python tests.Doctests in embedding.executor": "Run",
-    "Python.Attention.executor": "Run",
-    "Python.CSA.executor": "Run",
-    "Python.ConvolutionalGLU.executor": "Run",
-    "Python.FPN.executor": "Run",
-    "Python.Image.executor": "Run",
-    "Python.Inception.executor": "Run",
-    "Python.LSTM.executor": "Run",
-    "Python.Models.executor": "Run",
-    "Python.Modules.executor": "Run",
-    "Python.OBB.executor": "Run",
-    "Python.Res2Net.executor": "Run",
-    "Python.ResNeXt.executor": "Run",
-    "Python.ResNet.executor": "Run",
-    "Python.SRA.executor": "Run",
-    "Python.Transformer.executor": "Run",
-    "Python.__init__.executor": "Run",
-    "Python.block.executor": "Run",
-    "Python.coco.executor": "Run",
-    "Python.complex_test.executor": "Run",
-    "Python.datapicker.executor": "Run",
-    "Python.datasets.executor": "Run",
-    "Python.depthanythingv2.executor": "Run",
-    "Python.embedding.executor": "Run",
-    "Python.fpn.executor": "Run",
-    "Python.general.executor": "Run",
-    "Python.hydra_test.executor": "Run",
-    "Python.interpret.executor": "Run",
-    "Python.learning.executor": "Run",
-    "Python.loss.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.model (1).executor": "Run",
-    "Python.model.executor": "Run",
-    "Python.modellogger.executor": "Run",
-    "Python.models.executor": "Run",
-    "Python.modules.executor": "Run",
-    "Python.mousestrategy.executor": "Run",
-    "Python.nn.executor": "Run",
-    "Python.part.executor": "Run",
-    "Python.parts.executor": "Debug",
-    "Python.save.executor": "Run",
-    "Python.stack_cat_test.executor": "Run",
-    "Python.test.executor": "Run",
-    "Python.text.executor": "Run",
-    "Python.timestep.executor": "Run",
-    "Python.train.executor": "Run",
-    "Python.transform.executor": "Run",
-    "Python.viewer3d.executor": "Run",
-    "Python.vision.executor": "Run",
-    "Python.vit.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "E:/Developments/PythonLearning/DeepLearning",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python tests.Doctests in __init__.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Doctests in embedding.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Attention.executor&quot;: &quot;Run&quot;,
+    &quot;Python.CSA.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ConvolutionalGLU.executor&quot;: &quot;Run&quot;,
+    &quot;Python.FPN.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Image.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Inception.executor&quot;: &quot;Run&quot;,
+    &quot;Python.LSTM.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Models.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Modules.executor&quot;: &quot;Run&quot;,
+    &quot;Python.OBB.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Res2Net.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ResNeXt.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ResNet.executor&quot;: &quot;Run&quot;,
+    &quot;Python.SRA.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Transformer.executor&quot;: &quot;Run&quot;,
+    &quot;Python.__init__.executor&quot;: &quot;Run&quot;,
+    &quot;Python.block.executor&quot;: &quot;Run&quot;,
+    &quot;Python.coco.executor&quot;: &quot;Run&quot;,
+    &quot;Python.complex_test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.datapicker.executor&quot;: &quot;Run&quot;,
+    &quot;Python.datasets.executor&quot;: &quot;Run&quot;,
+    &quot;Python.depthanythingv2.executor&quot;: &quot;Run&quot;,
+    &quot;Python.embedding.executor&quot;: &quot;Run&quot;,
+    &quot;Python.fpn.executor&quot;: &quot;Run&quot;,
+    &quot;Python.general.executor&quot;: &quot;Run&quot;,
+    &quot;Python.hydra_test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.interpret.executor&quot;: &quot;Run&quot;,
+    &quot;Python.learning.executor&quot;: &quot;Run&quot;,
+    &quot;Python.loss.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.model (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.model.executor&quot;: &quot;Run&quot;,
+    &quot;Python.modellogger.executor&quot;: &quot;Run&quot;,
+    &quot;Python.models.executor&quot;: &quot;Run&quot;,
+    &quot;Python.modules.executor&quot;: &quot;Run&quot;,
+    &quot;Python.mousestrategy.executor&quot;: &quot;Run&quot;,
+    &quot;Python.nn.executor&quot;: &quot;Run&quot;,
+    &quot;Python.part.executor&quot;: &quot;Run&quot;,
+    &quot;Python.parts.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.save.executor&quot;: &quot;Run&quot;,
+    &quot;Python.stack_cat_test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.text.executor&quot;: &quot;Run&quot;,
+    &quot;Python.timestep.executor&quot;: &quot;Run&quot;,
+    &quot;Python.train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.transform.executor&quot;: &quot;Run&quot;,
+    &quot;Python.viewer3d.executor&quot;: &quot;Run&quot;,
+    &quot;Python.vision.executor&quot;: &quot;Run&quot;,
+    &quot;Python.vit.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/Developments/PythonLearning/DeepLearning/huggingface-convenient-usage/DepthAnythingV2&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\Developments\PythonLearning\DeepLearning\modeling\backbones\trunk" />
@@ -913,15 +907,12 @@
       <workItem from="1724659395071" duration="28540000" />
       <workItem from="1725106478531" duration="5000" />
       <workItem from="1725166199731" duration="15670000" />
-      <workItem from="1725190636402" duration="946000" />
-    </task>
-    <task id="LOCAL-00018" summary="1. 实现 Inception-v1, Inception-v2 的各种模块；&#10;2. 更新 FPN，使得可拓展性更强">
-      <option name="closed" value="true" />
-      <created>1716884085597</created>
-      <option name="number" value="00018" />
-      <option name="presentableId" value="LOCAL-00018" />
-      <option name="project" value="LOCAL" />
-      <updated>1716884085597</updated>
+      <workItem from="1725190636402" duration="1961000" />
+      <workItem from="1725258723631" duration="6650000" />
+      <workItem from="1725369460941" duration="6563000" />
+      <workItem from="1725584961212" duration="454000" />
+      <workItem from="1725585440994" duration="1024000" />
+      <workItem from="1725586595342" duration="45000" />
     </task>
     <task id="LOCAL-00019" summary="1. 实现 ResNeXt 网络结构，包括 ResNeXt50_32x4d、ResNeXt101_32x8d、ResNeXt152_64x4d 等。">
       <option name="closed" value="true" />
@@ -1307,7 +1298,15 @@
       <option name="project" value="LOCAL" />
       <updated>1724854823503</updated>
     </task>
-    <option name="localTasksCounter" value="67" />
+    <task id="LOCAL-00067" summary="1. 编写常用 backbone 中 trunk 的代码，包括 ViT&#10;2. 编写论文图表保存成 svg 格式文件">
+      <option name="closed" value="true" />
+      <created>1725191650698</created>
+      <option name="number" value="00067" />
+      <option name="presentableId" value="LOCAL-00067" />
+      <option name="project" value="LOCAL" />
+      <updated>1725191650698</updated>
+    </task>
+    <option name="localTasksCounter" value="68" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1372,7 +1371,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="1. 添加 Lora 模块" />
     <MESSAGE value="1. 添加 ScoreSDEs 的 EulerMaruyamaSampler（噪声采样）和 PredictorCorrectorSampler（Langevin MCMC矫正）&#10;2. 整理 DDPM 和 DDIM 文件" />
     <MESSAGE value="1. 添加 NumericalODESampler；&#10;2. 整理 Sampler（采样器）的相关代码；&#10;3. 整理 utils 的组织架构。" />
     <MESSAGE value="1. 整理 Embedding 模块，包括 SinusoidalPositionalEmbedding, LearnedPositionalEmbedding, RelativePositionalEmbedding 等等。" />
@@ -1397,7 +1395,8 @@
     <MESSAGE value="1. 添加 Hiera(MAE pre-trained ImageEncoder) 的 torch.hub 调用" />
     <MESSAGE value="1. 添加 OPENClip 的使用样例&#10;2. 添加模型文件夹，保存 encoder - decoder 模型代码&#10;3. 添加 CXBlock，来自 ConvNeXt&#10;4. 添加一些测试样例" />
     <MESSAGE value="1. 编写常用 backbone 和 neck 的代码，包括 FpnNeck" />
-    <option name="LAST_COMMIT_MESSAGE" value="1. 编写常用 backbone 和 neck 的代码，包括 FpnNeck" />
+    <MESSAGE value="1. 编写常用 backbone 中 trunk 的代码，包括 ViT&#10;2. 编写论文图表保存成 svg 格式文件" />
+    <option name="LAST_COMMIT_MESSAGE" value="1. 编写常用 backbone 中 trunk 的代码，包括 ViT&#10;2. 编写论文图表保存成 svg 格式文件" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="XDebuggerManager">
