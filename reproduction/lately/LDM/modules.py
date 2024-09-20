@@ -312,7 +312,7 @@ class Model(nn.Module):
                     torch.cat([h, h_skip.pop()], dim=1), time_embedding)
                 if len(self.up[i_level].attn) > 0:
                     h = self.up[i_level].attn[i_block](h)
-            # 记录 skip 连接
+            # 上采样
             if i_level != 0:                                   # 上采样，第一个上采样模块不需要记录到 skip 中
                 h = self.up[i_level].upsample(h)
 
@@ -404,7 +404,7 @@ class Encoder(nn.Module):
         # end
         # 输出层
         self.conv_out = nn.Conv2d(in_dim, 2 * z_channels if any_double_z else z_channels,
-                                  kernel_size=3, stride=1, padding=1)  # 用于需要获取最后一层的权重
+                                  kernel_size=3, stride=1, padding=1)  # 特意用 self.conv_out 储存起来，用于需要获取最后一层的权重
         self.net_out = nn.Sequential(
             Norm(in_dim),
             Swish(),

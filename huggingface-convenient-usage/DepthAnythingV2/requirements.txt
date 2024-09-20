@@ -1,3 +1,4 @@
+# 如果出现 KeyError: "Unknown task depth-estimation, ..."错误，尝试重新安装 transformers（卸了再重装）
 transformers
 pillow
 torch
