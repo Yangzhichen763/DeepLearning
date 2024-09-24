@@ -41,22 +41,27 @@ def get_1d_sinusoidal_positional_embedding(
     PE_(pos, 2i) = sin(pos/10000^(2i/d_model))
     PE_(pos, 2i+1) = cos(pos/10000^(2i/d_model))
     参考代码：
-      1.https://github.com/facebookresearch/segment-anything-2/blob/main/sam2/modeling/position_encoding.py
-      2.https://github.com/facebookresearch/segment-anything-2/blob/main/sam2/modeling/sam2_utils.py
+        1.https://github.com/facebookresearch/segment-anything-2/blob/main/sam2/modeling/position_encoding.py
+        2.https://github.com/facebookresearch/segment-anything-2/blob/main/sam2/modeling/sam2_utils.py
+
+    Args:
+        position_indices (torch.LongTensor): The indices of the positions to generate the embedding for.
+        max_length (int): The maximum length of the sequence. Equals to the embedding_dim.
+        temperature (float): The temperature to use for the positional encoding.
+        device (torch.device): The device to use for the positional encoding.
     """
     assert max_length % 2 == 0, f"max_length must be even (got max_length = {max_length})"
 
     # stack((a, b), dim=-1).flatten(start_dim=-2) <==shape=equal==> cat((a, b), dim=-1)
     dim_pe = max_length // 2
-    _2i = torch.arange(dim_pe, dtype=torch.float, device=device)  # // 2 * 2，参考代码2中使用 // 2 * 2
-    dim_t = temperature ** (_2i / dim_pe)
+    _2i = torch.arange(dim_pe, dtype=torch.float, device=device)    # // 2 * 2，参考代码2中使用 // 2 * 2
+    dim_t = temperature ** (_2i / dim_pe)                           # [dim//2], where dim is embedding_dim
 
     # 或者 position_indices[:, None] @ (1 / dim_t)[None, :]
-    position_embedding = position_indices.unsqueeze(-1) / dim_t
-    print(position_embedding.shape)
+    position_embedding = position_indices.unsqueeze(-1) / dim_t      # [..., 1] / [dim] -> [..., dim//2]
     position_embedding = torch.stack(  # 使用 stack 再 flatten 的结果和隔项 cos 和 sin 相加的结果相同，与 cat 结果不一样
         [position_embedding.sin(), position_embedding.cos()],
-        dim=-1).flatten(start_dim=-2)
+        dim=-1).flatten(start_dim=-2)                                # 2*[..., dim//2] -concat-> [..., dim]
 
     # 结果与下方代码相同
     # _2i = torch.arange(max_length, dtype=torch.float, device=device) // 2 * 2
@@ -78,7 +83,7 @@ def get_1d_sinusoidal_positional_embedding(
     # position_embedding[..., 0::2] = torch.sin(_embedding)
     # position_embedding[..., 1::2] = torch.cos(_embedding)
 
-    return position_embedding
+    return position_embedding                                        # [..., dim]
 
 
 # == Embedding Modules ==

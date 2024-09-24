@@ -45,22 +45,24 @@ class TimeEmbeddingProjection(Embedding):
 def get_timestep_embedding(timesteps, embedding_dim, temperature=10000.0):
     """
     Args:
-        timesteps: [T]
-        embedding_dim (int): the dimension of the embedding vector
-        temperature (float): the temperature of the positional encoding
+        timesteps: [T], a 1-D Tensor of N indices, one per batch element.
+        embedding_dim (int): the dimension of the embedding vector,or the dimension of the output
+        temperature (float): the temperature of the positional encoding,
+         or the parameter controlling the minimum frequency of the embeddings.
     """
     assert len(timesteps.shape) == 1
 
-    position = timesteps.float()                        # [T]
-    embedding = torch.exp(
+    position = timesteps.float()                            # [T]
+    frequencies = torch.exp(
         torch.arange(0, embedding_dim, step=2, device=position.device, dtype=torch.float32)
         / embedding_dim * -math.log(temperature)
-    )                                                   # [d_model // 2]
-    embedding = position[:, None] * embedding[None, :]  # [T, 1] * [1, d_model // 2] -> [T, d_model // 2]
+    )                                                       # [d_model // 2]
+    embedding = position[:, None] * frequencies[None, :]    # [T, 1] * [1, d_model // 2] -> [T, d_model // 2]
     embedding = torch.cat([torch.sin(embedding), torch.cos(embedding)], dim=-1)
 
     if embedding_dim % 2 == 1:
         embedding = F.pad(embedding, (0, 1, 0, 0))
+        # 换成这种写法也行：embedding = torch.cat([embedding, torch.zeros_like(embedding[:, :1])], dim=-1)
 
     return embedding
 
