@@ -3,9 +3,13 @@ import torch
 import math
 
 
-a = torch.randn(1, 3, 6)
-b = torch.randn(1, 3, 4)
-c = torch.cat([a, b], dim=2)
-print(c.shape)
+n = 3
+h = w = 224
+p = 16
+c = 28
+x = torch.randn(n, h*w//(p*p), p*p*c)
+print(x.shape)
+x = torch.einsum()
+print(x.shape)
 
 
