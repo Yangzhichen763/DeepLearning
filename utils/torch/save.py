@@ -18,7 +18,7 @@ def check_path(path: str, path_unique=False):
     """
     if path_unique:
         path = get_unique_full_path(path)
-    tqdm.write(f"Saving model to: {path}")
+    # tqdm.write(f"Saving model to: {path}")
     directory = os.path.dirname(path)
     os.makedirs(directory, exist_ok=True)
 
