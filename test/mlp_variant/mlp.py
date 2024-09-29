@@ -3,6 +3,33 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+def extract_as(a: torch.Tensor, b: torch.Tensor):
+    """
+    [N, B] -[N, B, C]-> [N, B, 1]
+    """
+    assert b.dim() >= a.dim(), f"b should have at least as many dimensions as a, instead of {b.dim()} and {a.dim()}"
+    dim_delta = b.dim() - a.dim()
+    return a.view(*a.shape, *([1] * dim_delta))
+
+
+def extract_dim(a: torch.Tensor, dim: int):
+    """
+    [N, B] -dim=-2-> [N, 1, B]
+    """
+    shape = list(a.shape)
+    shape.insert((dim + a.dim() + 1) % (a.dim() + 1), 1)
+    return a.view(*shape)
+
+
+def squeeze_as(a: torch.Tensor, b: torch.Tensor):
+    """
+    [N, B, 1] -[N, B]-> [N, B]
+    """
+    assert 1 in a.shape, f"a should have at least one dimension of size 1, instead of {a.shape}"
+    dim_delta = a.dim() - b.dim()
+    return a.squeeze(dim=list(range(-dim_delta, 0)))
+
+
 class MaskedLinear(nn.Module):
     """
     相当于 Drop Connect
@@ -50,6 +77,18 @@ class AttentionLinear(nn.Module):
             attention: [N, input_dim, output_dim], attention 的维度要和 weight 的维度一致
         """
         weight: torch.Tensor = self.weight
-        weight = weight * attention
-        return F.linear(x, weight, self.bias)
+        assert weight.shape[-2:] == attention.shape[-2:], \
+            (f"The attention shape should be the same as the weight shape. "
+             f"instead of {attention.shape[-2:]} and {weight.shape[-2:]}")
 
+        weight = (weight * attention).transpose(-1, -2)
+        weighted_x = extract_dim(x, dim=-2) @ weight
+        weighted_x = torch.squeeze(weighted_x, dim=-2)
+        return weighted_x + self.bias
+
+
+if __name__ == '__main__':
+    x = torch.randn(3, 28)
+    attention = torch.randn(3, 29, 28)
+    attention_linear = AttentionLinear(28, 29)
+    print(attention_linear(x, attention).shape)
