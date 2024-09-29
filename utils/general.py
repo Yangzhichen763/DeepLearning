@@ -157,7 +157,8 @@ class Trainer:
         Args:
             train_loader: 训练数据集
             optimizer: 优化器
-            **kwargs: 包括 writer_enabled, writer, scaler，不设置 writer 时，默认使用当前时间作为 writer 名称
+            **kwargs: 包括 writer_enabled, writer, scaler，不设置 writer 时，默认使用当前时间作为 writer 名称；
+                      包括 model: 用于调整模型状态为 train
         """
         self.min_loss = None
         self.max_loss = None
@@ -168,6 +169,10 @@ class Trainer:
         if self.writer_enabled:
             self.writer = get_writer_by_name(current_time, "train") if kwargs.get('writer', None) is None else kwargs['writer']
         self.scaler = GradScaler() if kwargs.get('scaler', None) is None else kwargs['scaler']
+
+        if kwargs.get('model', None) is not None:
+            model = kwargs['model']
+            model.train()
 
     def __call__(self, epoch, **kwargs):
         """
@@ -298,7 +303,8 @@ class Validator:
         """
         Args:
             test_loader: 测试数据集
-            **kwargs: 包括 writer_enabled, writer，不设置 writer 时，默认使用当前时间作为 writer 名称
+            **kwargs: 包括 writer_enabled, writer，不设置 writer 时，默认使用当前时间作为 writer 名称；
+                      包括 model: 用于调整模型状态为 eval
         """
         self.test_loader = test_loader
 
@@ -306,7 +312,11 @@ class Validator:
         if self.writer_enabled:
             self.writer = get_writer_by_name(current_time, "test") if kwargs.get('writer', None) is None else kwargs['writer']
 
-    def __call__(self, epoch, optimizer, **kwargs):
+        if kwargs.get('model', None) is not None:
+            model = kwargs['model']
+            model.eval()
+
+    def __call__(self, epoch, **kwargs):
         self.total_loss = 0.
         self.correct = 0.
         self.dataset_size = len(self.test_loader.dataset)
@@ -314,7 +324,6 @@ class Validator:
         self.batch_size = math.ceil(self.dataset_size / self.dataset_batches)
 
         self.epoch = epoch
-        self.optimizer = optimizer
 
         datas = buffer_dataloader(self.test_loader)
         self.process_bar = tqdm(   # 将 tqdm 放在加载 dataloader 之后，是因为防止进度条显示不正确
@@ -324,18 +333,17 @@ class Validator:
 
         return datas
 
-    def start(self, epoch, optimizer, **kwargs):
+    def start(self, epoch, **kwargs):
         """
         需要以 (i, (images, labels)) 的方式遍历
         Args:
             epoch:
-            optimizer:
             **kwargs:
 
         Returns:
 
         """
-        return self.__call__(epoch, optimizer, **kwargs)
+        return self.__call__(epoch, **kwargs)
 
     def step(self, i, loss, correct, **kwargs):
         """
@@ -387,6 +395,51 @@ class Validator:
                     self.writer.add_scalar(f"test_{key}", get_value(value), self.epoch)
 
         return average_loss, accuracy, *output_list
+
+    @staticmethod
+    def predict(model, images, targets, criterion):
+        """
+        简单的标签预测
+        Args:
+            model: 模型
+            images: 输入图像
+            targets: 标签
+            criterion: 损失函数
+
+        Returns: 模型预测结果，损失值
+        """
+        with torch.cuda.amp.autocast():
+            predict = model(images)
+            loss = criterion(predict, targets)
+        return predict, loss
+
+
+class Tester:
+    def __init__(self, **kwargs):
+        """
+        Args:
+            **kwargs: 包括 model: 用于调整模型状态为 eval
+        """
+        if kwargs.get('model', None) is not None:
+            model = kwargs['model']
+            model.eval()
+
+    @staticmethod
+    def predict(model, images, targets, criterion):
+        """
+        简单的标签预测
+        Args:
+            model: 模型
+            images: 输入图像
+            targets: 标签
+            criterion: 损失函数
+
+        Returns: 模型预测结果，损失值
+        """
+        with torch.cuda.amp.autocast():
+            predict = model(images)
+            loss = criterion(predict, targets)
+        return predict, loss
 
 
 class Manager:
