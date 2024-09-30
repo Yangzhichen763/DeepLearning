@@ -1,1 +1,6 @@
-pytorch
+torch
+# pytorch-lightning # pytorch lightning 感觉封装太过头了，需要懂得训练过程才能用好
+torchvision
+
+tensorboard
+tensorboardX
