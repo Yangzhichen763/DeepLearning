@@ -17,7 +17,7 @@ class AdditiveAttention(nn.Module):
     """
 
     def __init__(self, dim_hidden, q_dim, k_dim, dropout=0.1):
-        super(AdditiveAttention, self).__init__()
+        super().__init__()
         self.q_weight = nn.Linear(q_dim, dim_hidden, bias=False)
         self.k_weight = nn.Linear(k_dim, dim_hidden, bias=False)
         self.v_weight = nn.Linear(dim_hidden, 1, bias=False)
@@ -60,7 +60,7 @@ class ScaledDotProductAttention(nn.Module):
     """
 
     def __init__(self, temperature, dropout=0.1):
-        super(ScaledDotProductAttention, self).__init__()
+        super().__init__()
         self.temperature = temperature
         self.dropout = nn.Dropout(dropout)
 
@@ -69,7 +69,7 @@ class ScaledDotProductAttention(nn.Module):
         :param q: query （要查询的信息）[batch_size, q_n, dim]
         :param k: key   （被查询的向量）[batch_size, kv_n, dim]
         :param v: value （查询得到的值）[batch_size, kv_n, dim]
-        :param mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(q_n, kv_n, dtype=torch.bool))
+        :param mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(q_n, kv_n, dtype=torch.bool)) [dim, dim]
         :return:
         """
         # .view(-1, x_shape[-2], x_shape[-1]) 的目的是为了能进行 bmm 运算，bmm 运算只能接收 3 维矩阵
@@ -99,6 +99,63 @@ class ScaledDotProductAttention(nn.Module):
         output = output.view(*q_shape)
         attention = attention.view(*q_shape[:-1], k_shape[-2])
         return output, attention
+
+
+class LinearAttention(nn.Module):
+    """
+    参考代码：https://github.com/lucidrains/linear-attention-transformer/blob/master/linear_attention_transformer/linear_attention_transformer.py
+
+    相比于 Scaled Dot Product Attention，先求 K 和 V 的内积，再求 attention 权重，最后得到输出。
+    """
+
+    def __init__(self, temperature, dropout=0.1):
+        super().__init__()
+        self.temperature = temperature
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, q, k, v, kv_mask=None):
+        """
+        :param q: query （要查询的信息）[batch_size, q_n, dim]
+        :param k: key   （被查询的向量）[batch_size, kv_n, dim]
+        :param v: value （查询得到的值）[batch_size, kv_n, dim]
+        :param kv_mask: 可以是右上角遮罩（右上角都是 0） mask = torch.tril(torch.ones(q_n, kv_n, dtype=torch.bool)) [kv_n, dim]
+        :return:
+        """
+        # 计算经过遮罩 mask 计算后的 k 和 v
+        if kv_mask is not None:
+            if k.dim() == 3:
+                mask = kv_mask[:, :, None]          # -[B, kv_n, dim]-> [B, kv_n, 1]
+            elif k.dim() == 4:
+                mask = kv_mask[:, None, :, None]    # -[B, num_heads, kv_n, dim]-> [B, 1, kv_n, dim]
+            else:
+                raise ValueError(f"Invalid k/v shape, {k.shape}")
+            k = k.masked_fill(mask == 0, float("-inf"))
+            v = v.masked_fill(mask == 0, 0.0)
+            del mask  # 释放内存
+
+        # softmax 处理，将原本 attention 最后一维的维 softmax 变为两个一维 softmax 相乘
+        q = q.softmax(dim=-1)
+        k = k.softmax(dim=-2)
+
+        # 缩放
+        q = q / self.temperature
+
+        # .view(-1, x_shape[-2], x_shape[-1]) 的目的是为了能进行 bmm 运算，bmm 运算只能接收 3 维矩阵
+        q_shape = q.shape
+        k_shape = k.shape
+        v_shape = v.shape
+        q = q.reshape(-1, *q_shape[-2:])    # [batch_size, ...,  q_n, dim] -> [*, q_n, dim]
+        k = k.reshape(-1, *k_shape[-2:])    # [batch_size, ...,  kv_n, dim] -> [*, kv_n, dim]
+        v = v.reshape(-1, *v_shape[-2:])    # [batch_size, ...,  kv_n, dim] -> [*, kv_n, dim]
+
+        # 计算注意力权重
+        context = torch.matmul(k.transpose(-2, -1), v)  # [*, dim, kv_n] @ [*, kv_n, dim] -> [*, dim, dim]
+        output = torch.matmul(q, context)               # [*, q_n, dim] @ [*, dim, dim] -> [*, q_n, dim]
+
+        # 与前面呼应，转回原来的形式
+        output = output.view(*q_shape)      # [*, q_n, dim] -> [batch_size, ...,  q_n, dim]
+        context = context.view(*q_shape[:-2], k_shape[-1], v_shape[-1])
+        return output, context
 
 
 class SelfAttention(nn.Module):
@@ -204,6 +261,7 @@ class MultiheadAttention(nn.Module):
         q, k, v = map(lambda x: x.view(B, -1, self.num_heads, n_dim).permute(0, 2, 1, 3), (q, k, v))
 
         # 计算注意力权重
+        # q, k, v: [B, num_heads, n, n_dim]
         q, attention = self.attention(q, k, v, mask=mask)
 
         # 合并输出
@@ -232,56 +290,42 @@ class MultiheadSelfAttention(nn.Module):
 # == 以下是 Spatial Attention 相关的实现 == （即在 Attention 的输入输出做修改）
 
 
-class LinearAttention(nn.Module):
-    """
-    参考代码：
-    """
-
-    def __init__(self, d_model: int):
-        super().__init__()
-        self.weights = nn.Conv2d(d_model, 3 * d_model, 1, stride=1, padding=0, bias=False)
-        self.weight_Output = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
-        self.init_weights()
-
-        self.attention = ScaledDotProductAttention(temperature=d_model ** 0.5, dropout=0)
-
-    def init_weights(self):
-        for module in [self.weight_Q, self.weight_K, self.weight_V, self.weight_Output]:
-            init.xavier_uniform_(module.weight)
-            init.zeros_(module.bias)
-        init.xavier_uniform_(self.weight_Output.weight, gain=1e-5)
-
-    # noinspection PyPep8Naming
-    def forward(self, x):
-        B, C, H, W = x.shape
-        # [B, C, H, W] -> [B, H, W, 3*C] -> [B, H*W, 3*C] -> 3*[B, H*W, C]
-        # 先 permute 或者 transpose 再 view 需要注意是否会影响 view ，否则要在中间添加 contiguous
-        # 也可以 q = einops.rearrange(q, 'b c h w -> b (h w) c')
-        qkv = self.weights(x).permute(0, 2, 3, 1).view(B, H * W, -1)
-        q, k, v = torch.split(qkv, C, dim=-1)
-
-        # 计算注意力权重
-        output, attention = self.attention(q, k, v)
-
-        # [B, H*W, C] -> [B, H, W, C] -> [B, C, H, W]
-        # 也可以 output = einops.rearrange(output, 'b (h w) c -> b c h w', h=H, w=W)
-        output = output.view(B, H, W, C).permute(0, 3, 1, 2)
-        output = self.weight_Output(output)
-
-        return x + output, attention
-
-
 class SpatialSelfAttention(nn.Module):
+    def __init__(self, d_model: int, bias_qkv: [bool, tuple[bool]] = True, bias_output: bool = True):
+        super().__init__()
+        self.attention = SpatialAttention(d_model, bias_qkv=bias_qkv, bias_output=bias_output)
+
+    def forward(self, x):
+        x = self.attention(x, x, x)
+        return x
+
+
+class SpatialAttention(nn.Module):
     """
     参考代码：
+
+    相比于 Linear Attention 区别是 q k v 的 bias 可以单独处理，且默认值为 True
     """
 
-    def __init__(self, d_model: int):
+    def __init__(self, d_model: int, bias_qkv: [bool, tuple[bool]] = True, bias_output: bool = True):
+        """
+        Args:
+            d_model: 图像的通道数
+            bias_qkv: 是否使用 q k v 的 bias
+            bias_output: 是否使用输出层的 bias
+        """
         super().__init__()
-        self.weight_Q = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
-        self.weight_K = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
-        self.weight_V = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
-        self.weight_Output = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0)
+        if isinstance(bias_qkv, bool):
+            bias_qkv = (bias_qkv,) * 3
+        elif len(bias_qkv) == 1:
+            bias_qkv = (bias_qkv[0], bias_qkv[0], bias_qkv[0])
+        elif len(bias_qkv) == 2:
+            bias_qkv = (bias_qkv[0], bias_qkv[1], bias_qkv[1])
+
+        self.weight_Q = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0, bias=bias_qkv[0])
+        self.weight_K = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0, bias=bias_qkv[1])
+        self.weight_V = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0, bias=bias_qkv[2])
+        self.weight_Output = nn.Conv2d(d_model, d_model, 1, stride=1, padding=0, bias=bias_output)
         self.init_weights()
 
         self.attention = ScaledDotProductAttention(temperature=d_model ** 0.5, dropout=0)
@@ -289,18 +333,25 @@ class SpatialSelfAttention(nn.Module):
     def init_weights(self):
         for module in [self.weight_Q, self.weight_K, self.weight_V, self.weight_Output]:
             init.xavier_uniform_(module.weight)
-            init.zeros_(module.bias)
+            if module.bias is not None:
+                init.zeros_(module.bias)
         init.xavier_uniform_(self.weight_Output.weight, gain=1e-5)
 
     # noinspection PyPep8Naming
-    def forward(self, x):
-        B, C, H, W = x.shape
+    def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor):
+        """
+        Args:
+            q: query （要查询的信息）[batch_size, d_model, H, W]
+            k: key   （被查询的向量）[batch_size, d_model, H, W]
+            v: value （查询得到的值）[batch_size, d_model, H, W]
+        """
+        B, C, H, W = q.shape
         # [B, C, H, W] -> [B, H, W, C] -> [B, H*W, C]
         # 先 permute 或者 transpose 再 view 需要注意是否会影响 view ，否则要在中间添加 contiguous
         # 也可以 q = einops.rearrange(q, 'b c h w -> b (h w) c')
-        q = self.weight_Q(x).permute(0, 2, 3, 1).view(B, H * W, C)
-        k = self.weight_K(x).permute(0, 2, 3, 1).view(B, H * W, C)
-        v = self.weight_V(x).permute(0, 2, 3, 1).view(B, H * W, C)
+        q = self.weight_Q(q).permute(0, 2, 3, 1).view(B, H * W, C)
+        k = self.weight_K(k).permute(0, 2, 3, 1).view(B, H * W, C)
+        v = self.weight_V(v).permute(0, 2, 3, 1).view(B, H * W, C)
 
         # 计算注意力权重
         output, attention = self.attention(q, k, v)
@@ -310,7 +361,7 @@ class SpatialSelfAttention(nn.Module):
         output = output.view(B, H, W, C).permute(0, 3, 1, 2)
         output = self.weight_Output(output)
 
-        return x + output, attention
+        return output, attention
 
 
 if __name__ == '__main__':

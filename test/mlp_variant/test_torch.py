@@ -17,7 +17,7 @@ from utils.os import get_root_path
 from utils.general import Trainer, Manager, Validator
 
 from mlp import AttentionLinear
-from modules.attention import SelfAttention
+from modules.attention import SpatialSelfAttention
 
 
 device = 'cpu'
@@ -52,12 +52,14 @@ class MLP(nn.Module):
 
 
 class AttentionMLP(nn.Module):
-    def __init__(self, input_size: tuple[int, int], output_size, activations=nn.ReLU()):
+    def __init__(self, input_size: tuple[int, int], output_size, d_model, activations=nn.ReLU()):
         super(AttentionMLP, self).__init__()
         width, height = input_size
         input_dim = width * height
 
-        self.attention = SelfAttention(hidden_size)
+        self.conv = nn.Conv2d(d_model, 1, kernel_size=3, padding=1)
+        self.attention = SpatialSelfAttention(d_model)
+
         self.fc1 = nn.Linear(input_dim, width)
         self.fc2 = AttentionLinear(width, width)
         self.fc3 = nn.Linear(width, output_size)
@@ -75,12 +77,11 @@ class AttentionMLP(nn.Module):
 
     # noinspection PyPep8Naming
     def forward(self, x):
-        B, C, H, W = x.size()
-
-        x = x.view(B, H, W)
+        x = self.conv(x)
         attention, _ = self.attention(x)
+        attention = attention.squeeze(dim=1)
 
-        x = x.view(x.size(0), -1)
+        x = x.view(x.shape[0], -1)
         out = self.fc1(x)
         out = self.act(out)
         out = self.fc2(out, attention)
@@ -157,8 +158,9 @@ if __name__ == '__main__':
     hidden_size = 512
 
     # 训练模型
-    _model = AttentionMLP(input_size, 10)
+    _model = AttentionMLP(input_size, output_size=10, d_model=1)
     train(_model, num_epochs)
 
     _model = MLP(np.prod(input_size), input_size[0], 10)
     train(_model, num_epochs)
+

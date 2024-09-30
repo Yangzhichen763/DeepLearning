@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.nn import init
 import torch.nn.functional as F
 
-from modules.attention import SpatialSelfAttention, LinearAttention
+from modules.attention import SpatialSelfAttention
 from modules.activation import Swish
 from modules.embedding.timestep import get_timestep_embedding
 from modules.residual import ShortCutType
@@ -27,8 +27,6 @@ class AttentionType(enum.Enum):
             return None
         elif self == AttentionType.VANILLA:
             return SpatialSelfAttention(in_dim)
-        elif self == AttentionType.LINEAR:
-            return LinearAttention(in_dim)
         else:
             raise ValueError(f"Unknown attention type: {self}")
 
