@@ -2,7 +2,7 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 
 
-# python test/hydra_test.py ...=...,... ...=...,... -m
+# python testime/hydra_test.py ...=...,... ...=...,... -m
 # 更多关于 yaml 模型配置相关代码见 https://github.com/facebookresearch/segment-anything-2/blob/main/sam2/build_sam.py
 def build(config_file: str) -> None:
     hydra_overrides = [
