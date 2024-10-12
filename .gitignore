@@ -17,6 +17,7 @@
 **/pictures/
 **/configs/
 **/models/
+**/checkpoints/
 **/.*/
 *.png
 *.jpg
